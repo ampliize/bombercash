@@ -16,7 +16,7 @@ const SHOTS=process.env.SHOTS;
   const a=await st(p);console.log(JSON.stringify(a));
   ok(a.duel===1,'morreram juntos: começa o duelo');ok(a.ps.every(q=>q[2]),'os dois finalistas voltam vivos');
   ok(a.ps[0][0]===1&&a.ps[0][1]===1&&a.ps[1][0]===13&&a.ps[1][1]===11,'cada um num canto oposto');
-  ok(a.ps.every(q=>q[3]===140&&q[4]===1&&q[5]===2),'poderes zerados e velocidade de duelo (agilidade decide)');
+  ok(a.ps.every(q=>q[3]===140&&q[4]===1&&q[5]===1),'poderes zerados e velocidade de duelo (agilidade decide)');
   ok(a.freeze>1.5&&a.freeze<=3,'contagem curta antes do duelo ('+a.freeze+'s)');ok(a.timer==='DUELO','relógio mostra DUELO');
   ok(a.crates<=40&&a.pillars<=30,'mapa de lava com poucos blocos (caixas '+a.crates+', pilares '+a.pillars+')');
   if(SHOTS){await sleep(2600);await p.screenshot({path:SHOTS+'/duel_start.png'})}

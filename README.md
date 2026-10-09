@@ -79,3 +79,12 @@ Quando a câmera aproxima (celular em pé), a janela mostra um número inteiro d
 A página escurece por completo (tela preta por cima de tudo) quando alguém começa um atalho de print: **Cmd+Shift** no Mac (antes do 3/4/5) e **Win+Shift** no Windows (antes do S do Recorte); **PrintScreen** apaga a tela por ~2s e limpa a área de transferência; quando a janela perde o foco ou a aba some (ferramenta de recorte, gravador de tela, troca de app no celular) a tela fica preta até voltar; imprimir (Ctrl+P) sai preto. Botão direito e arrastar imagem ficam bloqueados no jogo.
 **Limite honesto:** nenhum site consegue impedir o print do sistema. No Windows a tecla PrintScreen sozinha chega ao navegador depois que a imagem já foi tirada, e no celular o print pelos botões físicos nem chega ao navegador. Bloqueio de verdade (tela preta no print e na gravação) só no app nativo: Android com `FLAG_SECURE` (dá para empacotar este PWA com TWA/Capacitor); no iPhone dá para detectar o print, não impedir. Teste: `npm run test:shield`.
 
+## Regras e telas (09/10)
+- **Bomba inicial:** alcance de 1 bloco para cada lado (cada item de fogo soma 1, até 7). Vale no jogo, no duelo e no servidor.
+- **Mapa sempre aleatório:** saiu a escolha de mapa do modo e da prévia; toda partida sorteia o mapa.
+- **Fundo do lobby:** arte da arena (`demo/assets/bg-arena.webp`) com um véu escuro por cima; as bombas flutuando continuam.
+- **Aviso de jogo responsável:** ao escolher o valor da partida, e antes da 1ª partida/sala/convite de cada sessão, aparece o aviso "JOGUE COM RESPONSABILIDADE"; o Confirmar só libera depois de marcar "Li o aviso e vou jogar com responsabilidade".
+- **Sair do jogo:** botão ⏻ no topo do lobby; confirma, encerra a partida/sala e volta para a tela inicial (no app instalado tenta fechar a janela).
+- **Ranking e IDs zerados:** os IDs agora têm 7 dígitos (0000001 a 9999999). No banco, as tabelas antigas ficaram guardadas como arquivo (`bc_*_arq_20261009`, ver `supabase/demo-ops/`); quem já tinha ID recebe um novo no próximo acesso.
+- Teste: `npm run test:rules`.
+

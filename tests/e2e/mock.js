@@ -1,6 +1,6 @@
 const http=require('http'),fs=require('fs'),{WebSocketServer}=require('ws');
 const PORT=8765;let uid=100;
-const mkHtml=()=>fs.readFileSync(require('path').join(__dirname,'../../demo/index.html'),'utf8').replace("https://tuowzfpbpjxknouodzgb.supabase.co","http://127.0.0.1:"+PORT).replace("const arena=BC.create({canvas:cv,keys,","const arena=window.__arena=BC.create({canvas:cv,keys,").replace("const MUS={on:false,timer:0,next:0,step:0,sd:false,bpm:128};","const MUS=window.__MUS={on:false,timer:0,next:0,step:0,sd:false,bpm:128};").replace("let rm=null,rmStartMsg=null;","let rm=null,rmStartMsg=null;window.__t={bal:()=>bal,net:()=>net};");
+const mkHtml=()=>fs.readFileSync(require('path').join(__dirname,'../../demo/index.html'),'utf8').replace('<head>','<head><script>if(!/[?&]rg\\b/.test(location.search))try{sessionStorage.setItem(\'bc_rg\',\'1\')}catch(e){}</script>').replace("https://tuowzfpbpjxknouodzgb.supabase.co","http://127.0.0.1:"+PORT).replace("const arena=BC.create({canvas:cv,keys,","const arena=window.__arena=BC.create({canvas:cv,keys,").replace("const MUS={on:false,timer:0,next:0,step:0,sd:false,bpm:128};","const MUS=window.__MUS={on:false,timer:0,next:0,step:0,sd:false,bpm:128};").replace("let rm=null,rmStartMsg=null;","let rm=null,rmStartMsg=null;window.__t={bal:()=>bal,net:()=>net};");
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'POST,GET,OPTIONS'};
 const srv=http.createServer((req,res)=>{
  if(req.method==='OPTIONS'){res.writeHead(204,cors);return res.end()}

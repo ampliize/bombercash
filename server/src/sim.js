@@ -30,7 +30,7 @@ export class Sim {
     const { W: w, H: h } = this;
     const starts = (this.N > 4 ? [[1, 1], [w - 2, h - 2], [w - 2, 1], [1, h - 2], [(w - 1) / 2, 1], [(w - 1) / 2, h - 2], [1, (h - 1) / 2], [w - 2, (h - 1) / 2]] : [[1, 1], [w - 2, h - 2], [w - 2, 1], [1, h - 2]]).slice(0, this.N);
     this.genWorld(starts);
-    this.players = starts.map(([x, y], i) => ({ i, x: (x + .5) * T, y: (y + .5) * T, alive: true, face: 'down', bombMax: 1, power: 2, speed: 125, cooldown: 0, shield: 0, inv: 0, curse: 0, mv: false, axis: null, dir: [0, 0], wantBomb: false, lastIn: 0, deadAt: -1, pass: 0 }));
+    this.players = starts.map(([x, y], i) => ({ i, x: (x + .5) * T, y: (y + .5) * T, alive: true, face: 'down', bombMax: 1, power: 1, speed: 125, cooldown: 0, shield: 0, inv: 0, curse: 0, mv: false, axis: null, dir: [0, 0], wantBomb: false, lastIn: 0, deadAt: -1, pass: 0 }));
   }
   at(x, y) { return x >= 0 && x < this.W && y >= 0 && y < this.H; }
   id(x, y) { return y * this.W + x; }
@@ -219,7 +219,7 @@ export class Sim {
     this.world = w;
     let k = 0;
     for (const p of this.players) {
-      if (ids.includes(p.i)) { const [x, y] = st[k++]; Object.assign(p, { x: (x + .5) * T, y: (y + .5) * T, alive: true, bombMax: 1, power: 2, speed: DUEL_SPEED, shield: 0, inv: 0, curse: 0, cooldown: 0, dir: [0, 0], wantBomb: false, deadAt: -1, deadTick: -1, face: 'down', mv: false }); }
+      if (ids.includes(p.i)) { const [x, y] = st[k++]; Object.assign(p, { x: (x + .5) * T, y: (y + .5) * T, alive: true, bombMax: 1, power: 1, speed: DUEL_SPEED, shield: 0, inv: 0, curse: 0, cooldown: 0, dir: [0, 0], wantBomb: false, deadAt: -1, deadTick: -1, face: 'down', mv: false }); }
       else p.alive = false;
     }
     this.matchT = 0; this.sdStart = DUEL_SD; this.freeze = DUEL_FREEZE;

@@ -55,7 +55,7 @@ test('empate (parados até a morte súbita/tempo): duelo na lava até sobrar 1',
   assert.equal(s.duel, 1, 'começou o duelo');
   assert.ok(s.players.every(p => p.alive), 'finalistas voltam');
   assert.deepEqual(s.players.map(p => [Math.floor(p.x / T), Math.floor(p.y / T)]), [[1, 1], [13, 11]]);
-  assert.ok(s.players.every(p => p.speed === 140 && p.bombMax === 1 && p.power === 2));
+  assert.ok(s.players.every(p => p.speed === 140 && p.bombMax === 1 && p.power === 1));
   assert.ok(s.snapshot().t < 0 && s.snapshot().du === 1, 'contagem do duelo vai no snapshot');
   run(s, 80);
   assert.equal(s.ended, true); assert.ok(s.winner >= 0, 'sempre sai um vencedor');
