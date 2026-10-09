@@ -110,3 +110,14 @@ test('explosão destrói item no chão, mas não o que acabou de sair da caixa',
   s.matchT = 1; s.blast({ id: 100, x: cx, y: cy, power: 3, owner: 0 });
   assert.ok(!s.items.some(i => i.x === cx + 2), 'na explosão seguinte ele queima');
 });
+
+test('quina: segurando para o lado, o boneco escorrega para a faixa livre e entra no corredor', () => {
+  const s = new Sim({ seed: 2, map: 0, n: 2 });
+  for (let y = 1; y < s.H - 1; y++) for (let x = 1; x < s.W - 1; x++) if (s.world[y][x] === 1) s.world[y][x] = 0;
+  const p = s.players[0];
+  p.x = 1.5 * T; p.y = 1.5 * T + 20;             // quase na faixa de baixo (linha 2 é pilar em x=2)
+  s.input(0, { dx: 1, dy: 0 });
+  for (let i = 0; i < 40; i++) s.step(1 / 30);
+  assert.ok(p.x > 2.5 * T, 'passou pela quina: x=' + p.x.toFixed(1));
+  assert.ok(Math.abs(p.y - 1.5 * T) < 1, 'alinhado no meio do corredor: y=' + p.y.toFixed(1));
+});

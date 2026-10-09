@@ -65,3 +65,13 @@ Se o tempo acabar com 2+ de pé, ou se os últimos morrerem no mesmo instante, a
 
 ## Recorte do mapa
 Quando a câmera aproxima (celular em pé), a janela mostra um número inteiro de blocos e a câmera para sempre alinhada à grade: nenhum bloco aparece cortado pela metade na beirada, e na borda do mapa a parede de fora aparece inteira. Se o mapa inteiro quase cabe (celular deitado, celulares grandes), o jogo mostra o mapa todo em vez de aproximar.
+
+## Fim de partida, perfil e controles
+- **Tela final detalhada:** resumo da partida (modo, mapa ou "Duelo na lava", duração, entradas, banca de 20% e prêmio) e a classificação de todos os participantes: posição (1º, 2º…; quem morreu por último fica na frente), boneco usado na partida, nome (Você / Bot / Jogador), eliminações e o prêmio de cada um (o 1º recebe a soma das entradas − 20%; os outros R$ 0, com o saldo da partida em verde/vermelho). Na sala com amigos, bots aparecem "sem entrada".
+- **Ícone do perfil:** 10 opções (os 6 bonecos, a sigla BC, a bomba e os mapas Castelo e Selva), escolhidas em Seu perfil; ficam salvas no aparelho e aparecem no topo do lobby.
+- **Direcional:** Configurações → Direcional: **Analógico** ou **Setas** (cruz de 4 botões; a seta apertada acende). Vale também no editor de posição.
+- **Cores dos controles:** 12 paletas só para os controles (painéis, analógico/setas e BOMBA): Clássico, Neon, Ouro, Floresta, Gelo, Lava, Retrô, Doce e 4 com arte dos mapas (Castelo, Selva, Laboratório, Ilhas).
+- **Mapas no mesmo tamanho:** todos usam a borda de blocos inteira, como o Castelo (sem moldura decorativa), então nenhum bloco some e todos medem 15×13 (21×15 no 8 jogadores).
+- **Movimento nos trilhos:** o boneco anda centralizado no corredor e, se bater numa quina, escorrega sozinho para a faixa livre (até ~60% de bloco), como no Bomberman clássico. A mesma regra está no servidor (`walkStep`).
+- Teste: `npm run test:custom` (setas, paletas, ícones, classificação e prêmio).
+

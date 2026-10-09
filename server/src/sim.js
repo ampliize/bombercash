@@ -79,11 +79,19 @@ export class Sim {
     p.mv = !!(dx || dy);
     if (dx || dy) {
       p.face = dy > 0 ? 'down' : dy < 0 ? 'up' : dx < 0 ? 'left' : 'right';
-      if (this.canMove(p, p.x + dx * s, p.y + dy * s)) { p.x += dx * s; p.y += dy * s; }
-      else if (dx) { const off = (Math.floor(p.y / T) + .5) * T - p.y; if (Math.abs(off) > .3) { const t = Math.sign(off) * Math.min(Math.abs(off), s); if (this.canMove(p, p.x, p.y + t)) p.y += t; } }
-      else { const off = (Math.floor(p.x / T) + .5) * T - p.x; if (Math.abs(off) > .3) { const t = Math.sign(off) * Math.min(Math.abs(off), s); if (this.canMove(p, p.x + t, p.y)) p.x += t; } }
+      this.walkStep(p, dx, dy, s);
     }
     this.pickup(p);
+  }
+  walkable(p, x, y) { return !this.solid(x, y) && !this.bombs.some(b => b.x === x && b.y === y && !(b.pass & (1 << p.i))); }
+  // anda nos trilhos: centraliza na faixa e escorrega na quina para a faixa vizinha livre (igual ao demo/index.html)
+  walkStep(p, dx, dy, s) {
+    const ax = dx ? 0 : 1, d = dx || dy, u = ax ? p.x : p.y, v = ax ? p.y : p.x, cell = Math.floor(u / T), cen = (cell + .5) * T, off = cen - u;
+    const go = (a, b) => ax ? this.canMove(p, p.x + b, p.y + a) : this.canMove(p, p.x + a, p.y + b), mv = (a, b) => { if (ax) { p.x += b; p.y += a; } else { p.x += a; p.y += b; } };
+    if (go(d * s, 0)) { mv(d * s, 0); if (Math.abs(off) > .3) { const t = Math.sign(off) * Math.min(Math.abs(off), s * .6); if (go(0, t)) mv(0, t); } return; }
+    const ahead = c => { const vv = Math.floor(v / T) + d; return ax ? this.walkable(p, c, vv) : this.walkable(p, vv, c); }, nb = cell + (off < 0 ? 1 : -1), nbOff = (nb + .5) * T - u;
+    let tgt = null; if (ahead(cell)) tgt = off; else if (Math.abs(nbOff) < T * .6 && ahead(nb)) tgt = nbOff;
+    if (tgt !== null && Math.abs(tgt) > .3) { const t = Math.sign(tgt) * Math.min(Math.abs(tgt), s); if (go(0, t)) mv(0, t); }
   }
   pickup(p) {
     for (const it of this.items.slice()) if (Math.abs(p.x - (it.x + .5) * T) < 24 && Math.abs(p.y - (it.y + .5) * T) < 24) {
