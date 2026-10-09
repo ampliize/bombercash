@@ -474,15 +474,15 @@ dialog#tut{width:min(460px,94vw);padding:20px 20px 16px}
  <h2>Valor por partida</h2><div class="chips" id="chips"></div>
  <h2>Escolha o modo</h2><div class="rail" id="rail"></div>
 
- <h2>Modos e regras</h2>
+ <h2>Veja o jogo rodando <small>prévia ao vivo de cada modo e mapa</small></h2>
  <div class="demo m2" id="demo-box">
-  <div class="demo-scr" hidden><canvas id="demo" width="720" height="624" aria-label="Prévia de uma partida entre bots"></canvas>
+  <div class="demo-scr"><canvas id="demo" width="720" height="624" aria-label="Prévia de uma partida entre bots"></canvas>
    <div class="live"><i></i><span id="dm-live">PRÉVIA · bots jogando</span></div><div class="demo-msg" id="dm-msg"></div></div>
   <div class="demo-info">
    <div class="tabs" id="dm-tabs"></div>
    <div><h3 id="dm-title"></h3><p id="dm-desc"></p></div>
    <dl class="facts" id="dm-facts"></dl>
-   <div><h3>Mapa</h3><p>Sorteado a cada partida entre os 7 mapas, todos do mesmo tamanho.</p><span id="dm-map" hidden></span><span id="dm-mapdesc" hidden></span></div>
+   <div><h3>Mapa: <span id="dm-map"></span></h3><p id="dm-mapdesc"></p><p class="note">Na partida valendo, o mapa é sorteado entre os 7, todos do mesmo tamanho.</p></div>
   </div>
  </div>
 

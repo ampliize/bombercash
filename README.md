@@ -4,7 +4,7 @@ Jogo (`demo/index.html`): arquivo único, partidas só entre pessoas, saldo real
 
 ## Versão final (09/10): só jogadores de verdade
 - **Sem bots:** toda partida é entre pessoas. O jogador escolhe modo (1x1, 4 ou 8) e valor, toca em **Procurar partida** e entra na fila do servidor de jogo (`server/src/match.js`); a partida só começa quando a sala enche com gente no mesmo modo e valor. Cancelar sai da fila.
-- **Removidos:** sala com amigos por código, convite 1x1 entre amigos, pausa (botão, tecla P e o "+ PAUSA" do controle) e o botão "+ R$ 100 demo". A prévia com bots do lobby virou só o quadro de regras.
+- **Removidos:** sala com amigos por código, convite 1x1 entre amigos, pausa (botão, tecla P e o "+ PAUSA" do controle) e o botão "+ R$ 100 demo". A prévia ao vivo com bots ("Veja o jogo rodando") continua no lobby só como demonstração; nenhuma partida tem bots.
 - **Precisa do servidor no ar:** sem o `server/` publicado (Easypanel, com `wss://`), o jogo mostra "Servidor de partidas indisponível". O endereço vai em `window.BC_GS` no `index.html` (ou `?gs=wss://…`).
 - Testes: `npm test` (fila real com 2 navegadores + servidor), `npm run test:rules`. Os outros testes usam `__bcSolo()`, um atalho que só existe no mock de teste para exercitar o motor sem servidor.
 
