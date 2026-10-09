@@ -667,10 +667,13 @@ function place(p,cx,cy){if(!p.alive||p.cooldown>0)return;const x=cx===undefined?
  p.cooldown=.23;p.placeAt=performance.now();sound(600,.075)}
 function drop(x,y){if(Math.random()>=.3)return;const r=Math.random();items.push({x,y,born:performance.now(),kind:r<.32?'fire':r<.56?'bomb':r<.73?'speed':r<.84?'shield':r<.9?'star':'skull'})}
 function crateFx(x,y){for(let i=0;i<6;i++)particles.push({x:(x+.5)*T,y:(y+.5)*T,vx:rnd(-90,90),vy:rnd(-130,30),t:.45,life:.45,r:5,color:Math.random()<.5?'#c9a070':'#8a6a48'})}
+/* a explosão destrói itens que estão no chão no caminho do fogo; o item que acabou de sair de uma caixa (esta explosão ou uma em cadeia, <0,6s) sobrevive */
+function burn(loc){const hit=new Set(loc.filter(c=>!c[4]).map(c=>id(c[0],c[1]))),now=performance.now();for(const it of items.slice())if(hit.has(id(it.x,it.y))&&now-it.born>600){items.splice(items.indexOf(it),1);for(let i=0;i<5;i++)particles.push({x:(it.x+.5)*T,y:(it.y+.5)*T,vx:rnd(-70,70),vy:rnd(-110,-20),t:.35,life:.35,r:3,color:'#fff4c2'})}}
 function blast(b){const loc=[[b.x,b.y,'c',null]];
  for(const [dx,dy] of D4){let lastI=-1;for(let s=1;s<=b.power;s++){const x=b.x+dx*s,y=b.y+dy*s;if(!at(x,y)||world[y][x]===2)break;loc.push([x,y,dx?'h':'v',null]);lastI=loc.length-1;
-   if(world[y][x]===1){world[y][x]=0;drop(x,y);crateFx(x,y);break}}
+   if(world[y][x]===1){world[y][x]=0;drop(x,y);crateFx(x,y);loc[lastI][4]=1;break}}
   if(lastI>0)loc[lastI][3]=[dx,dy]}
+ burn(loc);
  const pal=b.owner.skin>=4?b.owner.skin-3:0;
  for(const [x,y,k,end] of loc){flames.push({x,y,t:FL,k,end,pal,bid:b.id});for(const other of bombs)if(other!==b&&other.x===x&&other.y===y)other.t=Math.min(other.t,.04);
   for(let i=0;i<4;i++)particles.push({x:(x+.5)*T,y:(y+.5)*T,vx:rnd(-115,115),vy:rnd(-115,115),t:.3,life:.3,r:4,color:Math.random()<.5?FLAME[pal][2][0]:FLAME[pal][1][0]})}

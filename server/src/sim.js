@@ -102,7 +102,7 @@ export class Sim {
   }
   drop(x, y) {
     if (this.rng() >= .3) return; const r = this.rng();
-    this.items.push({ x, y, kind: r < .32 ? 'fire' : r < .56 ? 'bomb' : r < .73 ? 'speed' : r < .84 ? 'shield' : r < .9 ? 'star' : 'skull' });
+    this.items.push({ x, y, born: this.matchT, kind: r < .32 ? 'fire' : r < .56 ? 'bomb' : r < .73 ? 'speed' : r < .84 ? 'shield' : r < .9 ? 'star' : 'skull' });
   }
   blast(b) {
     const loc = [[b.x, b.y, 'c', null]], w = this.world;
@@ -112,10 +112,13 @@ export class Sim {
         const x = b.x + dx * s, y = b.y + dy * s;
         if (!this.at(x, y) || w[y][x] === 2) break;
         loc.push([x, y, dx ? 'h' : 'v', null]); lastI = loc.length - 1;
-        if (w[y][x] === 1) { w[y][x] = 0; this.drop(x, y); break; }
+        if (w[y][x] === 1) { w[y][x] = 0; this.drop(x, y); loc[lastI][4] = 1; break; }
       }
       if (lastI > 0) loc[lastI][3] = [dx, dy];
     }
+    // fogo destrói item no chão; item recém-saído de caixa (<0,6s) sobrevive
+    const hit = new Set(loc.filter(c => !c[4]).map(c => this.id(c[0], c[1])));
+    this.items = this.items.filter(it => !(hit.has(this.id(it.x, it.y)) && this.matchT - it.born > .6));
     const owner = this.players[b.owner], pal = owner && owner.skin >= 4 ? owner.skin - 3 : 0;
     for (const [x, y, k, end] of loc) {
       this.flames.push({ x, y, t: FL, k, end, pal, bid: b.id });

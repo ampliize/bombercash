@@ -71,3 +71,16 @@ test('movimento respeita paredes e velocidade', () => {
   const x0 = s2.players[0].x; s2.input(0, { dx: 1, dy: 0 }); s2.step(1 / 30);
   assert.ok(s2.players[0].x - x0 <= 125 / 30 + .01);
 });
+
+test('explosão destrói item no chão, mas não o que acabou de sair da caixa', () => {
+  const s = new Sim({ seed: 1, map: 0, n: 2 });
+  const p = s.players[0], cx = Math.floor(p.x / T), cy = Math.floor(p.y / T);
+  s.world[cy][cx + 1] = 0; s.world[cy][cx + 2] = 1;
+  s.items.push({ x: cx + 1, y: cy, born: -5, kind: 'fire' });
+  s.rng = () => 0;                          // força a caixa a soltar item
+  s.blast({ id: 99, x: cx, y: cy, power: 3, owner: 0 });
+  assert.ok(!s.items.some(i => i.x === cx + 1), 'item antigo queimou');
+  assert.ok(s.items.some(i => i.x === cx + 2), 'item da caixa sobreviveu');
+  s.matchT = 1; s.blast({ id: 100, x: cx, y: cy, power: 3, owner: 0 });
+  assert.ok(!s.items.some(i => i.x === cx + 2), 'na explosão seguinte ele queima');
+});
