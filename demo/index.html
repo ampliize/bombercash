@@ -82,6 +82,8 @@ dialog.wide{width:min(520px,94vw)}
 .idbox button{border:2px solid var(--line);background:transparent;border-radius:8px;padding:6px 10px;font-weight:800;font-size:12px}
 
 /* prévia de gameplay */
+.demo-scr[hidden]{display:none!important}
+.demo:has(.demo-scr[hidden]){grid-template-columns:1fr!important}
 .demo{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;background:var(--panel);border:2px solid color-mix(in srgb,var(--c1) 60%,var(--line));border-radius:20px;padding:14px;box-shadow:0 0 44px -20px var(--c1);transition:border-color .4s ease,box-shadow .4s ease}
 .demo-scr{position:relative;border-radius:12px;overflow:hidden;background:#07081a;align-self:start;line-height:0}
 .demo-scr canvas{width:100%;height:auto;display:block}
@@ -445,21 +447,20 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
    <button class="set" id="cfg-open" aria-label="Configurações" title="Configurações"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
    <button class="set quit" id="quit-open" aria-label="Sair do jogo" title="Sair do jogo"><svg viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
    <button class="set" id="fr-open" aria-label="Amigos" title="Amigos"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.900 1.900 6.500 5.500"/><circle cx="17.500" cy="9" r="2.600"/><path d="M17 14.600c2.600.200 4.200 1.800 4.700 4.400"/></svg><i id="fr-badge" hidden></i></button>
-   <div class="bal">Saldo: <span id="bal">R$ 0</span></div><button class="dep" id="dep">+ R$ 100 demo</button>
+   <div class="bal">Saldo: <span id="bal">R$ 0</span></div>
   </div></header>
  <h2>Valor por partida</h2><div class="chips" id="chips"></div>
  <h2>Escolha o modo</h2><div class="rail" id="rail"></div>
- <div class="row" style="margin:12px 0"><button class="ok" id="rm-open" type="button">Sala com amigos · jogar juntos por código (até 4)</button></div>
 
- <h2>Veja o jogo rodando <small>prévia ao vivo de cada modo e mapa</small></h2>
+ <h2>Modos e regras</h2>
  <div class="demo m2" id="demo-box">
-  <div class="demo-scr"><canvas id="demo" width="720" height="624" aria-label="Prévia de uma partida entre bots"></canvas>
+  <div class="demo-scr" hidden><canvas id="demo" width="720" height="624" aria-label="Prévia de uma partida entre bots"></canvas>
    <div class="live"><i></i><span id="dm-live">PRÉVIA · bots jogando</span></div><div class="demo-msg" id="dm-msg"></div></div>
   <div class="demo-info">
    <div class="tabs" id="dm-tabs"></div>
    <div><h3 id="dm-title"></h3><p id="dm-desc"></p></div>
    <dl class="facts" id="dm-facts"></dl>
-   <div><h3>Mapa: <span id="dm-map"></span></h3><p id="dm-mapdesc"></p></div>
+   <div><h3>Mapa</h3><p>Sorteado a cada partida entre os 7 mapas, todos do mesmo tamanho.</p><span id="dm-map" hidden></span><span id="dm-mapdesc" hidden></span></div>
   </div>
  </div>
 
@@ -486,7 +487,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
   <div><b>Fuja da morte súbita</b>Quando o relógio marca 1:00, blocos que não quebram começam a cair de fora para dentro e fecham a arena até sobrar só o miolo. Ficar parado no canto não é opção.</div>
   <div><b>Seja o último de pé</b>Prenda os rivais na explosão. Quem sobrar leva o prêmio: a soma das entradas menos 20% que ficam com a casa (ex.: 1x1 de R$ 10 → R$ 20 − 20% = R$ 16). Deu empate? Os finalistas disputam um duelo na lava até sobrar só um.</div>
  </div>
- <p class="note" style="margin-top:22px">Proibido para menores de 18 anos. Bomber Cash é um jogo de estratégia, agilidade e diversão. Saldo de demonstração: os valores em R$ são simulados neste aparelho, não há depósito nem saque nesta versão. O vencedor leva a soma das entradas menos 20%, que ficam com a casa em toda partida. Fora do 1x1 com amigo convidado, os adversários são bots. O ranking conta as partidas vencidas por ID de jogador; o da semana zera toda segunda-feira. Os bonecos são sorteados a cada partida; cada jogador tem 10% de chance de tirar uma das duas skins raras, que mudam só o visual.</p>
+ <p class="note" style="margin-top:22px">Proibido para menores de 18 anos. BomberCash é um jogo de habilidade, estratégia e agilidade entre jogadores reais: não existem bots e a partida só começa quando a sala tiver gente suficiente no mesmo valor. Em toda partida a casa fica com 20% das entradas e o vencedor leva o restante. Depósito e saque só por PIX, em conta do mesmo CPF do jogador. O ranking conta as partidas vencidas por ID; o da semana zera toda segunda-feira. Os bonecos são sorteados a cada partida (10% de chance de skin rara, só visual). Jogue com responsabilidade.</p>
 </section>
 
 <section id="s-arena" class="screen">
@@ -496,7 +497,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
   <div class="hud" id="hud"></div>
   <button id="bt-cfg" class="ibtn gear" aria-label="Configurações do controle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   <button id="bt-snd" class="ibtn" aria-label="Som" aria-pressed="true"><svg class="i-on" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5l5 4v-13l-5 4zM16 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><svg class="i-off" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5l5 4v-13l-5 4zM16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>
-  <button id="bt-pause" class="ibtn" aria-label="Pausar"><svg class="i-on" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg><svg class="i-off" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></button>
+
   <button id="bt-full" class="ibtn" aria-label="Tela cheia"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
  </div>
  <p class="rot" id="rot" hidden>Mapa grande: gire o celular para jogar na horizontal.</p>
@@ -504,10 +505,10 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
   <div class="joy jl"><button class="pill" data-act="mute" aria-label="Som"><b>−</b>SOM</button>
    <div class="stick" id="stick" role="group" aria-label="Analógico"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i><span class="knob"></span></div></div>
   <div class="scr"><div class="vp" id="vp"><canvas id="arena" width="720" height="624" aria-label="Arena"></canvas></div><div class="stats" id="stats"></div><div id="amsg" class="amsg" aria-live="polite"></div><div id="count" class="count" aria-live="assertive" hidden></div></div>
-  <div class="joy jr"><button class="pill" data-act="pause" aria-label="Pausar"><b>+</b>PAUSA</button>
+  <div class="joy jr">
    <button class="bombbtn" id="bombbtn" data-akey=" " aria-label="Soltar bomba"><i></i>BOMBA</button></div>
  </div>
- <p class="note keys">Teclado: setas ou WASD + Espaço (bomba), P pausa · Controle: analógico para andar, botão BOMBA, + pausa, − som · sair da partida não devolve a entrada</p>
+ <p class="note keys">Teclado: setas ou WASD + Espaço (bomba) · Controle: analógico ou setas para andar, botão BOMBA, − som · sair da partida conta como derrota e não devolve a entrada</p>
 </section>
 
 <section id="s-end" class="screen"><div class="res"><img id="e-img" alt=""><div class="big" id="e-t"></div><p id="e-p"></p><dl class="esum" id="e-sum"></dl><h3 class="eh">Classificação</h3><ol class="erank" id="e-rank"></ol><p class="wk" id="e-wk"></p><button id="again">Jogar de novo</button><button class="ghost" id="back">Voltar ao menu</button></div></section>
@@ -522,7 +523,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
 <dialog id="quit" aria-labelledby="quit-t"><div class="logo" style="font-size:20px" id="quit-t">Sair do jogo?</div><p class="note">Você volta para a tela inicial. Seu ID, saldo de demonstração e configurações ficam salvos neste aparelho.</p>
  <div class="row"><button type="button" id="quit-no">Continuar jogando</button><button type="button" class="ok" id="quit-ok">Sair do jogo</button></div></dialog>
 <dialog id="dlg"><img id="d-cover" alt=""><div class="logo" style="font-size:20px" id="d-t"></div><div class="led" id="d-l"></div>
- <div class="pbar" id="d-bar" hidden><i></i></div><p id="d-msg" class="note"></p><div class="row"><button id="d-no">Cancelar</button><button id="d-inv" hidden>Convidar amigo</button><button class="ok" id="d-ok">Entrar</button></div></dialog>
+ <div class="pbar" id="d-bar" hidden><i></i></div><p id="d-msg" class="note"></p><div class="row"><button id="d-no">Cancelar</button><button class="ok" id="d-ok">Entrar</button></div></dialog>
 
 <dialog id="prof"><div class="logo" style="font-size:20px">Seu perfil</div>
  <div class="idbox"><span>ID do jogador<br><b id="p-id">…</b></span><button id="p-copy">Copiar</button></div>
@@ -546,19 +547,9 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <ul class="hist" id="pf-hist"></ul>
  <div class="row"><button id="pf-close">Fechar</button></div></dialog>
 
-<dialog id="rm"><div class="logo" style="font-size:20px">Sala com amigos</div>
- <div id="rm-menu">
-  <p class="note">Um cria a sala e passa o código. Os outros entram com o código. Até 4 pessoas jogam juntas e as vagas vazias viram bots. Entrada: <b id="rm-stake"></b> por jogador; o vencedor leva a soma das entradas menos 20% da casa.</p>
-  <div class="row"><button class="ok" id="rm-create" type="button">Criar sala</button></div>
-  <form class="srch" id="rm-form"><input id="rm-code" maxlength="5" placeholder="Código da sala" autocomplete="off" autocapitalize="characters" aria-label="Código da sala"><button class="ok">Entrar</button></form>
- </div>
- <div id="rm-lobby" hidden><div class="idbox"><span>Código da sala<br><b id="rm-c">…</b></span><button id="rm-copy" type="button">Copiar</button></div>
-  <ul class="plist" id="rm-list"></ul><p class="note" id="rm-msg"></p></div>
- <div class="row"><button id="rm-close" type="button">Fechar</button><button class="ok" id="rm-start" type="button" hidden>Começar</button></div></dialog>
 
 <dialog id="wait"><div class="logo" style="font-size:20px" id="w-t"></div><div class="spin"></div><p id="w-msg" style="text-align:center;font-weight:800"></p><div class="row"><button id="w-no">Cancelar</button></div></dialog>
 
-<div id="inv" popover="manual" role="alertdialog" aria-labelledby="inv-t"><span class="av" id="inv-av"></span><div><b id="inv-t"></b><small id="inv-s"></small></div><div class="row"><button id="inv-no">Recusar</button><button class="ok" id="inv-yes">Aceitar</button></div></div>
 <dialog id="ed" aria-label="Posição dos controles"><div class="ed-arena" id="ed-arena"><span>ÁREA DO JOGO</span></div>
  <div class="ed-item" id="ed-stick" data-k="stick"><div class="stick"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i><span class="knob"></span></div></div>
  <div class="ed-item" id="ed-bomb" data-k="bomb"><div class="bombbtn"><i></i>BOMBA</div></div>
@@ -1119,14 +1110,13 @@ function draw(){
 function frame(t){const dt=Math.max(0,Math.min(.035,(t-last)/1000||.016));last=t;
  if(active&&!paused&&(!o.visible||o.visible())){const k=!demo&&!net&&players[meIdx]&&!players[meIdx].alive&&!ended?3:1;for(let i=0;i<k;i++)update(dt);draw()}
  requestAnimationFrame(frame)}
-function togglePause(){if(!active||ended||net)return paused;paused=!paused;audioPause(paused);say(paused?'PAUSADO':'');o.onPause&&o.onPause(paused);return paused}
 requestAnimationFrame(frame);
 return{
  begin(n,cb,opt){opt=opt||{};sdStart=opt.sdAt>0?opt.sdAt:SD_START;net=opt.net||null;if(net)n=net.n||2;names=opt.names||[];forced=opt.skins||null;N=n;W=n>4?21:15;H=n>4?15:13;onEnd=cb||null;keys.clear();fixedMap=opt.map>=0?opt.map:-1;map=fixedMap>=0?fixedMap:(demo&&opt.keep?map:rnd(0,MAPS.length-1));paused=false;start();active=true;last=performance.now();o.onPause&&o.onPause(false);musStart()},
  stop(){active=false;matchId++;net=null;musStop()},
  netRecv,getInit(){return{map,W,H,seed,skins:players.map(p=>p.skin),names:players.map(p=>p.name),w:encWorld(),br:[...bridges]}},
  setMap(i){fixedMap=i;map=i<0?map:i;if(active)start()},
- togglePause,toggleMute(){muted=!muted;if(muted)musStop();else if(active&&!ended&&!demo)musStart();return muted},
+ toggleMute(){muted=!muted;if(muted)musStop();else if(active&&!ended&&!demo)musStart();return muted},
  setVol(m,s){musVol=Math.max(0,Math.min(1,m/100));sfxVol=Math.max(0,Math.min(1,s/100));if(audio){const t=audio.currentTime;aSfx.gain.setTargetAtTime(sfxVol,t,.03);if(MUS.on)aMus.gain.setTargetAtTime(musVol*.5,t,.05)}if(musVol<=0)musStop();else if(active&&!muted&&!demo&&!ended&&!MUS.on)musStart()},
  drawNow(){try{if(players.length)draw()}catch(e){}},
  sample(){sfx('up');setTimeout(()=>sfx('put'),200)},unlock(){try{actx()}catch(e){}},
@@ -1142,7 +1132,7 @@ return{create,MAPS,SKINS,SKIN_NAMES,COL,RARE_CHANCE,deal};
 const SB_URL='https://tuowzfpbpjxknouodzgb.supabase.co',SB_KEY='sb_publishable_qBGTgCjueLqUgbU38HR7FA_9rrO7hhF';
 const BETS=[2,5,10,20,50,100];
 const MODES={
- '1x1':{n:2,cover:'c1',cls:'m1',label:'1x1',name:'Duelo',tag:'DUELO',tab:'Duelo 1x1',arena:'15 × 13 blocos',desc:'Você contra um rival, cada um num canto. Partida rápida e direta: errou a fuga, perdeu. É o único modo em que dá para convidar um amigo.'},
+ '1x1':{n:2,cover:'c1',cls:'m1',label:'1x1',name:'Duelo',tag:'DUELO',tab:'Duelo 1x1',arena:'15 × 13 blocos',desc:'Você contra outro jogador de verdade, cada um num canto. Partida rápida e direta: errou a fuga, perdeu.'},
  '4x4':{n:4,cover:'c4',cls:'m2',label:'4 PLAYS',name:'Mata-mata',tag:'4 JOGADORES',tab:'4 jogadores',arena:'15 × 13 blocos',desc:'Quatro jogadores, um em cada canto da arena. Todo mundo contra todo mundo até sobrar um.'},
  '8x8':{n:8,cover:'c8',cls:'m3',label:'8 PLAYS',name:'Mata-mata',tag:'8 JOGADORES',tab:'8 jogadores',arena:'21 × 15 blocos (mapa grande)',desc:'Oito jogadores no mapa grande. Mais caixas, mais itens e muito mais explosão ao mesmo tempo.'}};
 const MODE_N={'1x1':2,'4x4':4,'8x8':8},MODE_NAME={'1x1':'Duelo 1x1','4x4':'Mata-mata 4','8x8':'Mata-mata 8'};
@@ -1298,7 +1288,6 @@ $('rg-ok').onclick=()=>{if(!$('rg-ck').checked)return;ss.set('bc_rg','1');$('rg'
 $('rg-no').onclick=()=>{rgCb=null;$('rg').close()};
 $('rg').addEventListener('cancel',()=>{rgCb=null});
 $('chips').onclick=e=>{const b=e.target.closest('.chip');if(b){const v=+b.dataset.b;rgGate(()=>{bet=v;ls.set('bc_bet',bet);renderMoney()},true)}};
-$('dep').onclick=()=>{bal+=100;save();renderMoney()};
 $('rail').onclick=e=>{const c=e.target.closest('.card');if(!c)return;mode=MODES[c.dataset.k];mode.k=c.dataset.k;openDlg()};
 if(window.matchMedia&&matchMedia('(hover:hover)').matches&&!reduce){ // inclinação 3D acompanhando o mouse
  $('rail').addEventListener('pointermove',e=>{const c=e.target.closest('.card');if(!c)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.setProperty('--rx',(-y*9).toFixed(2)+'deg');c.style.setProperty('--ry',(x*11).toFixed(2)+'deg')});
@@ -1307,16 +1296,13 @@ function openDlg(){
  $('d-cover').src=ASSET[mode.cover];$('dlg').className=mode.cls;
  $('d-bar').hidden=true;$('d-bar').firstChild.style.width=0;$('d-t').textContent=mode.name+' · '+mode.label;
  $('d-l').innerHTML=`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span>${R$(bet)}</span><span>Prêmio do vencedor</span><span>${R$(prize(mode.n*bet))} <small>(${R$(mode.n*bet)} − 20% da casa)</small></span><span>Morte súbita</span><span>no 1:00 do relógio</span>`;
- const ok=$('d-ok');ok.disabled=bal<bet;ok.textContent='Entrar · '+R$(bet);$('d-inv').hidden=mode.k!=='1x1';$('d-inv').disabled=false;
- $('d-msg').textContent=bal<bet?'Saldo insuficiente. Adicione saldo no topo da tela.':'O valor da entrada sai do seu saldo ao confirmar.'+(mode.k==='1x1'?' Para jogar contra um amigo de verdade, toque em Convidar amigo.':'');
+ const ok=$('d-ok');ok.disabled=bal<bet||!!mq;ok.textContent='Procurar partida · '+R$(bet);
+ $('d-msg').textContent=bal<bet?'Saldo insuficiente para essa entrada.':'Só jogadores de verdade: a partida começa quando a sala tiver '+mode.n+' pessoas no mesmo valor. A entrada sai do seu saldo quando a partida começar.';
  if(!$('dlg').open)$('dlg').showModal()}
-$('d-no').onclick=()=>{clearInterval(timer);$('dlg').close()};
-$('dlg').addEventListener('close',()=>clearInterval(timer));
-$('d-ok').onclick=()=>{bal-=bet;save();renderMoney();$('d-ok').disabled=true;$('d-inv').disabled=true;$('d-bar').hidden=false;
- let n=1;const bar=$('d-bar').firstChild;bar.style.width=100/mode.n+'%';$('d-msg').textContent=`Montando a sala… 1/${mode.n}`;
- timer=setInterval(()=>{n++;bar.style.width=n*100/mode.n+'%';$('d-msg').textContent=`Montando a sala… ${n}/${mode.n}`;if(n>=mode.n){clearInterval(timer);setTimeout(()=>{$('dlg').close();go()},500)}},400)};
-$('d-inv').onclick=()=>{$('dlg').close();openFriends(true)};
-$('again').onclick=()=>{if(bal<bet){renderMoney();show('s-lobby');return}bal-=bet;save();renderMoney();go()};
+$('d-no').onclick=()=>{mmCancel();$('dlg').close()};
+$('dlg').addEventListener('close',()=>{if(mq&&!mq.started)mmCancel()});
+$('d-ok').onclick=()=>mmSearch();
+$('again').onclick=()=>{renderMoney();show('s-lobby');if(bal<bet)return;openDlg();rgGate(()=>mmSearch())};
 $('back').onclick=()=>{renderMoney();show('s-lobby');loadRank()};
 
 /* ---------- meu perfil (apelido) ---------- */
@@ -1345,7 +1331,7 @@ $('pus').innerHTML=PUS.map((p,i)=>`<div class="pu"><i style="background-image:ur
 /* ---------- amigos: lista por ID, busca de jogadores ---------- */
 let frInvite=false,frList=[];
 const prow=(p,o)=>`<li class="prow"><span class="av" style="${avStyle(p.skin)}"></span><span class="rk-n"><b>${esc(p.nick)}</b><small>${dot(p.status)}ID ${fid(p.id)}${o.wins!==undefined?' · '+o.wins+(o.wins===1?' vitória':' vitórias'):''}</small></span><span class="pacts">`
- +(o.invite?`<button class="mini go" data-act="invite" data-id="${p.id}" data-nick="${esc(p.nick)}">Convidar 1x1</button>`:'')
+ 
  +`<button class="mini" data-act="profile" data-id="${p.id}">Perfil</button>`
  +(o.friend?`<button class="mini x" data-act="unfriend" data-id="${p.id}" aria-label="Remover ${esc(p.nick)} da lista">✕</button>`:p.id===me.id?'<span class="mini ok">Você</span>':p.is_friend?'<span class="mini ok">Na lista</span>':`<button class="mini" data-act="friend" data-id="${p.id}">+ Amigo</button>`)+'</span></li>';
 async function loadFriends(){
@@ -1371,7 +1357,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]
  if(act==='profile')openProfile(id);
  else if(act==='friend'){b.disabled=true;if(await setFriend(id,true)){if(b.closest('#pf'))openProfile(id);else b.outerHTML='<span class="mini ok">Na lista</span>'}else b.disabled=false}
  else if(act==='unfriend'){b.disabled=true;await setFriend(id,false);if(b.closest('#pf'))openProfile(id)}
- else if(act==='invite')sendInvite(id,b.dataset.nick||'')});
+});
 
 /* ---------- perfil público + histórico de batalhas ---------- */
 const RES={win:['win','Vitória'],loss:['loss','Derrota'],draw:['draw','Empate']};
@@ -1388,7 +1374,7 @@ async function openProfile(id){
  $('pf-img').src=ASSET.ch[SK[p.skin||0]];$('pf-nick').textContent=p.nick+(mine?' (você)':'');
  $('pf-sub').innerHTML=dot(p.status)+'ID '+fid(p.id)+' · joga desde '+fmtDT(p.since).slice(0,5)+(p.pos_all?' · '+p.pos_all+'º no ranking geral':'');
  $('pf-tiles').innerHTML=[['Partidas',s.matches||0],['Vitórias',s.wins||0],['Derrotas',s.losses||0],['Empates',s.draws||0],['Aproveitamento',rate+'%'],['Vitórias na semana',s.week_wins||0]].map(t=>`<div><b>${t[1]}</b><span>${t[0]}</span></div>`).join('');
- $('pf-acts').innerHTML=mine?'<button id="pf-edit">Editar apelido</button>':(p.is_friend?`<button data-act="unfriend" data-id="${p.id}">Remover amigo</button>`:`<button data-act="friend" data-id="${p.id}">+ Adicionar amigo</button>`)+`<button class="ok" data-act="invite" data-id="${p.id}" data-nick="${esc(p.nick)}">Convidar 1x1 · ${R$(bet)}</button>`;
+ $('pf-acts').innerHTML=mine?'<button id="pf-edit">Editar apelido</button>':(p.is_friend?`<button data-act="unfriend" data-id="${p.id}">Remover amigo</button>`:`<button data-act="friend" data-id="${p.id}">+ Adicionar amigo</button>`);
  if(mine)$('pf-edit').onclick=()=>{d.close();$('me').click()};
  $('pf-hist').innerHTML=p.history.length?p.history.map(histRow).join(''):'<li class="rk-empty">Nenhuma batalha registrada ainda.</li>'}
 $('pf-close').onclick=()=>$('pf').close();
@@ -1420,26 +1406,32 @@ function GsRoom(onMsg,onUp){let ws=null,up=false;const raw=m=>{try{if(ws&&ws.rea
  return{raw,
   emit(ev,x){if(ev==='in')raw({t:'in',dx:x.dx|0,dy:x.dy|0});else if(ev==='bomb')raw({t:'in',dx:x.dx|0,dy:x.dy|0,bomb:1});else if(ev==='bye')this.close()},
   close(){try{ws.close()}catch(e){}}}}
-function rmJoinServer(role,code){
- const st={role,code:code||'…',room:null,roster:[],slot:null,stake:bet,started:false,server:true,hi:0,to:0,msg:''};rm=st;
- $('rm-msg').textContent='Conectando ao servidor…';$('rm-lobby').hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=st.code;
- st.to=setTimeout(()=>{if(rm===st&&st.slot==null){st.msg='O servidor de jogo não respondeu.';rmLeave()}},9000);
- st.room=GsRoom(m=>gsMsg(st,m),ok=>{if(rm!==st)return;if(!ok){st.msg='Não foi possível conectar ao servidor de jogo.';rmLeave()}})}
-function gsMsg(st,m){
- if(m.t==='hello'){if(rm===st)st.room.raw(st.role==='host'?{t:'create',mode:'4x4'}:{t:'join',code:st.code});return}
+/* ---------- fila de partidas (servidor de jogo) ----------
+   Sem bots e sem sala combinada: o jogador entra na fila do modo + valor e a partida só começa quando a sala
+   enche de gente de verdade (2, 4 ou 8). O servidor simula tudo e decide o vencedor. */
+let mq=null;
+function mmFail(msg){const st=mq;mq=null;if(st&&st.room)st.room.close();$('d-bar').hidden=true;$('d-ok').disabled=false;$('d-msg').textContent=msg}
+function mmSearch(){
+ if(mq)return;if(!GS_URL){$('d-msg').textContent='Servidor de partidas indisponível agora. Tente de novo em instantes.';return}
+ if(bal<bet){$('d-msg').textContent='Saldo insuficiente para a entrada de '+R$(bet)+'.';return}
+ const st={k:mode.k,n:mode.n,stake:bet,slot:null,room:null,started:false};mq=st;
+ $('d-ok').disabled=true;$('d-bar').hidden=false;$('d-bar').firstChild.style.width='0%';$('d-msg').textContent='Conectando ao servidor de partidas…';
+ st.room=GsRoom(m=>mmMsg(st,m),ok=>{if(mq===st&&!ok)mmFail('Não foi possível conectar ao servidor de partidas.')})}
+function mmCancel(){const st=mq;if(!st||st.started)return;mq=null;try{st.room.raw({t:'leave'})}catch(e){}setTimeout(()=>st.room.close(),200)}
+function mmMsg(st,m){
  if(m.t==='snap'){if(net&&net.room===st.room&&net.started)arena.netRecv('snap',m.s);return}
  if(m.t==='abort'||m.t==='closed'||m.t==='error'){
-  if(rm===st&&(m.t!=='error'||st.slot==null)){st.msg=m.t==='closed'?'A conexão com o servidor caiu.':(m.error||m.reason||'Sala encerrada.');rmLeave();return}
-  if(m.t==='abort'&&net&&net.room===st.room){toast('Partida cancelada: '+(m.reason||''));return}
-  if(m.t==='error')toast(m.error);return}
- if(rm!==st)return;
- if(m.t==='joined'){clearTimeout(st.to);st.code=m.code;st.slot=m.slot;st.role=m.slot===0?'host':'guest';st.roster=[{s:m.slot,id:me.id,nick:me.nick}];rmRender()}
- else if(m.t==='lobby'){st.slot=m.you;st.role=m.you===0?'host':'guest';st.roster=m.names.map((nick,s)=>({s,id:s===m.you?me.id:-(s+1),nick:String(nick).slice(0,16)}));rmRender()}
- else if(m.t==='start'){
-  if(bal<st.stake){toast('Saldo insuficiente para a entrada de '+R$(st.stake)+'.');rmLeave(true);return}
-  const humans=Array.from({length:m.n},(_,i)=>i);st.started=true;rm=null;clearTimeout(st.to);
+  if(mq===st&&!st.started){mmFail(m.t==='closed'?'A conexão com o servidor caiu.':(m.error||m.reason||'Partida cancelada.'));return}
+  if(m.t==='abort'&&net&&net.room===st.room)toast('Partida cancelada: '+(m.reason||''));return}
+ if(mq!==st)return;
+ if(m.t==='hello'){st.room.raw({t:'queue',mode:st.k,stake:Math.round(st.stake*100)});return}
+ if(m.t==='queue'){$('d-bar').firstChild.style.width=Math.round(m.have*100/m.need)+'%';$('d-msg').textContent=`Procurando jogadores… ${m.have}/${m.need}. A partida começa quando a sala encher.`;return}
+ if(m.t==='joined'){st.slot=m.slot;return}
+ if(m.t==='lobby'){st.slot=m.you;return}
+ if(m.t==='start'){
+  const humans=Array.from({length:m.n},(_,i)=>i);st.started=true;mq=null;
   net={role:'guest',room:st.room,stake:st.stake,peer:{id:null,nick:''},started:true,slot:st.slot,n:m.n,humans,humansN:m.n,server:true};
-  mode=MODES['4x4'];mode.k='4x4';bal-=st.stake;save();renderMoney();if($('rm').open)$('rm').close();show('s-arena');$('e-wk').textContent='';
+  mode=MODES[st.k];mode.k=st.k;bal-=st.stake;save();renderMoney();if($('dlg').open)$('dlg').close();show('s-arena');$('e-wk').textContent='';
   arena.begin(m.n,finish,{net:{role:'guest',server:true,slot:st.slot,n:m.n,humans,init:m,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}}
 let net=null;        // partida online em andamento: {role,room,stake,peer:{id,nick},started}
 let pend=null;       // convite enviado aguardando resposta: {invite,to,nick,stake,room,until,tick}
@@ -1448,124 +1440,8 @@ const busy=()=>!!(arena.active||net||pend||$('s-arena').classList.contains('on')
 function endNet(){if(net){const r=net.room;net=null;setTimeout(()=>r.close(),400)}}
 function closeWait(){clearInterval(pend&&pend.tick);pend=null;if($('wait').open)$('wait').close()}
 function waitUI(title,msg,cancel){$('w-t').textContent=title;$('w-msg').textContent=msg;$('w-no').textContent=cancel||'Cancelar';if(!$('wait').open)$('wait').showModal()}
-async function sendInvite(id,nick){
- if(net||pend||arena.active){toast('Termine a partida atual antes de convidar.');return}
- if(!await ensurePlayer()){toast('Sem conexão com o servidor agora.');return}
- if(id===me.id){toast('Esse é o seu próprio ID.');return}
- if(bal<bet){toast('Saldo insuficiente para a entrada de '+R$(bet)+'.');return}
- let r;try{r=await rpc('bc_invite_send',auth({p_to:id,p_stake:bet}))}catch(e){toast('Sem conexão com o servidor agora.');return}
- if(!r.ok){toast(r.error==='notfound'?'Não existe jogador com esse ID.':r.error==='rate'?'Espere um instante antes de convidar de novo.':'Não deu para enviar o convite.');return}
- for(const d of ['fr','pf','dlg'])if($(d).open)$(d).close();
- const stake=bet,nm=r.to_nick||nick||('ID '+fid(id));
- const room=Room(r.room,(ev,d)=>onRoom(ev,d),up=>{if(!up&&pend&&pend.room===room){cancelInvite();toast('Não foi possível abrir a sala online agora.')}});
- pend={invite:r.invite,to:id,nick:nm,stake,room,until:Date.now()+60000,tick:0};
- const tick=()=>{if(!pend)return;const s=Math.ceil((pend.until-Date.now())/1000);if(s<=0){cancelInvite();toast(nm+' não respondeu ao convite.');return}
-  waitUI('Convite enviado','Aguardando '+nm+' aceitar o 1x1 valendo '+R$(stake)+'… '+s+'s')};
- tick();pend.tick=setInterval(tick,500);poll(true)}
-function cancelInvite(){if(!pend)return;const p=pend;closeWait();p.room.close();rpc('bc_invite_cancel',auth({p_invite:p.invite})).catch(()=>{})}
-$('w-no').onclick=()=>{if(pend)cancelInvite();else if(net&&!net.started){const r=net.room;net=null;r.close();if($('wait').open)$('wait').close()}};
-$('wait').addEventListener('cancel',e=>{e.preventDefault();$('w-no').click()});
-function onRoom(ev,d){
- if(ev==='hello'){ // anfitrião: o convidado entrou na sala
-  if(pend&&d&&+d.id===pend.to){const p=pend;closeWait();if(bal<p.stake){p.room.emit('bye',{});p.room.close();toast('Saldo insuficiente para a entrada.');return}
-   net={role:'host',room:p.room,stake:p.stake,peer:{id:p.to,nick:String(d.nick||p.nick).slice(0,16)},started:true};
-   mode=MODES['1x1'];mode.k='1x1';bal-=p.stake;save();renderMoney();show('s-arena');$('e-wk').textContent='';
-   arena.begin(2,finish,{map:mapSel,names:[me.nick,net.peer.nick],net:{role:'host',send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}
-  if(net&&net.role==='host'&&arena.active)net.room.emit('start',Object.assign(arena.getInit(),{stake:net.stake}));
-  return}
- if(ev==='start'){ // convidado: o anfitrião mandou o mapa
-  if(net&&net.role==='guest'&&!net.started){net.started=true;clearInterval(net.hello);if($('wait').open)$('wait').close();
-   mode=MODES['1x1'];mode.k='1x1';bal-=net.stake;save();renderMoney();show('s-arena');$('e-wk').textContent='';
-   arena.begin(2,finish,{net:{role:'guest',init:d,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}
-  return}
- if(ev==='bye'&&net&&!net.started){const r=net.room;clearInterval(net.hello);net=null;r.close();if($('wait').open)$('wait').close();toast('O convite foi cancelado.');return}
- if(net&&net.started)arena.netRecv(ev,d)}
-async function replyInvite(inv,accept){
- dismissed.add(inv.id);hideInv();
- if(accept&&bal<inv.stake){toast('Saldo insuficiente para a entrada de '+R$(inv.stake)+'.');accept=false}
- let r;try{r=await rpc('bc_invite_reply',auth({p_invite:inv.id,p_accept:accept}))}catch(e){if(accept)toast('Sem conexão com o servidor agora.');return}
- if(!accept)return;
- if(!r.ok){toast('Esse convite expirou.');return}
- for(const d of ['fr','pf','dlg','prof','cfg'])if($(d).open)$(d).close();
- const ctx={role:'guest',stake:r.stake,peer:{id:r.from_id,nick:r.from_nick},started:false,hello:0,room:null};
- ctx.room=Room(r.room,(ev,d)=>onRoom(ev,d),up=>{if(net!==ctx)return;if(!up){net=null;if($('wait').open)$('wait').close();toast('Não foi possível entrar na sala online agora.');return}
-  const hi=()=>ctx.room.emit('hello',{id:me.id,nick:me.nick});hi();ctx.hello=setInterval(hi,800)});
- net=ctx;waitUI('Entrando na sala','Conectando com '+r.from_nick+'…','Desistir');
- setTimeout(()=>{if(net===ctx&&!ctx.started){clearInterval(ctx.hello);net=null;ctx.room.close();if($('wait').open)$('wait').close();toast('Não deu para conectar com '+r.from_nick+'.')}},15000)}
-function hideInv(){if(!shownInv&&!$('inv').classList.contains('on'))return;shownInv=null;pop($('inv'),false)}
-function showInv(inv){$('inv-av').style.cssText=avStyle(inv.from_skin);$('inv-t').textContent=inv.from_nick+' te convidou para um 1x1';
- $('inv-s').textContent='ID '+fid(inv.from_id)+' · entrada '+R$(inv.stake)+' · prêmio '+R$(prize(inv.stake*2))+' · expira em '+inv.left_s+'s';if(shownInv!==inv||!$('inv').classList.contains('on')){const same=shownInv&&shownInv.id===inv.id;shownInv=inv;if(!same||!$('inv').classList.contains('on'))pop($('inv'),true)}}
-$('inv-yes').onclick=()=>shownInv&&replyInvite(shownInv,true);$('inv-no').onclick=()=>shownInv&&replyInvite(shownInv,false);
-async function poll(now){
- clearTimeout(pollT);
- if(me.id&&(!document.hidden||pend||net)){
-  try{const r=await rpc('bc_inbox',auth({p_busy:busy()}));
-   if(r&&r.ok){
-    if(pend&&r.out&&r.out.id===pend.invite&&r.out.status==='declined'){const nm=pend.nick;closeWait();toast(nm+' recusou o convite.')}
-    const inv=(r.invites||[]).find(i=>!dismissed.has(i.id));
-    if(inv&&!busy()&&!$('intro'))showInv(inv);else if(shownInv&&(!inv||busy()))hideInv()}}catch(e){}}
- pollT=setTimeout(poll,pend||(net&&!net.started)?2000:6000)}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll(true)});
+function hideInv(){}async function poll(){} // convites entre amigos removidos: só fila de partidas
 addEventListener('pagehide',()=>{if(net&&net.started&&arena.active)net.room.emit('bye',{s:net.slot||0})});
-
-/* ---------- sala com amigos: 2 a 4 humanos por código (o anfitrião simula; vagas vazias viram bots) ---------- */
-let rm=null,rmStartMsg=null;
-const rmCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<5;i++)c+=a[Math.floor(Math.random()*a.length)];return c};
-function rmRender(){if(!rm)return;const lob=$('rm-lobby');lob.hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=rm.code;
- $('rm-list').innerHTML=rm.roster.map(r=>`<li><b>${esc(r.nick)}</b> · jogador ${r.s+1}${r.id===me.id?' (você)':''}${r.s===0?' · anfitrião':''}</li>`).join('');
- const host=rm.role==='host';$('rm-start').hidden=!host;$('rm-start').disabled=rm.roster.length<2;
- $('rm-msg').textContent=host?(rm.roster.length<2?'Passe o código para os amigos entrarem. É preciso pelo menos 2 pessoas.':rm.roster.length+' na sala. Quando todos entrarem, toque em Começar.'+(rm.server?'':' Vagas vazias viram bots.')):'Aguardando o anfitrião começar… Entrada de '+R$(rm.stake)+'.'}
-function rmReset(){const r=rm;rm=null;if(r){clearInterval(r.hi);clearTimeout(r.to)}$('rm-lobby').hidden=true;$('rm-menu').hidden=false;$('rm-start').hidden=true;return r}
-function rmLeave(silent){const r=rmReset();if(r&&r.room&&!r.started){if(r.role==='host')r.room.emit('bye',{s:0});else r.room.emit('leave',{id:me.id});const rr=r.room;setTimeout(()=>rr.close(),300)}if($('rm').open)$('rm').close();if(!silent&&r&&r.msg)toast(r.msg)}
-function rmEmitStart(){if(!net||net.role!=='host'||!rmStartMsg)return;net.room.emit('start',rmStartMsg)}
-function rmMsg(ev,d){
- if(rm&&!rm.started){
-  if(rm.role==='host'){
-   if(ev==='join'&&d&&d.id){let e=rm.roster.find(r=>r.id===+d.id);
-    if(!e){if(rm.roster.length>=4){rm.room.emit('full',{id:+d.id});return}e={s:rm.roster.length,id:+d.id,nick:String(d.nick||'Jogador').slice(0,16)};rm.roster.push(e)}
-    rm.room.emit('roster',{list:rm.roster,stake:rm.stake});rmRender()}
-   else if(ev==='leave'&&d){const i=rm.roster.findIndex(r=>r.id===+d.id);if(i>0){rm.roster.splice(i,1);rm.roster.forEach((r,k)=>r.s=k);rm.room.emit('roster',{list:rm.roster,stake:rm.stake});rmRender()}}}
-  else{
-   if(ev==='roster'&&d&&d.list){const mine=d.list.find(r=>r.id===me.id);if(!mine)return;
-    if(bal<d.stake){rm.msg='Saldo insuficiente para a entrada de '+R$(d.stake)+'.';rmLeave();return}
-    clearInterval(rm.hi);clearTimeout(rm.to);rm.slot=mine.s;rm.roster=d.list;rm.stake=d.stake;rmRender()}
-   else if(ev==='full'&&d&&+d.id===me.id){rm.msg='Essa sala já está cheia.';rmLeave()}
-   else if(ev==='bye'){rm.msg='O anfitrião cancelou a sala.';rmLeave()}
-   else if(ev==='start'&&d&&d.slots&&d.slots[me.id]!=null){
-    const s=d.slots[me.id],r=rm;rm=null;clearInterval(r.hi);clearTimeout(r.to);
-    if(bal<d.stake){toast('Saldo insuficiente para a entrada de '+R$(d.stake)+'.');r.room.close();$('rm').close();return}
-    net={role:'guest',room:r.room,stake:d.stake,peer:{id:null,nick:''},started:true,slot:s,n:4,humans:d.humans,humansN:d.humans.length};
-    mode=MODES['4x4'];mode.k='4x4';bal-=d.stake;save();renderMoney();if($('rm').open)$('rm').close();show('s-arena');$('e-wk').textContent='';
-    arena.begin(4,finish,{net:{role:'guest',slot:s,n:4,humans:d.humans,init:d,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}}
-  return}
- if(net&&net.started)arena.netRecv(ev,d)}
-function rmJoinRoom(role,code){
- const st={role,code,room:null,roster:[],slot:role==='host'?0:null,stake:bet,started:false,hi:0,to:0,msg:''};rm=st;
- st.room=Room('rm-'+code,rmMsg,up=>{if(rm!==st)return;
-  if(!up){st.msg='Não foi possível abrir a sala online agora.';rmLeave();return}
-  if(role==='host'){st.roster=[{s:0,id:me.id,nick:me.nick}];rmRender()}
-  else{const hi=()=>st.room.emit('join',{id:me.id,nick:me.nick,skin:me.skin||0});hi();st.hi=setInterval(hi,800);
-   st.to=setTimeout(()=>{if(rm===st&&st.slot==null){st.msg='Sala não encontrada. Confira o código.';rmLeave()}},9000);$('rm-msg').textContent='Entrando…';$('rm-lobby').hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=code}})}
-$('rm-open').onclick=async()=>{
- if(net||pend||arena.active||rm){toast('Termine a partida atual antes.');return}
- if(!await ensurePlayer()){toast('Sem conexão com o servidor agora.');return}
- $('rm-stake').textContent=R$(bet);rmReset();$('rm').showModal()};
-$('rm-create').onclick=()=>{if(bal<bet){toast('Saldo insuficiente para a entrada de '+R$(bet)+'.');return}if(GS_URL)rmJoinServer('host');else rmJoinRoom('host',rmCode())};
-$('rm-form').onsubmit=e=>{e.preventDefault();const c=$('rm-code').value.trim().toUpperCase();if(c.length<4){toast('Digite o código da sala.');return}if(GS_URL)rmJoinServer('guest',c);else rmJoinRoom('guest',c)};
-$('rm-copy').onclick=()=>{try{navigator.clipboard.writeText(rm?rm.code:'');toast('Código copiado.')}catch(e){}};
-$('rm-close').onclick=()=>rmLeave(true);
-$('rm').addEventListener('cancel',e=>{e.preventDefault();rmLeave(true)});
-$('rm-start').onclick=()=>{
- if(!rm||rm.role!=='host'||rm.roster.length<2)return;
- if(rm.server){rm.room.raw({t:'start'});return}
- if(bal<rm.stake){toast('Saldo insuficiente para a entrada de '+R$(rm.stake)+'.');return}
- const r=rm,humans=r.roster.map(x=>x.s),names=r.roster.map(x=>x.nick),slots={};r.roster.forEach(x=>slots[x.id]=x.s);
- r.started=true;clearInterval(r.hi);rm=null;
- net={role:'host',room:r.room,stake:r.stake,peer:{id:null,nick:''},started:true,slot:0,n:4,humans,humansN:humans.length};
- mode=MODES['4x4'];mode.k='4x4';bal-=r.stake;save();renderMoney();$('rm').close();show('s-arena');$('e-wk').textContent='';
- arena.begin(4,finish,{map:mapSel,names,net:{role:'host',n:4,slot:0,humans,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit();
- rmStartMsg=Object.assign(arena.getInit(),{stake:r.stake,humans,slots});
- for(const t of [0,500,1300,2500,4000])setTimeout(rmEmitStart,t)};
 
 /* ---------- prévia ao vivo ---------- */
 let dmMode='4x4',dmMap=-1,dmView=false;
@@ -1596,8 +1472,7 @@ const arena=BC.create({canvas:cv,keys,
  onCount:(n,was)=>{const c=$('count');clearTimeout(c._t);c.parentElement.classList.toggle('counting',n>0);
   if(n>0){c.hidden=false;c.className='count';void c.offsetWidth;c.className='count pop';c.innerHTML=`<div><span>${n}</span>${n>3?'<small>A partida começa em</small>':''}</div>`}
   else if(was>0){c.className='count pop go';c.innerHTML='<div><span>VAI!</span></div>';c._t=setTimeout(()=>{c.hidden=true},900)}else c.hidden=true},
- onPause:p=>{$('bt-pause').classList.toggle('off',p);$('bt-pause').setAttribute('aria-pressed',String(p))},
- onStart:s=>{$('hud').dataset.map=s.name;me.skin=s.skins[s.meIdx];$('bombbtn').style.setProperty('--bp',me.skin*20+'%');$('bt-pause').disabled=s.net;
+ onStart:s=>{$('hud').dataset.map=s.name;me.skin=s.skins[s.meIdx];$('bombbtn').style.setProperty('--bp',me.skin*20+'%');
   opp=s.names.map((n,i)=>i===s.meIdx?null:(s.net&&net?(net.humans?(net.humans.includes(i)?{nick:n}:{nick:n,bot:true}):{id:net.peer.id,nick:n}):{nick:n,bot:true})).filter(Boolean);saveMe();renderMe();cam.snap=true;fit()},
  onHud:h=>{$('timer').textContent=h.duel?'DUELO':mmss(h.time);$('timer').classList.toggle('sd',!!h.sd&&!h.ended);
   $('hud').innerHTML=h.players.map(p=>`<span class="av${p.alive?'':' dead'}" title="${esc(p.name)}" style="${avStyle(p.skin)};--c:${p.rare?'#ffd76a':BC.COL[p.i%8]}"></span>`).join('')+`<span class="hud-map">${esc($('hud').dataset.map||'')}</span>`;
@@ -1659,7 +1534,6 @@ function autoFs(on){const d=document,coarse=window.matchMedia&&matchMedia('(poin
  if(on){if(!cfg.fs||!coarse||!canFs||isFs)return;const r=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen,p=r.call(fsEl);fsAuto=true;if(p&&p.then)p.then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{fsAuto=false})}
  else if(fsAuto&&isFs){fsAuto=false;try{(d.exitFullscreen||d.webkitExitFullscreen).call(d)}catch(e){}try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}}}
 addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,250));
-function go(){hideInv();show('s-arena');$('e-wk').textContent='';arena.begin(mode.n,finish,{map:mapSel,names:[me.nick],skins:window.__bcSkins||null,sdAt:window.__bcSdAt});fit()}
 function finish(w,info){
  const online=!!info.net,stake=online&&net?net.stake:bet,pot=(online&&net&&net.humansN?net.humansN:mode.n)*stake,mine=info.meIdx;let t,p,result=null;
  if(w===-2){bal+=stake;t='Partida cancelada';p='A conexão com o outro jogador caiu. Sua entrada de '+R$(stake)+' voltou.'}
@@ -1669,7 +1543,7 @@ function finish(w,info){
  else{result='loss';t='Derrota';p=info.name+' foi o último de pé e levou o prêmio.'}
  save();$('e-img').src=ASSET.ch[SK[w>=0&&w!==mine?info.skin:me.skin]];$('e-t').textContent=t;$('e-p').textContent=p+' Saldo: '+R$(bal)+'.';
  renderEnd(w,info,stake,pot,online);
- $('again').hidden=online;$('again').textContent=bal<bet?'Sem saldo · voltar ao menu':'Jogar de novo · '+R$(bet);
+ $('again').hidden=false;$('again').textContent=bal<bet?'Sem saldo · voltar ao menu':'Jogar de novo · '+R$(bet);
  const o=opp.slice();if(online)endNet();show('s-end');
  if(result)report(result,info,stake,online?'friend':'bots',o);else $('e-wk').textContent=''}
 /* tela final: resumo (modo, mapa, duração, entradas, banca, prêmio) e a classificação com boneco e prêmio de cada jogador */
@@ -1689,7 +1563,7 @@ $('ar-back').onclick=()=>{
  else{arena.stop();keys.clear()}
  renderMoney();show('s-lobby');loadRank()};
 function setSnd(){const m=arena.toggleMute();$('bt-snd').classList.toggle('off',m);$('bt-snd').setAttribute('aria-pressed',String(!m))}
-$('bt-snd').onclick=setSnd;$('bt-pause').onclick=()=>arena.togglePause();
+$('bt-snd').onclick=setSnd;
 const fsEl=document.documentElement,canFs=!!(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen);
 if(!canFs)$('bt-full').hidden=true;
 $('bt-full').onclick=()=>{const d=document;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{const p=(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen).call(fsEl);if(p&&p.then)p.then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{})}setTimeout(fit,300)};
@@ -1697,7 +1571,7 @@ document.addEventListener('fullscreenchange',()=>setTimeout(fit,120));
 
 /* teclado */
 const typing=e=>/^(INPUT|SELECT|TEXTAREA)$/.test((e.target&&e.target.tagName)||'');
-document.addEventListener('keydown',e=>{if(typing(e))return;const k=e.key.length===1?e.key.toLowerCase():e.key;if(arena.active&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k))e.preventDefault();keys.add(k);if(k==='p'&&arena.active&&!e.repeat)arena.togglePause()});
+document.addEventListener('keydown',e=>{if(typing(e))return;const k=e.key.length===1?e.key.toLowerCase():e.key;if(arena.active&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k))e.preventDefault();keys.add(k)});
 document.addEventListener('keyup',e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key));
 addEventListener('blur',()=>keys.clear());
 /* controle na tela */
@@ -1749,7 +1623,7 @@ $('ed-save').onclick=()=>{cfg.pos=clonePos(edDraft);cfg.layout='custom';saveCfg(
 $('ed-cancel').onclick=()=>{Object.assign(cfg,edSnap);saveCfg();ed.close()};
 $('ed-reset').onclick=()=>{edDraft=clonePos(POS_DEF);edRender()};
 ed.addEventListener('cancel',e=>{e.preventDefault();$('ed-cancel').click()});
-ed.addEventListener('close',()=>{edOpening=false;if(cfgPaused&&arena.active&&arena.paused)arena.togglePause();cfgPaused=false});
+ed.addEventListener('close',()=>{edOpening=false});
 $('e-opa').oninput=e=>{cfg.opa=Math.round(clampN(e.target.value,30,100,CFG_DEF.opa));edRender()};
 $('e-size').oninput=e=>{cfg.size=Math.round(clampN(e.target.value,70,150,CFG_DEF.size));edRender()};
 $('e-bomb').oninput=e=>{cfg.bomb=Math.round(clampN(e.target.value,70,150,CFG_DEF.bomb));edRender()};
@@ -1763,7 +1637,7 @@ addEventListener('resize',()=>{if(ed.open)edRender()});addEventListener('orienta
 /* configurações */
 const DIRN={'':'parado',w:'cima',s:'baixo',a:'esquerda',d:'direita'};
 const testStick=makeStick($('c-stick'),$('c-zone'),d=>{$('c-dir').textContent=DIRN[d]});
-let cfgPaused=false;
+
 /* paletas só dos controles (painéis, analógico/setas e BOMBA); as "Arte" usam texturas dos mapas */
 const TXU=k=>`url('${ASSET.tx[k]}')`,artPal=(name,a,b,c)=>({name,jl:`linear-gradient(#0003,#0006),${TXU(a)} 0 0/48px`,jr:`linear-gradient(#0003,#0006),${TXU(b)} 0 0/48px`,
  st:`radial-gradient(circle,#0000 40%,#000a 75%),${TXU(c)} center/38px`,kn:`radial-gradient(circle at 40% 30%,#fff6,#0000 45%),${TXU(c)} center/30px`,bb:`radial-gradient(circle at 38% 28%,#0000 30%,#000b 75%),${TXU(b)} center/40px`,ink:'#ffe27a',dp:`linear-gradient(#0004,#0008),${TXU(c)} center/36px`,dpi:'#fff'});
@@ -1791,7 +1665,7 @@ function renderCfg(){renderPads();applyPad();$('c-pad').checked=padOn;$('c-sens'
  const two=window.matchMedia&&matchMedia('(max-height:520px) and (orientation:landscape)').matches;
  $('cfg').style.setProperty('--as',Math.round(Math.min(STICK_BASE*cfg.size/100,two?170:($('cfg').clientWidth||340)-70))+'px')}
 function saveCfg(){ls.set('bc_cfg',cfg);renderCfg();arena.setVol(cfg.mus,cfg.sfx);try{bgm.update()}catch(e){}fit()}
-function openCfg(){cfgPaused=false;if(arena.active&&!arena.paused&&!arena.online){arena.togglePause();cfgPaused=arena.paused}gameStick.reset();keys.clear();$('cfg').showModal();renderCfg()}
+function openCfg(){gameStick.reset();keys.clear();$('cfg').showModal();renderCfg()}
 $('cfg-open').onclick=openCfg;$('bt-cfg').onclick=openCfg;
 $('c-sens').oninput=e=>{cfg.sens=Math.round(clampN(e.target.value,1,10,CFG_DEF.sens));saveCfg()};
 $('c-size').oninput=e=>{cfg.size=Math.round(clampN(e.target.value,70,150,CFG_DEF.size));saveCfg()};
@@ -1807,8 +1681,8 @@ $('c-mus').oninput=e=>{cfg.mus=Math.round(clampN(e.target.value,0,100,CFG_DEF.mu
 $('c-sfx').oninput=e=>{cfg.sfx=Math.round(clampN(e.target.value,0,100,CFG_DEF.sfx));saveCfg()};$('c-sfx').onchange=()=>arena.sample();
 $('c-def').onclick=()=>{Object.assign(cfg,CFG_DEF,{pos:clonePos(POS_DEF)});saveCfg()};
 $('c-ok').onclick=()=>$('cfg').close();
-$('cfg').addEventListener('close',()=>{testStick.reset();if(edOpening)return;if(cfgPaused&&arena.active&&arena.paused)arena.togglePause();cfgPaused=false});
-for(const b of document.querySelectorAll('[data-act="pause"],[data-act="mute"]')){b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');buzz();if(b.dataset.act==='pause')arena.togglePause();else setSnd()});for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>b.classList.remove('on'))}
+$('cfg').addEventListener('close',()=>{testStick.reset()});
+for(const b of document.querySelectorAll('[data-act="mute"]')){b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');buzz();setSnd()});for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>b.classList.remove('on'))}
 con.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear()});
 
@@ -1892,8 +1766,7 @@ if(intro){
 if(/[#&]debug\b/.test(location.hash))window.__bc={arena,demo};
 render();renderMe();renderDemo();renderRank();try{applyPad()}catch(e){}
 // antes de jogar valendo saldo (partida, criar/entrar em sala, aceitar convite) o aviso precisa estar aceito nesta sessão
-for(const id of ['d-ok','rm-create','inv-yes']){const b=$(id),f=b&&b.onclick;if(f)b.onclick=function(e){rgGate(()=>f.call(this,e))}}
-{const fm=$('rm-form'),f=fm.onsubmit;fm.onsubmit=e=>{e.preventDefault();rgGate(()=>f(e))}}
+for(const id of ['d-ok']){const b=$(id),f=b&&b.onclick;if(f)b.onclick=function(e){rgGate(()=>f.call(this,e))}}
 try{bgm.update()}catch(e){}window.__bgm=bgm;
 demo.begin(4,null,{map:-1,sdAt:45}); // na prévia a morte súbita entra aos 45s para o visitante ver
 loadRank();ensurePlayer().then(()=>{poll(true);loadFriends()});

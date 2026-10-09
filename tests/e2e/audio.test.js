@@ -8,7 +8,7 @@ const {chromium}=require('playwright-core');const sleep=ms=>new Promise(r=>setTi
  const au=()=>p.evaluate(()=>({...window.__au,fs:!!document.fullscreenElement}));
  console.log('viewport meta:',await p.evaluate(()=>document.querySelector('meta[name=viewport]').content));
  console.log('antes de jogar (lobby, sem som):',JSON.stringify(await au()));
- await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(4200);
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await sleep(300);await p.evaluate(()=>window.__bcSolo());await sleep(4200);
  await p.evaluate(()=>{setInterval(()=>{try{window.__arena._s().players[0].inv=999}catch(e){}},300)});const a1=await au();await sleep(2000);const a2=await au();console.log('musica tocando: osc',a1.osc,'->',a2.osc,'em 2s | estado',a2.state,'| tela cheia auto:',a2.fs);
  // efeitos: bomba + explosao
  const s0=(await au()).src;await p.keyboard.down(' ');await sleep(250);await p.keyboard.up(' ');await sleep(3200);const s1=(await au()).src;console.log('efeitos (fontes de ruido da explosao):',s0,'->',s1);
@@ -17,7 +17,7 @@ const {chromium}=require('playwright-core');const sleep=ms=>new Promise(r=>setTi
  await p.evaluate(()=>document.querySelector('[data-act="mute"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true})));await sleep(1800);const u2=await au();console.log('som de volta: osc',m2.osc,'->',u2.osc);
  // musica 0 pelas configuracoes
  await p.evaluate(()=>{const e=document.getElementById('c-mus');e.value=0;e.dispatchEvent(new Event('input',{bubbles:true}))});await sleep(900);const z1=await au();await sleep(1500);const z2=await au();console.log('musica 0%: MUS.on =',await p.evaluate(()=>window.__MUS.on),'(deve ser false)');
- await p.evaluate(()=>{const e=document.getElementById('c-mus');e.value=60;e.dispatchEvent(new Event('input',{bubbles:true}))});await sleep(1800);const z3=await au();console.log('musica 60%: MUS.on =',await p.evaluate(()=>window.__MUS.on),'(deve ser true) | acelera na morte subita:',await p.evaluate(()=>{window.__MUS.sd=true;return window.__MUS.sd}));await p.evaluate(()=>{const b=document.querySelector('[data-act="pause"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}))});await sleep(600);console.log('pausa: audio suspenso =',await p.evaluate(()=>window.__audioState||'n/d'));
+ await p.evaluate(()=>{const e=document.getElementById('c-mus');e.value=60;e.dispatchEvent(new Event('input',{bubbles:true}))});await sleep(1800);const z3=await au();console.log('musica 60%: MUS.on =',await p.evaluate(()=>window.__MUS.on),'(deve ser true) | acelera na morte subita:',await p.evaluate(()=>{window.__MUS.sd=true;return window.__MUS.sd}));
  // zoom por toque duplo
  const r=await p.evaluate(()=>{const out=[];document.addEventListener('touchend',e=>out.push(e.defaultPrevented),false);const t=document.getElementById('arena');
   const mk=()=>new Event('touchend',{bubbles:true,cancelable:true});t.dispatchEvent(mk());t.dispatchEvent(mk());return out});

@@ -19,7 +19,10 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  await p.click('#chips .chip[data-b="10"]');await sleep(200);await p.click('#rg-ck');ok(!(await p.$eval('#rg-ok',e=>e.disabled)),'marcou a caixa: Confirmar liberado');
  await p.click('#rg-ok');await sleep(200);ok(await p.evaluate(()=>JSON.parse(localStorage.bc_bet))===10&&!(await p.$eval('#rg',d=>d.open)),'confirmou: valor R$ 10 aplicado');
  // partida: aviso já aceito nesta sessão, mapa sorteado, bomba alcance 1
- await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>document.getElementById('d-ok').click());
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await sleep(200);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
+ ok(/Servidor de partidas indisponível/.test(await p.textContent('#d-msg'))&&!(await p.evaluate(()=>window.__arena.active)),'sem servidor de partidas: não começa partida contra bots');
+ ok(!(await p.$('#dep'))&&!(await p.$('#rm-open'))&&!(await p.$('#bt-pause')),'sem dinheiro demo, sem sala com amigos e sem pausa');
+ await p.evaluate(()=>window.__bcSolo());
  await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});await sleep(500);
  const st=await p.evaluate(()=>{const s=window.__arena._s();return{pw:s.players.map(q=>q.power),map:window.__arena.map}});
  ok(st.pw.every(v=>v===1),'bomba inicial com alcance 1 bloco');

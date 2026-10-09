@@ -26,7 +26,7 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
   await p.click('#hello-ok');await sleep(900);ok(!(await p.$('#intro')),n+': tela inicial sai e libera o lobby');
   ok(await p.evaluate(()=>window.__bgm.on),n+': trilha continua no lobby');
   if(n==='deitado'){
-   await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>document.getElementById('d-ok').click());await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});await sleep(500);
+   await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>window.__bcSolo());await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});await sleep(500);
    ok(!(await p.evaluate(()=>window.__bgm.on)),'trilha da interface para durante a partida');
    await p.evaluate(()=>document.getElementById('ar-back').click());await sleep(700);
    ok(await p.evaluate(()=>window.__bgm.on),'trilha volta ao sair da partida')}

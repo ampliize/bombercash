@@ -12,7 +12,7 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  const cf=await p.evaluate(()=>({c:JSON.parse(localStorage.bc_cfg),dp:document.getElementById('stick').classList.contains('dpad'),bg:getComputedStyle(document.getElementById('console')).getPropertyValue('--jl-bg').slice(0,60)}));
  ok(cf.c.ptype==='dpad'&&cf.c.pal==='a_jun'&&cf.dp,'setas + paleta salvas e aplicadas');ok(/url\(/.test(cf.bg),'paleta de arte usa a textura do mapa');
  await p.evaluate(()=>document.getElementById('cfg').close());
- await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await p.evaluate(()=>document.getElementById('d-ok').click());
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await p.evaluate(()=>window.__bcSolo());
  await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});await sleep(1200);
  const r=await p.evaluate(()=>{const e=document.querySelector('#stick i.d').getBoundingClientRect();return[e.left+e.width/2,e.top+e.height/2]});
  const y0=await p.evaluate(()=>window.__arena._s().players[0].y);

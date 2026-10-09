@@ -78,16 +78,3 @@ test('JWT: aceita válido, rejeita adulterado/expirado/outro papel', () => {
   assert.equal(verifyJwt(jwt(ok, 's3cret', 'none'), 's3cret'), null);
   assert.equal(verifyJwt('lixo', 's3cret'), null);
 });
-
-test('quem criou começa com 2 de 4; os outros não podem', async () => {
-  const room = new Room({ code: '5', mode: '4x4', ledger: mkLedger() });
-  const a = fakeWs(), b = fakeWs();
-  room.join(a, { id: 'u1', name: 'A' }); room.join(b, { id: 'u2', name: 'B' });
-  assert.ok(room.requestStart(room.seats[1]).err);
-  assert.ok(room.requestStart(room.seats[0]).ok);
-  await wait(50);
-  const st = a.out.find(m => m.t === 'start');
-  assert.equal(st.n, 2); assert.equal(st.w.length, st.W * st.H); assert.ok(Array.isArray(st.br));
-  assert.equal(b.out.filter(m => m.t === 'lobby').at(-1).you, 1);
-  room.close();
-});

@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { WebSocketServer } from 'ws';
-import { Room, MODES } from './room.js';
+import { MODES } from './room.js';
+import { Matchmaker } from './match.js';
 import { NoopLedger, SupabaseLedger } from './ledger.js';
 import { verifyJwt } from './auth.js';
 
@@ -13,15 +14,17 @@ if (MONEY && !SECRET) throw new Error('MONEY_MODE exige SUPABASE_JWT_SECRET');
 
 const rooms = new Map();
 const log = (...a) => console.log(new Date().toISOString(), ...a);
-const code = () => { for (;;) { const c = String(Math.floor(1000 + Math.random() * 9000)); if (!rooms.has(c)) return c; } };
 
 const server = http.createServer((req, res) => { if (req.url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ ok: true, rooms: rooms.size, money: MONEY })); } else { res.writeHead(404); res.end(); } });
 const wss = new WebSocketServer({ server, maxPayload: 2048, verifyClient: ({ origin }) => !ORIGINS.length || ORIGINS.includes(origin) });
 
+const mm = new Matchmaker({ ledger, log, money: MONEY, onRoom: (r, open) => { if (open) rooms.set(r.code, r); else rooms.delete(r.code); } });
+
 wss.on('connection', ws => {
-  let user = null, room = null, seat = null, msgs = 0;
+  let user = null, msgs = 0;
+  const conn = { ws, room: null, seat: null, send: m => { try { if (ws.readyState === 1) ws.send(JSON.stringify(m)); } catch { /* fechado */ } }, setRoom(r, s) { this.room = r; this.seat = s; } };
   const rate = setInterval(() => { msgs = 0; }, 1000);
-  const err = m => { try { ws.send(JSON.stringify({ t: 'error', error: m })); } catch { /* fechado */ } };
+  const err = m => conn.send({ t: 'error', error: m });
   ws.on('message', raw => {
     if (++msgs > 90) { ws.close(); return; }
     let m; try { m = JSON.parse(raw); } catch { return err('mensagem inválida'); }
@@ -29,20 +32,14 @@ wss.on('connection', ws => {
     if (!user) { // primeira mensagem identifica o jogador
       if (m.t !== 'hello') return err('identifique-se');
       if (MONEY || m.token) { user = verifyJwt(m.token, SECRET); if (!user) { err('sessão inválida'); return ws.close(); } }
-      else { const nm = String(m.name || '').replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 14) || 'Jogador'; user = { id: 'demo-' + Math.random().toString(36).slice(2, 10), name: nm }; }
-      return ws.send(JSON.stringify({ t: 'hello', id: user.id }));
+      else { const nm = String(m.name || '').replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 14) || 'Jogador'; user = { id: 'teste-' + Math.random().toString(36).slice(2, 10), name: nm }; }
+      return conn.send({ t: 'hello', id: user.id, money: MONEY });
     }
-    if (m.t === 'create' && !room) {
-      try { room = new Room({ code: code(), mode: String(m.mode || '1x1'), stakeCents: MONEY ? +m.stake || 0 : 0, ledger, log, onClose: r => rooms.delete(r.code) }); } catch (e) { return err(e.message); }
-      if (MONEY && !room.stakeCents) { room = null; return err('aposta obrigatória'); }
-      rooms.set(room.code, room); const r = room.join(ws, user); if (r.err) { room = null; return err(r.err); } seat = r.seat;
-    } else if (m.t === 'join' && !room) {
-      const r0 = rooms.get(String(m.code)); if (!r0) return err('sala não encontrada');
-      const r = r0.join(ws, user); if (r.err) return err(r.err); room = r0; seat = r.seat;
-    } else if (m.t === 'start' && room && seat) { const r = room.requestStart(seat); if (r.err) err(r.err); }
-    else if (m.t === 'in' && room && seat) room.input(seat, m);
+    if (m.t === 'queue') { const r = mm.queue(conn, user, m.mode, m.stake); if (r.err) err(r.err); }
+    else if (m.t === 'leave') { if (mm.leave(conn)) conn.send({ t: 'left' }); }
+    else if (m.t === 'in' && conn.room && conn.seat) conn.room.input(conn.seat, m);
   });
-  ws.on('close', () => { clearInterval(rate); if (room && seat) room.drop(seat); });
+  ws.on('close', () => { clearInterval(rate); mm.leave(conn); if (conn.room && conn.seat) conn.room.drop(conn.seat); });
   ws.on('error', () => {});
 });
 

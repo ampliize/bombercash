@@ -6,7 +6,7 @@ const SHOTS=process.env.SHOTS;
  const open=async(w,h)=>{const c=await b.newContext({viewport:{width:w,height:h}});const p=await c.newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));
   await p.addInitScript(()=>{window.__bcCount=0;localStorage.setItem('bc_cfg',JSON.stringify({fs:false}))});
   await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(800);await p.click('#hello-ok');await sleep(700);
-  await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>document.getElementById('d-ok').click());
+  await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>window.__bcSolo());
   await p.waitForFunction(()=>window.__arena.active&&window.__arena._s().players.length===2,null,{timeout:8000});await sleep(300);return{c,p}};
  const st=p=>p.evaluate(()=>{const s=window.__arena._s();return{duel:s.duel,freeze:+s.freeze.toFixed(2),ended:s.ended,timer:document.getElementById('timer').textContent,
    ps:s.players.map(q=>[Math.round(q.x/48-.5),Math.round(q.y/48-.5),q.alive,q.speed,q.bombMax,q.power]),border:s.world[0][0],crates:s.world.flat().filter(v=>v===1).length,pillars:s.world.slice(1,-1).map(r=>r.slice(1,-1)).flat().filter(v=>v===2).length}});

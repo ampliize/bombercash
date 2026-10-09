@@ -27,11 +27,6 @@ export class Room {
     if (this.seats.length === this.n) this.start().catch(e => this.abort('erro ao iniciar: ' + e.message));
     return { ok: true, seat };
   }
-  // quem criou a sala (vaga 0) pode começar antes de lotar, com pelo menos 2 pessoas
-  requestStart(seat) {
-    if (this.state !== 'lobby' || seat.slot !== 0 || this.seats.length < 2) return { err: 'só quem criou a sala começa, com pelo menos 2 pessoas' };
-    this.start().catch(e => this.abort('erro ao iniciar: ' + e.message)); return { ok: true };
-  }
   async start() {
     if (this.starting) return; this.starting = true;
     const seed = (Math.random() * 0x7fffffff) | 0, map = Math.floor(Math.random() * 7);

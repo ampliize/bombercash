@@ -24,7 +24,7 @@ const ok=(c,m)=>{console.log((c?'OK  ':'FALHA ')+m);if(!c)process.exitCode=1};
  ok(saved.layout==='custom','layout personalizado salvo');ok(saved.pos.l.stick[0]>.6&&saved.pos.l.bomb[0]<.4,'posicoes salvas para deitado: stick '+saved.pos.l.stick+' bomba '+saved.pos.l.bomb);
  ok(JSON.stringify(saved.pos.p)===JSON.stringify({stick:[.24,.82],bomb:[.78,.82],bar:[.5,.035]}),'posicao em pe nao mudou (cada orientacao e separada)');
  // inicia partida e confere posicoes reais
- await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(4200);
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await sleep(300);await p.evaluate(()=>window.__bcSolo());await sleep(4200);
  const m=await p.evaluate(()=>{const r=e=>{const q=document.querySelector(e).getBoundingClientRect();return[Math.round(q.left+q.width/2),Math.round(q.top+q.height/2),Math.round(q.width),Math.round(q.height)]};const de=document.documentElement;
   return{free:document.querySelector('.console').classList.contains('free'),stick:r('#stick'),bomb:r('#bombbtn'),cv:r('#arena'),bar:r('#atop'),vw:innerWidth,vh:innerHeight,scrollH:de.scrollHeight}});
  console.log('em jogo:',JSON.stringify(m));

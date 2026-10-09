@@ -5,7 +5,7 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
 const start=async(b,w,h,touch,lay)=>{const c=await b.newContext({viewport:{width:w,height:h},isMobile:touch,hasTouch:touch});const p=await c.newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));
  await p.addInitScript(l=>{localStorage.setItem('bc_cfg',JSON.stringify({layout:l,fs:false}))},lay);
  await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(1000);await p.click('#hello-ok');await sleep(500);return{c,p}};
-const play=async p=>{await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(3200)};
+const play=async p=>{await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>window.__bcSolo());await sleep(3200)};
 const geo=p=>p.evaluate(()=>{const v=document.getElementById('vp'),r=v.getBoundingClientRect(),c=document.getElementById('arena').getBoundingClientRect(),s=window.__arena._s();return{cam:v.classList.contains('cam'),vp:[r.left,r.top,r.width,r.height].map(Math.round),tile:c.width/(document.getElementById('arena').width/1.5)*48,tf:getComputedStyle(document.getElementById('arena')).transform,vw:innerWidth,vh:innerHeight,canScroll:(()=>{scrollTo(0,300);const y=scrollY;scrollTo(0,0);return y>0})()}});
 (async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
  {const{c,p}=await start(b,390,844,true,'fixed');await play(p);const g=await geo(p);

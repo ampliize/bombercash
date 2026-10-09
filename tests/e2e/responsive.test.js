@@ -20,7 +20,7 @@ const check=(m,label)=>{const bad=[];const ov=(a,b)=>a&&b&&a[0]<b[0]+b[2]&&b[0]<
   const c=await b.newContext({viewport:{width:w,height:h},isMobile:!!touch,hasTouch:!!touch,deviceScaleFactor:2});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
   await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(1000);await p.click('#hello-ok');await sleep(400);
   const dm=await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click();const d=document.getElementById('dlg'),r=d.getBoundingClientRect();return{bottom:Math.round(r.bottom),vh:innerHeight,scrolls:d.scrollHeight>d.clientHeight}});
-  await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(4200);
+  await p.evaluate(()=>window.__bcSolo());await sleep(4200);
   const m1=await p.evaluate(measure);console.log(n.padEnd(7),(w+'x'+h).padEnd(9),check(m1,'padrao'),dm.bottom>dm.vh+1?'| DIALOGO MODO ESTOURA':'', errs.length?'ERR '+errs[0]:'');
   await p.screenshot({path:'n_'+n+'.png'});
   await p.evaluate(()=>{const set=(id,v,ev)=>{const e=document.getElementById(id);if(e.type==='checkbox')e.checked=v;else e.value=v;e.dispatchEvent(new Event(ev,{bubbles:true}))};set('c-swap',true,'change');set('c-bomb',150,'input');set('c-scr',70,'input');set('c-float',true,'change')});await sleep(400);
