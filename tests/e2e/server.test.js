@@ -3,7 +3,7 @@
 const {chromium}=require('playwright-core'),{spawn}=require('child_process'),path=require('path');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),GS='ws://127.0.0.1:2599';
 (async()=>{
- const gs=spawn('node',[path.join(__dirname,'../../server/src/index.js')],{env:{...process.env,PORT:'2599'},stdio:'inherit'});await sleep(800);
+ const gs=spawn('node',[path.join(__dirname,'../../server/src/index.js')],{env:{...process.env,PORT:'2599',COUNTDOWN:'3'},stdio:'inherit'});await sleep(800);
  const fail=m=>{console.log('FALHOU:',m);gs.kill();process.exit(1)};
  const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});const pages=[];
  for(let i=0;i<2;i++){const c=await b.newContext({viewport:{width:900,height:800}});const p=await c.newPage();p.on('pageerror',e=>fail('P'+(i+1)+' pageerror: '+e.message));await p.goto('http://127.0.0.1:8765/?gs='+GS);pages.push(p)}
@@ -22,6 +22,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms)),GS='ws://127.0.0.1:2599';
  const a0=await st(A),b0=await st(B);console.log('A',JSON.stringify(a0));console.log('B',JSON.stringify(b0));
  if(!a0.arena||!b0.arena||a0.me!==0||b0.me!==1||a0.n!==2)fail('partida não começou certo');
  if(JSON.stringify(a0.p)!==JSON.stringify(b0.p))fail('posições iniciais diferentes');
+ const cd=await A.evaluate(()=>{const c=document.getElementById('count');return{vis:!c.hidden,t:c.textContent}});console.log('contagem',JSON.stringify(cd));if(!cd.vis||!/^[1-3]/.test(cd.t))fail('contagem não apareceu');
  await sleep(2000); // contagem
  // B anda para cima por 0,6s: o servidor move e A vê
  await B.keyboard.down('ArrowUp');await sleep(600);await B.keyboard.up('ArrowUp');await sleep(500);

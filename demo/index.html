@@ -173,6 +173,12 @@ body.playing{overflow:hidden;overscroll-behavior:none}
 .scr canvas{display:block;border-radius:5px;background:#07081a;touch-action:none}
 .vp{position:relative;overflow:hidden;border-radius:5px;background:#07081a;margin:0 auto}
 .vp.cam canvas{position:absolute;left:0;top:0;border-radius:0;will-change:transform}
+.count{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:3;font-family:Bungee,Impact,sans-serif;color:#ffd76a;font-size:clamp(64px,20vmin,180px);line-height:1;text-shadow:5px 6px #141b32,0 0 28px #000}
+.count[hidden]{display:none}.count small{display:block;text-align:center;font-size:.16em;color:#fff;letter-spacing:.06em;margin-top:.3em;text-shadow:2px 2px #141b32}
+.count.pop span{animation:cpop .9s ease-out both}.count.go{color:#8dffb0}
+@keyframes cpop{0%{transform:scale(1.9);opacity:0}18%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.85);opacity:.15}}
+@media (prefers-reduced-motion:reduce){.count.pop span{animation:none}}
+.scr.counting .amsg{top:10%}
 .amsg{position:absolute;left:0;right:0;top:42%;text-align:center;pointer-events:none;font-family:Bungee,Impact,sans-serif;font-size:clamp(20px,5vw,40px);text-shadow:3px 4px #141b32,0 0 17px #000;line-height:1.1}
 .stats{position:absolute;left:14px;bottom:14px;background:#000a;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;display:flex;gap:10px;line-height:1.2;pointer-events:none}
 .stats i{font-style:normal;display:inline-flex;align-items:center;gap:3px}
@@ -455,7 +461,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <div class="console" id="console">
   <div class="joy jl"><button class="pill" data-act="mute" aria-label="Som"><b>−</b>SOM</button>
    <div class="stick" id="stick" role="group" aria-label="Analógico"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i><span class="knob"></span></div></div>
-  <div class="scr"><div class="vp" id="vp"><canvas id="arena" width="720" height="624" aria-label="Arena"></canvas></div><div class="stats" id="stats"></div><div id="amsg" class="amsg" aria-live="polite"></div></div>
+  <div class="scr"><div class="vp" id="vp"><canvas id="arena" width="720" height="624" aria-label="Arena"></canvas></div><div class="stats" id="stats"></div><div id="amsg" class="amsg" aria-live="polite"></div><div id="count" class="count" aria-live="assertive" hidden></div></div>
   <div class="joy jr"><button class="pill" data-act="pause" aria-label="Pausar"><b>+</b>PAUSA</button>
    <button class="bombbtn" id="bombbtn" data-akey=" " aria-label="Soltar bomba"><i></i>BOMBA</button></div>
  </div>
@@ -573,7 +579,8 @@ const ITEM_IDX={fire:0,bomb:1,speed:2,shield:3,star:4,skull:5};
 const ITEM_TXT={fire:['+FOGO','#ffb347'],bomb:['+BOMBA','#7cc4ff'],speed:['+VELOCIDADE','#ffd76a'],shield:['ESCUDO','#8dffb0'],star:['INVENCÍVEL','#fff07a'],skull:['MALDIÇÃO','#d59bff']};
 const D4=[[1,0],[-1,0],[0,1],[0,-1]],FACES=['down','up','left','right'],ITEM_KEYS=['fire','bomb','speed','shield','star','skull'];
 /* partida de 2:30; a morte súbita começa quando o relógio marca 1:00 e fecha a arena em ~40s */
-const MATCH_T=150,SD_START=90,SD_DUR=40,SD_WARN=.9,SD_FALL=.28;
+/* contagem regressiva antes de liberar os bonecos (window.__bcCount encurta nos testes) */
+const COUNT=10,MATCH_T=150,SD_START=90,SD_DUR=40,SD_WARN=.9,SD_FALL=.28;
 const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
 function segmap(n,S,fill,fpos){const c=(S-1)/2,extra=Math.max(0,(n-S)/2),left=[];for(let s=0;s<c;s++){left.push(s);if(s===fpos)for(let k=0;k<extra;k++)left.push(fill[k%fill.length])}return left.concat([c],left.map(s=>S-1-s).reverse())}
 
@@ -582,7 +589,7 @@ const canvas=o.canvas,ctx=canvas.getContext('2d'),demo=!!o.demo,keys=o.keys||new
 let W=15,H=13,M=0,N=4,seed=0,world=[],bridges=new Set(),players=[],bombs=[],flames=[],items=[],particles=[],floats=[];
 let map=0,fixedMap=-1,active=false,paused=false,ended=false,matchT=0,matchId=0,last=0,muted=demo,audio=null,onEnd=null,resetAt=0,frameCv=null,frameOk=false,hudAt=0,shake=0,names=[],forced=null,introT=0;
 let sd={on:false,order:[],idx:0,next:0,every:.4,falling:[],blocks:new Set(),doomed:new Set()};
-let sDir=[0,0],sdStart=SD_START,net=null,meIdx=0,freeze=0,seq=1,snapAcc=0,inAcc=0,lastRx=0,gotSnap=false,seenBlast=new Set(),winner=null;
+let cntShown=-1,sDir=[0,0],sdStart=SD_START,net=null,meIdx=0,freeze=0,seq=1,snapAcc=0,inAcc=0,lastRx=0,gotSnap=false,seenBlast=new Set(),winner=null;
 const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,at=(x,y)=>x>=0&&x<W&&y>=0&&y<H,id=(x,y)=>y*W+x,solid=(x,y)=>!at(x,y)||world[y][x]>0;
 const r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100,guest=()=>net&&net.role==='guest';
 const hsh=(x,y,q)=>{const n=Math.sin((x+seed)*127.1+y*311.7+(q||0)*74.7)*43758.5453;return n-Math.floor(n)};
@@ -613,6 +620,9 @@ const SFX={
  alarm1(t){tone(aSfx,t,880,780,.4,'sawtooth',.3,2600)},
  alarm2(t){tone(aSfx,t,660,560,.55,'sawtooth',.3,2400)},
  win(t){[523,659,784,1047,784,1047].forEach((f,k)=>tone(aSfx,t+k*.1,f,f,.22,'square',.24,3600));tone(aSfx,t+.6,1047,1047,.6,'triangle',.3)},
+ cd1(t){tone(aSfx,t,660,660,.09,'square',.16,2600)},
+ cd2(t){tone(aSfx,t,880,880,.14,'square',.24,3200)},
+ go(t){tone(aSfx,t,988,988,.12,'square',.26,3600);tone(aSfx,t+.1,1319,1319,.32,'square',.26,3600)},
  lose(t){[392,349,311,262].forEach((f,k)=>tone(aSfx,t+k*.18,f,f*.97,.3,'triangle',.34))}};
 const SFXMAP={'115|sawtooth':'boom','190|square':'die','420|triangle':'shield','600|square':'put','850|sine':'up','160|sawtooth':'skull','95|square':'fall','880|sawtooth':'alarm1','660|sawtooth':'alarm2'};
 function sfx(n){if(muted||sfxVol<=0)return;try{actx();SFX[n](audio.currentTime+.005)}catch(e){}}
@@ -643,7 +653,7 @@ function start(){
  canvas.width=Math.round((W*T+2*M)*SS);canvas.height=Math.round((H*T+2*M)*SS);frameOk=false;frameCv=null;
  matchT=0;ended=false;resetAt=0;MUS.sd=false;bombs=[];flames=[];items=[];particles=[];floats=[];shake=0;
  sd={on:false,order:[],idx:0,next:0,every:.4,falling:[],blocks:new Set(),doomed:new Set()};
- seq=1;snapAcc=inAcc=0;sDir=[0,0];gotSnap=false;seenBlast=new Set();winner=null;lastRx=performance.now();freeze=net?2.8:0;
+ seq=1;snapAcc=inAcc=0;sDir=[0,0];gotSnap=false;seenBlast=new Set();winner=null;lastRx=performance.now();freeze=demo?0:(window.__bcCount>=0?+window.__bcCount:COUNT);cntShown=-1;
  const starts=(N>4?[[1,1],[W-2,H-2],[W-2,1],[1,H-2],[(W-1)/2,1],[(W-1)/2,H-2],[1,(H-1)/2],[W-2,(H-1)/2]]:[[1,1],[W-2,H-2],[W-2,1],[1,H-2]]).slice(0,N);
  if(init){world=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>{const c=init.w.charCodeAt(y*W+x)-48;return c===4?2:c}));bridges=new Set(init.br)}
  else{
@@ -838,7 +848,7 @@ function guestUpdate(dt,now){
  if(ended){for(const f of flames.slice()){f.t-=dt;if(f.t<=0)flames.splice(flames.indexOf(f),1)}return}
  if(now-lastRx>(gotSnap?8000:14000)){voidMatch('CONEXÃO PERDIDA');return}
  if(!gotSnap)return;
- if(freeze<=0)matchT+=dt;
+ if(freeze>0)freeze=Math.max(0,freeze-dt);else matchT+=dt;
  const me=players[meIdx];me.cooldown=Math.max(0,me.cooldown-dt);
  for(const p of players){if(p!==me)ease(p,dt);p.inv=Math.max(0,p.inv-dt);p.curse=Math.max(0,p.curse-dt)}
  if(me.alive&&freeze<=0){
@@ -858,12 +868,15 @@ function finishMatch(w,place){ended=true;winner=w;hud(true);introT=0;
  say(place?'VOCÊ FOI ELIMINADO':w?(w.me?'VOCÊ VENCEU!':w.name.toUpperCase()+' VENCEU!'):'EMPATE!');endSfx(w);musStop();
  if(demo)resetAt=performance.now()+2600;else{const my=matchId;resetAt=Infinity;setTimeout(()=>{if(my!==matchId||!active)return;active=false;onEnd&&onEnd(w?w.i:-1,endInfo(w,place))},1900)}}
 function voidMatch(msg){if(ended)return;ended=true;musStop();introT=0;say(msg);const my=matchId;setTimeout(()=>{if(my!==matchId||!active)return;active=false;onEnd&&onEnd(-2,Object.assign(endInfo(null),{void:true}))},1800)}
+function countTick(){const n=ended?0:freeze>0?Math.ceil(freeze-1e-6):0;if(n===cntShown)return;const was=cntShown;cntShown=n;
+ if(n>0){if(was!==-1||n<=10)sfx(n<=3?'cd2':'cd1')}else if(was>0&&!ended)sfx('go');o.onCount&&o.onCount(n,was)}
 function update(dt){
  const now=performance.now();
  if(introT>0){introT-=dt;if(introT<=0&&!ended)say('')}
  if(shake>0)shake=Math.max(0,shake-dt);
  for(const z of particles.slice()){z.x+=z.vx*dt;z.y+=z.vy*dt;z.vy+=200*dt;z.t-=dt;if(z.t<=0)particles.splice(particles.indexOf(z),1)}
  for(const f of floats.slice()){f.y-=26*dt;f.t-=dt;if(f.t<=0)floats.splice(floats.indexOf(f),1)}
+ if(!demo)countTick();
  if(guest()){guestUpdate(dt,now);hud(false);return}
  if(net)netSnap(dt);
  if(ended){for(const f of flames.slice()){f.t-=dt;if(f.t<=0)flames.splice(flames.indexOf(f),1)}
@@ -1410,6 +1423,9 @@ const cfg=(()=>{const c=ls.get('bc_cfg',null)||{};return{sens:Math.round(clampN(
 const deadZone=()=>.55-.47*(cfg.sens-1)/9;
 const arena=BC.create({canvas:cv,keys,
  onMsg:t=>{$('amsg').textContent=t},
+ onCount:(n,was)=>{const c=$('count');clearTimeout(c._t);c.parentElement.classList.toggle('counting',n>0);
+  if(n>0){c.hidden=false;c.className='count';void c.offsetWidth;c.className='count pop';c.innerHTML=`<div><span>${n}</span>${n>3?'<small>A partida começa em</small>':''}</div>`}
+  else if(was>0){c.className='count pop go';c.innerHTML='<div><span>VAI!</span></div>';c._t=setTimeout(()=>{c.hidden=true},900)}else c.hidden=true},
  onPause:p=>{$('bt-pause').classList.toggle('off',p);$('bt-pause').setAttribute('aria-pressed',String(p))},
  onStart:s=>{$('hud').dataset.map=s.name;me.skin=s.skins[s.meIdx];$('bombbtn').style.setProperty('--bp',me.skin*20+'%');$('bt-pause').disabled=s.net;
   opp=s.names.map((n,i)=>i===s.meIdx?null:(s.net&&net?(net.humans?(net.humans.includes(i)?{nick:n}:{nick:n,bot:true}):{id:net.peer.id,nick:n}):{nick:n,bot:true})).filter(Boolean);saveMe();renderMe();cam.snap=true;fit()},

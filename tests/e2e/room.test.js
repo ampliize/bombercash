@@ -2,7 +2,7 @@ const {chromium}=require('playwright-core');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{
  const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});const pages=[];
- for(let i=0;i<3;i++){const c=await b.newContext({viewport:{width:900,height:800}});const p=await c.newPage();p.on('pageerror',e=>console.log('P'+(i+1)+' pageerror:',e.message));await p.goto('http://127.0.0.1:8765/');pages.push(p)}
+ for(let i=0;i<3;i++){const c=await b.newContext({viewport:{width:900,height:800}});const p=await c.newPage();await p.addInitScript(()=>{window.__bcCount=1});p.on('pageerror',e=>console.log('P'+(i+1)+' pageerror:',e.message));await p.goto('http://127.0.0.1:8765/');pages.push(p)}
  await sleep(2500);
  for(const p of pages){await p.click('#intro');await sleep(1200);await p.click('#hello-ok');}
  await sleep(2500);

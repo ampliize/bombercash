@@ -17,7 +17,7 @@ cliente → `hello {name | token}`, `create {mode:'1x1'|'4x4'|'8x8', stake}`, `j
 servidor → `hello`, `joined`, `lobby {names,you}`, `start {seed,map,W,H,n,w,br,names,skins}`, `snap {s}`, `end {winner,resultHash,settled}`, `abort`, `error`
 
 ## Variáveis de ambiente (Easypanel)
-`PORT` · `ALLOWED_ORIGINS` (domínios do front, separados por vírgula) · `MONEY_MODE=1` + `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` + `SUPABASE_JWT_SECRET`.
+`PORT` · `COUNTDOWN` (segundos de contagem antes de liberar os bonecos; padrão 10) · `ALLOWED_ORIGINS` (domínios do front, separados por vírgula) · `MONEY_MODE=1` + `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` + `SUPABASE_JWT_SECRET`.
 Sem `MONEY_MODE` só rodam salas de brincadeira (sem saldo). **A service key só existe no servidor, nunca no front nem no repositório.**
 
 ## Dinheiro

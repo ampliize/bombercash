@@ -2,6 +2,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { Sim } from './sim.js';
 
 export const TICK = 1 / 30, SNAP_EVERY = 2; // simula a 30 Hz, envia estado a 15 Hz
+export const COUNTDOWN = Number(process.env.COUNTDOWN ?? 10); // segundos de contagem antes de liberar os bonecos
 export const MODES = { '1x1': 2, '4x4': 4, '8x8': 8 };
 const STAKES = [200, 500, 1000, 2000, 5000, 10000];
 
@@ -38,7 +39,7 @@ export class Room {
       await this.ledger.open({ matchId: this.matchId, mode: this.mode, stakeCents: this.stakeCents, userIds: this.seats.map(s => s.userId) });
     } catch (e) { this.bcast({ t: 'abort', reason: 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
     this.sim = new Sim({ seed, map, n: this.seats.length });
-    this.state = 'play'; this.freeze = 2.8; this.tickN = 0; this.inputLog = [];
+    this.state = 'play'; this.freeze = COUNTDOWN; this.tickN = 0; this.inputLog = [];
     const skins = this.seats.map((_, i) => i % 4);
     this.sim.players.forEach((p, i) => { p.skin = skins[i]; });
     this.bcast({ t: 'start', seed, map, W: this.sim.W, H: this.sim.H, n: this.seats.length, w: this.sim.encWorld(), br: [...this.sim.bridges], stake: this.stakeCents, names: this.seats.map(s => s.name), skins, matchId: this.matchId });

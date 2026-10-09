@@ -40,6 +40,7 @@ Responsividade: o layout usa `dvh`, `safe-area` e `visualViewport`, os diálogos
 
 ## Visão do jogo no celular, zoom e som
 - **Celular deitado:** a barra do topo flutua sobre os painéis e a arena usa quase toda a altura (16% a 22% maior que antes; os painéis de botões encolhem sozinhos, sem cobrir a arena). Em pé, o jogo mostra a dica para girar o celular. Ao iniciar a partida o jogo tenta **tela cheia + horizontal** (Android/Chrome; o iPhone não permite, então só a dica aparece). Dá para desligar em Configurações.
+- **Contagem antes da partida:** toda partida (bots, sala com amigos, servidor) começa com 10 segundos na tela (10…1 e "VAI!", com bipes). Durante a contagem ninguém anda nem solta bomba e o relógio fica em 2:30. Teste: `npm run test:count`.
 - **Câmera automática:** se o mapa inteiro deixaria cada bloco pequeno demais (celular), o jogo aproxima até o bloco ter 34px (30px com mouse) e a câmera segue o seu boneco, sem passar da borda do mapa. Em pé o bloco foi de ~25px para 34px; deitado, de ~29px para 34px. Tablet e PC continuam vendo o mapa inteiro. Configurações → **Câmera automática** desliga (volta a mostrar o mapa inteiro).
 - **Layout personalizado:** o mapa fica centralizado na tela inteira (largura toda em pé, altura toda deitado) e a página não rola; o editor de controles mostra o mapa de verdade nessa mesma posição, para você ver o que o analógico e a bomba cobrem.
 - **Sem zoom por toque duplo ou pinça** durante a partida (viewport `user-scalable=no`, `touch-action: manipulation` e bloqueio de gestos).
