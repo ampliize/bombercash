@@ -435,6 +435,27 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
 .hello-card button{width:100%;border:0;border-radius:14px;padding:14px;background:linear-gradient(90deg,#ffb21c,#ff3d5a);font-family:Bungee,Impact,sans-serif;font-size:16px;color:#1a0a10;box-shadow:0 5px 0 #7a1f2a}
 @media (max-height:520px){#intro.msg .lwrap{display:none}.hello-card{padding:14px 18px}.hello-card .big{margin:6px 0 10px}.age{margin:2px 0 8px}}
 @media (prefers-reduced-motion:reduce){#inv.on,#toast.on,.spin{animation:none}}
+
+/* passo a passo do primeiro login */
+dialog#tut{width:min(460px,94vw);padding:20px 20px 16px}
+#tut .tu-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+#tut .tu-n{font-size:12px;font-weight:900;color:var(--mute,#a9acd6);letter-spacing:.08em}
+#tut .tu-skip{background:none;border:0;color:#ffc83d;font-weight:900;text-decoration:underline;cursor:pointer;padding:6px}
+#tut .tu-art{height:120px;display:flex;align-items:center;justify-content:center;gap:10px;background:#0c0d26;border:2px solid var(--line);border-radius:14px;margin:6px 0 12px;position:relative;overflow:hidden}
+#tut .tu-art .av{width:46px;height:46px;background-size:600% 100%;image-rendering:pixelated}
+#tut .tu-art .bm{width:46px;height:46px;background-image:var(--bombs);background-size:600% 100%;image-rendering:pixelated;animation:tuPulse .8s ease-in-out infinite alternate}
+#tut .tu-art .it{width:34px;height:34px;background-image:var(--items);background-size:600% 100%;image-rendering:pixelated}
+#tut .tu-art .fx{width:34px;height:34px;border-radius:6px;background:radial-gradient(circle,#fff6c4,#ffb02e 45%,#ff5a1f 75%,transparent 80%);animation:tuPulse .5s ease-in-out infinite alternate}
+#tut .tu-art .pad{display:grid;grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);gap:3px}
+#tut .tu-art .pad b{background:#1d1f4a;border:2px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+#tut .tu-art .btn{width:62px;height:62px;border-radius:50%;background:#ff3d6e;border:3px solid #ffd1dc;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px}
+#tut .tu-art .big{font-size:40px;font-weight:900;color:#ffc83d}
+#tut h3{margin:0 0 6px;font-size:20px}
+#tut ul{margin:6px 0 0;padding-left:18px}#tut li{margin:3px 0}
+#tut .tu-dots{display:flex;gap:6px;justify-content:center;margin:12px 0 10px}
+#tut .tu-dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}#tut .tu-dots i.on{background:#ffc83d;width:20px;border-radius:5px}
+@keyframes tuPulse{from{transform:scale(.9)}to{transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){#tut .tu-art *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -445,6 +466,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
   <div class="acct">
    <button class="me" id="me" aria-label="Abrir seu perfil"><span class="av" id="me-av"></span><span class="me-t"><b id="me-nick">Jogador</b><small id="me-id">ID …</small></span></button>
    <button class="set" id="cfg-open" aria-label="Configurações" title="Configurações"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+   <button class="set" id="tut-open" aria-label="Como jogar" title="Como jogar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 3.8"/><path d="M12 17.2v.3"/></svg></button>
    <button class="set quit" id="quit-open" aria-label="Sair do jogo" title="Sair do jogo"><svg viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
    <button class="set" id="fr-open" aria-label="Amigos" title="Amigos"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.900 1.900 6.500 5.500"/><circle cx="17.500" cy="9" r="2.600"/><path d="M17 14.600c2.600.200 4.200 1.800 4.700 4.400"/></svg><i id="fr-badge" hidden></i></button>
    <div class="bal">Saldo: <span id="bal">R$ 0</span></div><span id="acct-in"><button class="dep" id="login-open" type="button">Entrar / Criar conta</button></span><span id="acct-out" hidden><button class="dep" id="dep-open" type="button">Depositar</button> <button class="set wd" id="wd-open" type="button" title="Sacar" aria-label="Sacar">Sacar</button></span>
@@ -520,6 +542,9 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <p>A diversão deve vir em primeiro lugar! 🎮💣</p><p><b>Bom jogo e cuidado com as bombas!</b></p>
  <label class="rg-ck"><input type="checkbox" id="rg-ck"><span>Li o aviso e vou jogar com responsabilidade</span></label>
  <div class="row"><button type="button" id="rg-no">Cancelar</button><button type="button" class="ok" id="rg-ok" disabled>Confirmar</button></div></dialog>
+<dialog id="tut" aria-labelledby="tu-h"><div class="tu-top"><span class="tu-n" id="tu-n"></span><button type="button" class="tu-skip" id="tu-skip">Pular passo a passo</button></div>
+ <div class="tu-art" id="tu-art" aria-hidden="true"></div><h3 id="tu-h"></h3><div id="tu-b"></div><div class="tu-dots" id="tu-dots"></div>
+ <div class="row"><button type="button" id="tu-back">Voltar</button><button type="button" class="ok" id="tu-next">Próximo</button></div></dialog>
 <dialog id="auth" aria-labelledby="au-t"><div class="logo" style="font-size:20px" id="au-t">Entrar</div>
  <div class="seg" id="au-tabs" role="group"><button type="button" data-v="in" aria-pressed="true">Entrar</button><button type="button" data-v="up" aria-pressed="false">Criar conta</button></div>
  <form id="au-form" autocomplete="on"><label class="fld">E-mail<input id="au-email" type="email" autocomplete="email" required maxlength="120"></label>
@@ -1224,6 +1249,34 @@ async function refreshAcct(){if(!logged()){bal=0;renderAcct();return}
 function renderAcct(){$('acct-in').hidden=logged();$('acct-out').hidden=!logged();renderMoney()}
 /* antes de jogar: logado → cadastro completo → saldo suficiente */
 function needAcct(cb){if(!logged()){acctAfter=cb;openAuth();return false}if(!acct.profile){acctAfter=cb;openKyc();return false}if(bal<bet){openDep();return false}return true}
+/* ---------- passo a passo: aparece no primeiro login (por conta, neste aparelho); dá para pular e rever no "?" ---------- */
+const TUT=[
+ {h:'Bem-vindo à BomberCash!',art:()=>[0,1,2,3].map(i=>`<i class="av" style="${avStyle(i)}"></i>`).join(''),
+  b:'<p>Cada partida é entre <b>pessoas de verdade</b>. Solte bombas, prenda os rivais e seja o <b>último de pé</b>.</p><p>O vencedor leva o total das entradas <b>menos 20%</b> da casa.</p>'},
+ {h:'Mexa-se',art:()=>'<div class="pad"><span></span><b>▲</b><span></span><b>◀</b><span></span><b>▶</b><span></span><b>▼</b><span></span></div>',
+  b:'<ul><li><b>Celular:</b> use o analógico ou as setas (troque em Configurações ⚙️, onde também dá para mudar cores e posição).</li><li><b>Computador:</b> setas ou W A S D.</li></ul>'},
+ {h:'Solte bombas',art:()=>'<i class="fx"></i><i class="bm"></i><i class="fx"></i><div class="btn">BOMBA</div>',
+  b:'<ul><li>Toque em <b>BOMBA</b> (ou Espaço no computador).</li><li>A explosão começa com <b>1 bloco de cada lado</b> e cresce com o item Fogo.</li><li>Solte e <b>saia da linha do fogo</b>: sua própria bomba também te pega.</li></ul>'},
+ {h:'Quebre caixas, pegue itens',art:()=>[0,1,2,3,4,5].map(i=>`<i class="it" style="background-position:${i*20}% 0"></i>`).join(''),
+  b:()=>'<ul>'+PUS.map(p=>`<li><b>${p[0]}:</b> ${p[1]}</li>`).join('')+'</ul><p class="note">Itens no caminho de uma explosão são destruídos.</p>'},
+ {h:'Como funciona a partida',art:()=>'<span class="big">1x1 · 4 · 8</span>',
+  b:'<ul><li>Escolha o modo e o valor e toque em <b>Procurar partida</b>.</li><li>A partida só começa quando a sala enche com jogadores no mesmo modo e valor.</li><li>Contagem de 10 segundos e valendo! Não há pausa.</li><li>Empate? Os 2 finalistas vão para o <b>duelo na lava</b>.</li></ul>'},
+ {h:'Saldo, PIX e responsabilidade',art:()=>'<span class="big">PIX</span>',
+  b:'<ul><li><b>Depositar:</b> PIX a partir de R$ 10, de uma conta no seu CPF.</li><li><b>Sacar:</b> só para o seu próprio CPF.</li><li>Jogue por diversão, defina limites e nunca tente recuperar perdas.</li></ul>'}];
+let tutI=0,tutCb=null;
+const tutUser=()=>{try{return JSON.parse(atob(sess.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub}catch(e){return'anon'}};
+const tutKey=()=>'bc_tut_'+tutUser();
+function tutDraw(){const t=TUT[tutI],last=tutI===TUT.length-1;$('tu-n').textContent='PASSO '+(tutI+1)+' DE '+TUT.length;$('tu-h').textContent=t.h;$('tu-art').innerHTML=t.art();
+ $('tu-b').innerHTML=typeof t.b==='function'?t.b():t.b;$('tu-dots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
+ $('tu-back').hidden=tutI===0;$('tu-next').textContent=last?'Começar a jogar':'Próximo';$('tu-skip').hidden=last}
+function openTut(cb){tutI=0;tutCb=cb||null;tutDraw();if(!$('tut').open)$('tut').showModal()}
+function tutDone(){ls.set(tutKey(),1);if($('tut').open)$('tut').close();const cb=tutCb;tutCb=null;cb&&cb()}
+/* primeiro login: mostra antes de seguir; depois disso, segue direto */
+function tutGate(cb){if(logged()&&!ls.get(tutKey(),0))openTut(cb);else cb&&cb()}
+$('tu-next').onclick=()=>{if(tutI<TUT.length-1){tutI++;tutDraw()}else tutDone()};
+$('tu-back').onclick=()=>{if(tutI>0){tutI--;tutDraw()}};
+$('tu-skip').onclick=tutDone;$('tut').addEventListener('cancel',e=>{e.preventDefault();tutDone()});
+$('tut-open').onclick=()=>openTut();
 let auMode='in';
 function openAuth(){auMode='in';syncAu();$('au-msg').textContent='';if(!$('auth').open)$('auth').showModal()}
 function syncAu(){$('au-tabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===auMode)));$('au-t').textContent=auMode==='in'?'Entrar':'Criar conta';$('au-ok').textContent=auMode==='in'?'Entrar':'Criar conta';$('au-pass').autocomplete=auMode==='in'?'current-password':'new-password'}
@@ -1232,7 +1285,7 @@ $('au-no').onclick=()=>{acctAfter=null;$('auth').close()};$('login-open').onclic
 $('au-form').onsubmit=async e=>{e.preventDefault();const email=$('au-email').value.trim(),password=$('au-pass').value;$('au-ok').disabled=true;$('au-msg').textContent='Aguarde…';
  try{if(auMode==='up'){const j=await authApi('signup',{email,password,data:{nickname:me.nick}});if(!j.access_token){$('au-msg').textContent='Conta criada! Confirme pelo link enviado para '+email+' e depois entre aqui.';auMode='in';syncAu();return}setSess(j)}
   else setSess(await authApi('token?grant_type=password',{email,password}));
-  $('auth').close();await refreshAcct();if(!acct.profile)openKyc();else{const cb=acctAfter;acctAfter=null;cb&&cb()}}
+  $('auth').close();await refreshAcct();if(!acct.profile)openKyc();else{const cb=acctAfter;acctAfter=null;tutGate(cb)}}
  catch(err){$('au-msg').textContent=/invalid/i.test(err.message)?'E-mail ou senha incorretos.':/registered|exists/i.test(err.message)?'Esse e-mail já tem conta: entre com ele.':err.message}
  finally{$('au-ok').disabled=false}};
 const fmtCpf=v=>{const d=v.replace(/\D/g,'').slice(0,11);return d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')};
@@ -1241,7 +1294,7 @@ for(const id of ['ky-cpf','wd-cpf'])$(id).addEventListener('input',e=>{e.target.
 function openKyc(){$('ky-msg').textContent='';if(!$('ky-nick').value)$('ky-nick').value=String(me.nick||'').replace(/[^A-Za-z0-9_]/g,'').slice(0,16);if(!$('kyc').open)$('kyc').showModal()}
 $('ky-no').onclick=()=>{acctAfter=null;$('kyc').close()};
 $('ky-form').onsubmit=async e=>{e.preventDefault();if(!cpfOk($('ky-cpf').value)){$('ky-msg').textContent='CPF inválido: confira os números.';return}$('ky-go').disabled=true;$('ky-msg').textContent='Conferindo…';
- try{await fnCall('account',{name:$('ky-name').value,cpf:$('ky-cpf').value,birth:$('ky-birth').value,nick:$('ky-nick').value});$('kyc').close();await refreshAcct();toast('Cadastro concluído!');const cb=acctAfter;acctAfter=null;cb&&cb()}
+ try{await fnCall('account',{name:$('ky-name').value,cpf:$('ky-cpf').value,birth:$('ky-birth').value,nick:$('ky-nick').value});$('kyc').close();await refreshAcct();toast('Cadastro concluído!');const cb=acctAfter;acctAfter=null;tutGate(cb)}
  catch(err){$('ky-msg').textContent=err.message}finally{$('ky-go').disabled=false}};
 // depósito
 let depPoll=0;
@@ -1393,7 +1446,8 @@ function openDlg(){
  if(!$('dlg').open)$('dlg').showModal()}
 $('d-no').onclick=()=>{mmCancel();$('dlg').close()};
 $('dlg').addEventListener('close',()=>{if(mq&&!mq.started)mmCancel()});
-$('d-ok').onclick=()=>{if(needAcct(()=>{openDlg();rgGate(()=>mmSearch())}))mmSearch()};
+function play(){if(needAcct(()=>{openDlg();play()}))mmSearch()}
+$('d-ok').onclick=()=>play();
 $('again').onclick=()=>{renderMoney();show('s-lobby');if(bal<bet)return;openDlg();rgGate(()=>mmSearch())};
 $('back').onclick=()=>{renderMoney();show('s-lobby');loadRank()};
 

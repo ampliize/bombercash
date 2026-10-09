@@ -21,6 +21,11 @@ Jogo (`demo/index.html`): arquivo único, partidas só entre pessoas, saldo real
 - **Servidor de jogo:** com `MONEY_MODE=1` exige login (JWT do Supabase via JWKS em `SUPABASE_URL`, ou `SUPABASE_JWT_SECRET` legado) e usa `SUPABASE_SERVICE_KEY` só no servidor.
 - Testes: `node money.test.js` (conta → cadastro → PIX simulado → saque). O mock simula Auth, carteira e funções; `/__pay` marca os PIX como pagos.
 
+## Passo a passo do primeiro login
+- No primeiro login de cada conta (depois do cadastro), abre um passo a passo de 6 telas: objetivo e prêmio, movimento, bombas (alcance 1), itens, como funciona a partida (fila, contagem, sem pausa, duelo na lava) e saldo/PIX com jogo responsável.
+- **Pular passo a passo** em qualquer tela; Voltar/Próximo; no fim, "Começar a jogar" segue para o depósito ou para a fila. Fica lembrado por conta neste aparelho (`bc_tut_<id>`). O botão **?** no topo reabre quando quiser.
+- Teste: `npm run test:tutorial`.
+
 ## Rodar local
     cd demo && python3 -m http.server 8080   # abrir http://localhost:8080
 
