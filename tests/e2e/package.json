@@ -1,1 +1,13 @@
-{"name":"bombercash-e2e","private":true,"scripts":{"mock":"node mock.js","test":"node room.test.js"},"dependencies":{"playwright-core":"^1.56.1","ws":"^8.18.0"}}
+{
+  "name": "bombercash-e2e",
+  "private": true,
+  "scripts": {
+    "mock": "node mock.js",
+    "test": "node room.test.js",
+    "test:responsive": "node responsive.test.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.56.1",
+    "ws": "^8.18.0"
+  }
+}

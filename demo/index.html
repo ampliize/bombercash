@@ -219,7 +219,6 @@ dialog{max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow-y:a
 button,.ibtn,.pill,.bombbtn,.card,.chip{touch-action:manipulation}
 .console.swap .jl{grid-area:jr;border-radius:0 0 46px 0}.console.swap .jr{grid-area:jl;border-radius:0 0 0 46px}
 .console.swap .jl .pill{right:auto;left:10px}.console.swap .jr .pill{left:auto;right:10px}
-.console.land.swap{grid-template-areas:"jr scr jl"}
 .console.land.swap .jl{border-radius:0 64px 64px 0}.console.land.swap .jr{border-radius:64px 0 0 64px}
 .console.land.swap .jl .pill{right:auto;left:14px}.console.land.swap .jr .pill{left:auto;right:14px}
 .joy{position:relative}
@@ -1239,9 +1238,9 @@ function fit(){
   const cl=Math.round(left),cr=Math.round(right);con.style.gridTemplateColumns=padOn?(cfg.swap?`minmax(min-content,${cr}fr) minmax(min-content,${cl}fr)`:`minmax(min-content,${cl}fr) minmax(min-content,${cr}fr)`):''}
  con.style.setProperty('--as',Math.max(60,Math.round(stick))+'px');con.style.setProperty('--bs',Math.max(70,Math.round(bs))+'px');
  const joyW=land&&padOn?jl.offsetWidth:0,minPad=!land&&padOn?jl.offsetHeight:0,keysEl=document.querySelector('.keys'),kh=keysEl&&keysEl.offsetHeight?keysEl.offsetHeight+10:0;
- const aw=Math.min(vw-12,1500)-2*joyW-16,ah=vh-topH-minPad-(land?8:16)-kh-(land?4:10),ar=cv.width/cv.height;
+ const aw=Math.min(vw-12,1500)-2*joyW-16,ah=vh-topH-minPad-(land?10:16)-kh-(land?8:10),ar=cv.width/cv.height;
  const w=Math.max(140,Math.floor(Math.min(aw,ah*ar)*cfg.scr/100)),h=Math.round(w/ar);cv.style.width=w+'px';cv.style.height=h+'px';
- if(!land&&padOn){const free=vh-topH-h-(land?8:16)-kh-14;jl.style.height=jr.style.height=Math.max(minPad,Math.min(360,free))+'px'}}
+ if(!land&&padOn){const free=vh-topH-h-(land?10:16)-kh-14;jl.style.height=jr.style.height=Math.max(minPad,Math.min(360,free))+'px'}}
 addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,250));
 function go(){hideInv();show('s-arena');$('e-wk').textContent='';arena.begin(mode.n,finish,{map:mapSel,names:[me.nick],skins:window.__bcSkins||null,sdAt:window.__bcSdAt});fit()}
 function finish(w,info){

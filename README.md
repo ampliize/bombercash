@@ -22,3 +22,12 @@ Como funciona (demo): o anfitrião simula a partida e manda o estado 10x por seg
     cd tests/e2e && npm i && npm run mock &   # servidor local na porta 8765
     CHROME_PATH=/caminho/do/chrome npm test    # cria sala, entra com 2, joga, termina e confere o prêmio
 O mock substitui o Supabase só no servidor de teste; o arquivo do demo não muda.
+
+## Ajustes de tela e controles (Configurações)
+Disponíveis no lobby e durante a partida (engrenagem). Ficam salvos no aparelho (`localStorage`, chave `bc_cfg`):
+- Mostrar controle na tela; sensibilidade e tamanho do analógico; **analógico flutuante** (aparece onde o dedo toca).
+- **Tamanho da tela do jogo** (60% a 100% do máximo que cabe) e **tamanho do botão BOMBA** (70% a 150%).
+- **Inverter lados** (analógico à direita, bomba à esquerda) e vibração ao tocar.
+- "Voltar ao padrão" restaura tudo.
+
+Responsividade: o layout usa `dvh`, `safe-area` e `visualViewport`, os diálogos rolam por dentro em telas baixas e a barra do topo se compacta abaixo de 380px (Galaxy Fold, 280px). Teste: `npm run test:responsive` em `tests/e2e` (14 tamanhos, de 280x653 a 2560x1080, no padrão e com as opções ligadas; confere sobra de rolagem, sobreposição, controles fora da tela e lado invertido).
