@@ -1,12 +1,25 @@
 # BomberCash
 
-Demo "entre amigos" (`demo/index.html`): arquivo único feito pelo designer, com fichas virtuais (sem dinheiro real).
+Jogo (`demo/index.html`): arquivo único, partidas só entre pessoas, saldo real por PIX.
 
 ## Versão final (09/10): só jogadores de verdade
 - **Sem bots:** toda partida é entre pessoas. O jogador escolhe modo (1x1, 4 ou 8) e valor, toca em **Procurar partida** e entra na fila do servidor de jogo (`server/src/match.js`); a partida só começa quando a sala enche com gente no mesmo modo e valor. Cancelar sai da fila.
 - **Removidos:** sala com amigos por código, convite 1x1 entre amigos, pausa (botão, tecla P e o "+ PAUSA" do controle) e o botão "+ R$ 100 demo". A prévia com bots do lobby virou só o quadro de regras.
 - **Precisa do servidor no ar:** sem o `server/` publicado (Easypanel, com `wss://`), o jogo mostra "Servidor de partidas indisponível". O endereço vai em `window.BC_GS` no `index.html` (ou `?gs=wss://…`).
 - Testes: `npm test` (fila real com 2 navegadores + servidor), `npm run test:rules`. Os outros testes usam `__bcSolo()`, um atalho que só existe no mock de teste para exercitar o motor sem servidor.
+
+## Dinheiro real: conta, cadastro com CPF e PIX (AbacatePay)
+- **Fluxo:** Procurar partida → (aviso) → **Entrar / Criar conta** (Supabase Auth, e-mail e senha) → **cadastro** (nome, CPF, nascimento, apelido, 18+) → **Depositar** (PIX copia-e-cola e QR) → fila. O saldo exibido é o da carteira em `core` (livro-razão de partidas dobradas); nada fica guardado no aparelho.
+- **Edge Functions** (`supabase/functions/`, publicadas com `verify_jwt=false` e autenticação própria):
+  - `account`: cria o perfil (o CPF vira hash com `CPF_PEPPER`; só os 4 últimos ficam legíveis).
+  - `pix-deposit`: cria a cobrança PIX na AbacatePay e o depósito pendente.
+  - `pix-webhook`: recebe `billing.paid`, grava o evento uma vez só e credita a carteira.
+  - `pix-withdraw`: pedido de saque, só para o CPF do titular. Exige KYC aprovado, 24 h desde o 1º depósito e rollover. Até R$ 100 é aprovado automaticamente, acima disso vai para revisão.
+- **Segredos** (Supabase → Edge Functions → Secrets; nunca no front nem no repositório): `CPF_PEPPER` (32+ caracteres aleatórios), `ABACATEPAY_API_KEY`, `ABACATEPAY_WEBHOOK_SECRET`, opcional `ALLOWED_ORIGINS`.
+- **Webhook na AbacatePay:** `https://tuowzfpbpjxknouodzgb.supabase.co/functions/v1/pix-webhook?webhookSecret=<o mesmo ABACATEPAY_WEBHOOK_SECRET>`, evento `billing.paid`.
+- **Saques:** o envio do PIX é manual (financeiro), marcado com `core.withdrawal_mark_sent`/`withdrawal_mark_failed`. O KYC começa `pending` e é aprovado por `core.kyc_set`.
+- **Servidor de jogo:** com `MONEY_MODE=1` exige login (JWT do Supabase via JWKS em `SUPABASE_URL`, ou `SUPABASE_JWT_SECRET` legado) e usa `SUPABASE_SERVICE_KEY` só no servidor.
+- Testes: `node money.test.js` (conta → cadastro → PIX simulado → saque). O mock simula Auth, carteira e funções; `/__pay` marca os PIX como pagos.
 
 ## Rodar local
     cd demo && python3 -m http.server 8080   # abrir http://localhost:8080

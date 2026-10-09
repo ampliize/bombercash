@@ -447,7 +447,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
    <button class="set" id="cfg-open" aria-label="Configurações" title="Configurações"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
    <button class="set quit" id="quit-open" aria-label="Sair do jogo" title="Sair do jogo"><svg viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
    <button class="set" id="fr-open" aria-label="Amigos" title="Amigos"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.900 1.900 6.500 5.500"/><circle cx="17.500" cy="9" r="2.600"/><path d="M17 14.600c2.600.200 4.200 1.800 4.700 4.400"/></svg><i id="fr-badge" hidden></i></button>
-   <div class="bal">Saldo: <span id="bal">R$ 0</span></div>
+   <div class="bal">Saldo: <span id="bal">R$ 0</span></div><span id="acct-in"><button class="dep" id="login-open" type="button">Entrar / Criar conta</button></span><span id="acct-out" hidden><button class="dep" id="dep-open" type="button">Depositar</button> <button class="set wd" id="wd-open" type="button" title="Sacar" aria-label="Sacar">Sacar</button></span>
   </div></header>
  <h2>Valor por partida</h2><div class="chips" id="chips"></div>
  <h2>Escolha o modo</h2><div class="rail" id="rail"></div>
@@ -520,6 +520,30 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <p>A diversão deve vir em primeiro lugar! 🎮💣</p><p><b>Bom jogo e cuidado com as bombas!</b></p>
  <label class="rg-ck"><input type="checkbox" id="rg-ck"><span>Li o aviso e vou jogar com responsabilidade</span></label>
  <div class="row"><button type="button" id="rg-no">Cancelar</button><button type="button" class="ok" id="rg-ok" disabled>Confirmar</button></div></dialog>
+<dialog id="auth" aria-labelledby="au-t"><div class="logo" style="font-size:20px" id="au-t">Entrar</div>
+ <div class="seg" id="au-tabs" role="group"><button type="button" data-v="in" aria-pressed="true">Entrar</button><button type="button" data-v="up" aria-pressed="false">Criar conta</button></div>
+ <form id="au-form" autocomplete="on"><label class="fld">E-mail<input id="au-email" type="email" autocomplete="email" required maxlength="120"></label>
+ <label class="fld">Senha<input id="au-pass" type="password" autocomplete="current-password" required minlength="8" maxlength="72"></label>
+ <p id="au-msg" class="note"></p><div class="row"><button type="button" id="au-no">Fechar</button><button class="ok" id="au-ok">Entrar</button></div></form></dialog>
+<dialog id="kyc" aria-labelledby="ky-t"><div class="logo" style="font-size:20px" id="ky-t">Complete seu cadastro</div>
+ <p class="note">Uma conta por CPF, só para maiores de 18 anos. O CPF não fica guardado em texto: o sistema guarda só uma assinatura dele e os 4 últimos dígitos. Depósito e saque só em PIX do mesmo CPF.</p>
+ <form id="ky-form"><label class="fld">Nome completo<input id="ky-name" autocomplete="name" required maxlength="120"></label>
+ <label class="fld">CPF<input id="ky-cpf" inputmode="numeric" autocomplete="off" required maxlength="14" placeholder="000.000.000-00"></label>
+ <label class="fld">Data de nascimento<input id="ky-birth" type="date" required></label>
+ <label class="fld">Apelido no jogo (3 a 16 letras, números ou _)<input id="ky-nick" required maxlength="16" pattern="[A-Za-z0-9_]{3,16}"></label>
+ <label class="rg-ck"><input type="checkbox" id="ky-ok18" required><span>Tenho 18 anos ou mais e os dados são meus</span></label>
+ <p id="ky-msg" class="note"></p><div class="row"><button type="button" id="ky-no">Depois</button><button class="ok" id="ky-go">Confirmar cadastro</button></div></form></dialog>
+<dialog id="dep" aria-labelledby="dp-t"><div class="logo" style="font-size:20px" id="dp-t">Depositar por PIX</div>
+ <div id="dp-step1"><p class="note">Mínimo R$ 10. O PIX precisa sair de uma conta no seu CPF. O saldo entra assim que o banco confirmar o pagamento.</p>
+  <div class="chips" id="dp-chips"></div><label class="fld">Outro valor (R$)<input id="dp-val" inputmode="decimal" placeholder="10,00"></label>
+  <p id="dp-msg" class="note"></p><div class="row"><button type="button" id="dp-no">Fechar</button><button class="ok" type="button" id="dp-go">Gerar PIX</button></div></div>
+ <div id="dp-step2" hidden><p class="note" id="dp-info"></p><img id="dp-qr" alt="QR Code PIX" style="width:220px;height:220px;display:block;margin:8px auto;background:#fff;border-radius:12px;padding:8px">
+  <label class="fld">PIX copia e cola<input id="dp-code" readonly></label><div class="row"><button type="button" id="dp-copy">Copiar código</button><button type="button" class="ok" id="dp-done">Fechar</button></div><p class="note" id="dp-status">Aguardando pagamento…</p></div></dialog>
+<dialog id="wd" aria-labelledby="wd-t"><div class="logo" style="font-size:20px" id="wd-t">Sacar por PIX</div>
+ <p class="note">Saque só para a chave PIX do tipo CPF do titular da conta. Mínimo R$ 10. Até R$ 100 em conta sem pendências sai na hora; acima disso passa por revisão. O primeiro saque libera 24h depois do primeiro depósito.</p>
+ <form id="wd-form"><label class="fld">Valor (R$)<input id="wd-val" inputmode="decimal" required placeholder="10,00"></label>
+ <label class="fld">Seu CPF (chave PIX)<input id="wd-cpf" inputmode="numeric" required maxlength="14" placeholder="000.000.000-00"></label>
+ <p id="wd-msg" class="note"></p><ul class="plist" id="wd-list"></ul><div class="row"><button type="button" id="wd-no">Fechar</button><button class="ok" id="wd-go">Solicitar saque</button></div></form></dialog>
 <dialog id="quit" aria-labelledby="quit-t"><div class="logo" style="font-size:20px" id="quit-t">Sair do jogo?</div><p class="note">Você volta para a tela inicial. Seu ID, saldo de demonstração e configurações ficam salvos neste aparelho.</p>
  <div class="row"><button type="button" id="quit-no">Continuar jogando</button><button type="button" class="ok" id="quit-ok">Sair do jogo</button></div></dialog>
 <dialog id="dlg"><img id="d-cover" alt=""><div class="logo" style="font-size:20px" id="d-t"></div><div class="led" id="d-l"></div>
@@ -529,7 +553,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <div class="idbox"><span>ID do jogador<br><b id="p-id">…</b></span><button id="p-copy">Copiar</button></div>
  <label class="fld">Apelido (aparece no ranking)<input id="p-nick" maxlength="16" autocomplete="off" spellcheck="false"></label>
  <div class="fld" style="margin-bottom:0">Ícone do perfil</div><div class="icons" id="p-icons" role="group" aria-label="Ícone do perfil"></div>
- <p id="p-msg" class="note"></p><div class="row"><button id="p-no">Fechar</button><button id="p-hist">Meu histórico</button><button class="ok" id="p-ok">Salvar</button></div></dialog>
+ <p id="p-msg" class="note"></p><div class="row"><button id="p-logout" type="button">Sair da conta</button><button id="p-no">Fechar</button><button id="p-hist">Meu histórico</button><button class="ok" id="p-ok">Salvar</button></div></dialog>
 
 <dialog id="fr" class="wide"><div class="logo" style="font-size:20px">Amigos</div>
  <div class="idbox"><span>Seu ID (passe para os amigos)<br><b id="f-myid">…</b></span><button id="f-copy">Copiar</button></div>
@@ -1151,10 +1175,9 @@ const R$=v=>{v=Number(v||0);return'R$ '+v.toLocaleString('pt-BR',{minimumFractio
 /* a casa fica com 20% de cada partida: o vencedor leva o total das entradas menos 20% (igual ao core.match_settle do banco) */
 const RAKE=.2,prize=pot=>Math.round(pot*(1-RAKE)*100)/100;
 const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
-let bal=100,bet=5,mode=null,timer=0;const mapSel=-1; // mapa sempre sorteado: ninguém escolhe
-try{const raw=localStorage.getItem('bc_fichas'),v=Number(raw);if(raw!==null&&isFinite(v)&&v>=0)bal=v}catch(e){}
+let bal=0,bet=5,mode=null,timer=0;const mapSel=-1; // mapa sempre sorteado: ninguém escolhe
 {const b=Number(ls.get('bc_bet',5));if(BETS.includes(b))bet=b}
-const save=()=>{try{localStorage.setItem('bc_fichas',bal)}catch(e){}};
+const save=()=>{}; // o saldo vem do servidor (carteira no Supabase); nada fica guardado no aparelho
 const avStyle=s=>`background-image:url(${ASSET.av});background-position:${(s||0)*20}% 0`;
 /* ícones do perfil (10): os 6 bonecos, a sigla BC, a bomba e 2 mapas. Fica salvo neste aparelho junto com o apelido. */
 const ICONS=[['s0','Astro'],['s1','Estrela'],['s2','Piloto'],['s3','Ninja'],['s4','Rei Celeste'],['s5','Lorde Sombrio'],['bc','Sigla BC'],['bomb','Bomba'],['cas','Castelo'],['jun','Selva']],ICON_TX={cas:'cas_brick',jun:'jun_leaf'};
@@ -1177,6 +1200,75 @@ async function rpc(fn,args){
  try{const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',signal:ctl.signal,headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
   if(!r.ok)throw new Error('http '+r.status);return await r.json()}finally{clearTimeout(to)}}
 const auth=o=>Object.assign({p_id:me.id,p_token:me.token},o||{});
+/* ---------- conta real (Supabase Auth), cadastro com CPF, carteira e PIX ----------
+   O saldo é o da carteira no banco (core): o aparelho só mostra. Depósito/saque passam pelas Edge Functions
+   (account, pix-deposit, pix-withdraw); o saldo de depósito só entra quando o webhook do gateway confirma. */
+const FN_URL=SB_URL+'/functions/v1/';
+let sess=ls.get('bc_sess',null),acct={profile:null,wallet:null},acctAfter=null;
+const logged=()=>!!(sess&&sess.access_token);
+async function authApi(path,body){const r=await fetch(SB_URL+'/auth/v1/'+path,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.error_description||j.message||j.error||('erro '+r.status));return j}
+function setSess(j){sess={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Date.now()+(j.expires_in||3600)*1000,email:j.user&&j.user.email||(sess&&sess.email)};ls.set('bc_sess',sess)}
+async function token(){if(!logged())return null;if(Date.now()>sess.expires_at-60000){try{setSess(await authApi('token?grant_type=refresh_token',{refresh_token:sess.refresh_token}))}catch(e){logout();return null}}return sess.access_token}
+function logout(){if(sess)authApi('logout',{}).catch(()=>{});sess=null;try{localStorage.removeItem('bc_sess')}catch(e){}acct={profile:null,wallet:null};bal=0;renderAcct()}
+async function urpc(fn,args){const t=await token();if(!t)throw new Error('login');
+ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+ if(r.status===401){logout();throw new Error('login')}if(!r.ok)throw new Error('http '+r.status);return r.json()}
+async function fnCall(name,body){const t=await token();if(!t)throw new Error('Faça login.');
+ const r=await fetch(FN_URL+name,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Não foi possível agora. Tente de novo.');return j}
+async function refreshAcct(){if(!logged()){bal=0;renderAcct();return}
+ try{const [p,w]=await Promise.all([urpc('my_profile'),urpc('my_wallet')]);acct.profile=p&&p[0]||null;acct.wallet=w&&w[0]||{balance_cents:0,escrow_cents:0};
+  bal=Math.round(acct.wallet.balance_cents||0)/100;if(acct.profile){me.nick=acct.profile.nickname;saveMe();renderMe()}}catch(e){}
+ renderAcct()}
+function renderAcct(){$('acct-in').hidden=logged();$('acct-out').hidden=!logged();renderMoney()}
+/* antes de jogar: logado → cadastro completo → saldo suficiente */
+function needAcct(cb){if(!logged()){acctAfter=cb;openAuth();return false}if(!acct.profile){acctAfter=cb;openKyc();return false}if(bal<bet){openDep();return false}return true}
+let auMode='in';
+function openAuth(){auMode='in';syncAu();$('au-msg').textContent='';if(!$('auth').open)$('auth').showModal()}
+function syncAu(){$('au-tabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===auMode)));$('au-t').textContent=auMode==='in'?'Entrar':'Criar conta';$('au-ok').textContent=auMode==='in'?'Entrar':'Criar conta';$('au-pass').autocomplete=auMode==='in'?'current-password':'new-password'}
+$('au-tabs').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;auMode=b.dataset.v;syncAu()};
+$('au-no').onclick=()=>{acctAfter=null;$('auth').close()};$('login-open').onclick=openAuth;
+$('au-form').onsubmit=async e=>{e.preventDefault();const email=$('au-email').value.trim(),password=$('au-pass').value;$('au-ok').disabled=true;$('au-msg').textContent='Aguarde…';
+ try{if(auMode==='up'){const j=await authApi('signup',{email,password,data:{nickname:me.nick}});if(!j.access_token){$('au-msg').textContent='Conta criada! Confirme pelo link enviado para '+email+' e depois entre aqui.';auMode='in';syncAu();return}setSess(j)}
+  else setSess(await authApi('token?grant_type=password',{email,password}));
+  $('auth').close();await refreshAcct();if(!acct.profile)openKyc();else{const cb=acctAfter;acctAfter=null;cb&&cb()}}
+ catch(err){$('au-msg').textContent=/invalid/i.test(err.message)?'E-mail ou senha incorretos.':/registered|exists/i.test(err.message)?'Esse e-mail já tem conta: entre com ele.':err.message}
+ finally{$('au-ok').disabled=false}};
+const fmtCpf=v=>{const d=v.replace(/\D/g,'').slice(0,11);return d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')};
+const cpfOk=v=>{const d=String(v).replace(/\D/g,'');if(d.length!==11||/^(\d)\1{10}$/.test(d))return false;for(const n of [9,10]){let t=0;for(let i=0;i<n;i++)t+=d[i]*(n+1-i);if((t*10%11)%10!==+d[n])return false}return true};
+for(const id of ['ky-cpf','wd-cpf'])$(id).addEventListener('input',e=>{e.target.value=fmtCpf(e.target.value)});
+function openKyc(){$('ky-msg').textContent='';if(!$('ky-nick').value)$('ky-nick').value=String(me.nick||'').replace(/[^A-Za-z0-9_]/g,'').slice(0,16);if(!$('kyc').open)$('kyc').showModal()}
+$('ky-no').onclick=()=>{acctAfter=null;$('kyc').close()};
+$('ky-form').onsubmit=async e=>{e.preventDefault();if(!cpfOk($('ky-cpf').value)){$('ky-msg').textContent='CPF inválido: confira os números.';return}$('ky-go').disabled=true;$('ky-msg').textContent='Conferindo…';
+ try{await fnCall('account',{name:$('ky-name').value,cpf:$('ky-cpf').value,birth:$('ky-birth').value,nick:$('ky-nick').value});$('kyc').close();await refreshAcct();toast('Cadastro concluído!');const cb=acctAfter;acctAfter=null;cb&&cb()}
+ catch(err){$('ky-msg').textContent=err.message}finally{$('ky-go').disabled=false}};
+// depósito
+let depPoll=0;
+function openDep(){if(!logged()){acctAfter=openDep;openAuth();return}if(!acct.profile){acctAfter=openDep;openKyc();return}
+ clearInterval(depPoll);$('dp-step1').hidden=false;$('dp-step2').hidden=true;$('dp-msg').textContent='';
+ $('dp-chips').innerHTML=[10,20,50,100,200].map(v=>`<button type="button" class="chip" data-v="${v}">${R$(v)}</button>`).join('');if(!$('dep').open)$('dep').showModal()}
+$('dp-chips').onclick=e=>{const b=e.target.closest('[data-v]');if(b)$('dp-val').value=b.dataset.v};
+const parseBRL=v=>{const n=Number(String(v).replace(/\./g,'').replace(',','.'));return isFinite(n)?Math.round(n*100):NaN};
+$('dp-go').onclick=async()=>{const c=parseBRL($('dp-val').value);if(!(c>=1000)){$('dp-msg').textContent='O depósito mínimo é R$ 10.';return}
+ $('dp-go').disabled=true;$('dp-msg').textContent='Gerando o PIX…';
+ try{const j=await fnCall('pix-deposit',{amount_cents:c});const q=j.qr||'';$('dp-qr').src=q?(q.startsWith('data:')?q:'data:image/png;base64,'+q):'';$('dp-qr').hidden=!q;
+  $('dp-code').value=j.brCode;$('dp-info').textContent='Pague '+R$(c/100)+' com o PIX abaixo (vale até '+new Date(j.expiresAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+').';
+  $('dp-step1').hidden=true;$('dp-step2').hidden=false;$('dp-status').textContent='Aguardando pagamento…';const before=acct.wallet?acct.wallet.balance_cents:0;
+  depPoll=setInterval(async()=>{await refreshAcct();if(acct.wallet&&acct.wallet.balance_cents>before){clearInterval(depPoll);$('dp-status').textContent='Pagamento confirmado! Saldo: '+R$(bal);toast('Depósito confirmado.')}},4000)}
+ catch(err){$('dp-msg').textContent=err.message}finally{$('dp-go').disabled=false}};
+$('dp-copy').onclick=()=>{const t=$('dp-code').value;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Código PIX copiado.')).catch(()=>{$('dp-code').select()})};
+$('dp-no').onclick=$('dp-done').onclick=()=>$('dep').close();$('dep').addEventListener('close',()=>clearInterval(depPoll));
+$('dep-open').onclick=openDep;
+// saque
+const WD_ST={approved:'aprovado, enviando',pending_review:'em revisão',sent:'enviado',failed:'falhou (valor devolvido)',rejected:'recusado (valor devolvido)'};
+async function openWd(keep){if(keep!==true){$('wd-msg').textContent='';$('wd-list').innerHTML=''}if(!$('wd').open)$('wd').showModal();
+ try{const l=await urpc('my_withdrawals',{p_limit:5});$('wd-list').innerHTML=(l||[]).map(w=>`<li>${R$(w.amount_cents/100)} · ${esc(WD_ST[w.status]||w.status)} · ${esc(w.pix_key_masked)}</li>`).join('')}catch(e){}}
+$('wd-open').onclick=()=>openWd();$('wd-no').onclick=()=>$('wd').close();
+$('wd-form').onsubmit=async e=>{e.preventDefault();const c=parseBRL($('wd-val').value);if(!(c>=1000)){$('wd-msg').textContent='O saque mínimo é R$ 10.';return}if(c/100>bal){$('wd-msg').textContent='Saldo insuficiente.';return}if(!cpfOk($('wd-cpf').value)){$('wd-msg').textContent='CPF inválido: confira os números.';return}
+ $('wd-go').disabled=true;$('wd-msg').textContent='Enviando pedido…';
+ try{const j=await fnCall('pix-withdraw',{amount_cents:c,cpf:$('wd-cpf').value});$('wd-msg').textContent=j.status==='approved'?'Saque aprovado: o PIX é enviado para o seu CPF.':'Saque recebido: está em revisão e o valor fica reservado.';await refreshAcct();openWd(true)}
+ catch(err){$('wd-msg').textContent=err.message}finally{$('wd-go').disabled=false}};
 let regP=null;
 function ensurePlayer(){
  if(me.id)return Promise.resolve(true);
@@ -1277,7 +1369,7 @@ function renderMoney(){
  document.querySelectorAll('#rail .card').forEach(c=>{const m=MODES[c.dataset.k];c.querySelector('.prize b').textContent=R$(prize(m.n*bet));c.querySelector('.play').textContent='Jogar · '+R$(bet)})}
 function render(){
  $('chips').innerHTML=BETS.map(b=>`<button class="chip" aria-pressed="false" data-b="${b}">${R$(b)}</button>`).join('');
- $('rail').innerHTML=Object.entries(MODES).map(([k,m],i)=>`<button class="card ${m.cls}" data-k="${k}" style="--i:${i}"><div class="cov" role="img" aria-label="${m.name} ${m.label}"><span class="cov-img" style="background-image:url(${ASSET[m.cover]})"></span><span class="badge">${m.tag}</span>${k==='1x1'?'<span class="badge b2">Convide um amigo</span>':''}<span class="shine"></span></div><div class="info2"><div class="prize"><span>${m.n} jogadores · prêmio</span><b></b></div><div class="play"></div></div></button>`).join('');
+ $('rail').innerHTML=Object.entries(MODES).map(([k,m],i)=>`<button class="card ${m.cls}" data-k="${k}" style="--i:${i}"><div class="cov" role="img" aria-label="${m.name} ${m.label}"><span class="cov-img" style="background-image:url(${ASSET[m.cover]})"></span><span class="badge">${m.tag}</span><span class="shine"></span></div><div class="info2"><div class="prize"><span>${m.n} jogadores · prêmio</span><b></b></div><div class="play"></div></div></button>`).join('');
  renderMoney()}
 /* aviso de jogo responsável: aparece ao escolher o valor da partida e antes da 1ª partida de cada sessão;
    só libera o Confirmar depois de marcar "li e vou jogar com responsabilidade" */
@@ -1296,18 +1388,19 @@ function openDlg(){
  $('d-cover').src=ASSET[mode.cover];$('dlg').className=mode.cls;
  $('d-bar').hidden=true;$('d-bar').firstChild.style.width=0;$('d-t').textContent=mode.name+' · '+mode.label;
  $('d-l').innerHTML=`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span>${R$(bet)}</span><span>Prêmio do vencedor</span><span>${R$(prize(mode.n*bet))} <small>(${R$(mode.n*bet)} − 20% da casa)</small></span><span>Morte súbita</span><span>no 1:00 do relógio</span>`;
- const ok=$('d-ok');ok.disabled=bal<bet||!!mq;ok.textContent='Procurar partida · '+R$(bet);
- $('d-msg').textContent=bal<bet?'Saldo insuficiente para essa entrada.':'Só jogadores de verdade: a partida começa quando a sala tiver '+mode.n+' pessoas no mesmo valor. A entrada sai do seu saldo quando a partida começar.';
+ const ok=$('d-ok');ok.disabled=!!mq;ok.textContent='Procurar partida · '+R$(bet);
+ $('d-msg').textContent=!logged()?'Entre na sua conta para jogar valendo.':bal<bet?'Saldo insuficiente: deposite por PIX para jogar.':'Só jogadores de verdade: a partida começa quando a sala tiver '+mode.n+' pessoas no mesmo valor. A entrada sai do seu saldo quando a partida começar.';
  if(!$('dlg').open)$('dlg').showModal()}
 $('d-no').onclick=()=>{mmCancel();$('dlg').close()};
 $('dlg').addEventListener('close',()=>{if(mq&&!mq.started)mmCancel()});
-$('d-ok').onclick=()=>mmSearch();
+$('d-ok').onclick=()=>{if(needAcct(()=>{openDlg();rgGate(()=>mmSearch())}))mmSearch()};
 $('again').onclick=()=>{renderMoney();show('s-lobby');if(bal<bet)return;openDlg();rgGate(()=>mmSearch())};
 $('back').onclick=()=>{renderMoney();show('s-lobby');loadRank()};
 
 /* ---------- meu perfil (apelido) ---------- */
 $('me').onclick=()=>{renderIcons();$('p-id').textContent=me.id?fid(me.id):'offline';$('p-nick').value=me.nick;$('p-msg').textContent=me.id?'Guarde seu ID: é por ele que os amigos encontram você e é ele que aparece no ranking. O apelido aparece em cima do seu boneco na partida.':'Sem conexão: o ID é criado assim que o servidor responder.';$('prof').showModal();ensurePlayer().then(()=>{$('p-id').textContent=me.id?fid(me.id):'offline'})};
 $('p-no').onclick=()=>$('prof').close();
+$('p-logout').onclick=()=>{logout();$('prof').close();toast('Você saiu da conta.')};
 /* sair do jogo: fecha a partida/sala e volta para a tela inicial (no app instalado tenta fechar a janela) */
 $('quit-open').onclick=()=>$('quit').showModal();$('quit-no').onclick=()=>$('quit').close();
 $('quit-ok').onclick=()=>{try{if(net&&net.room)net.room.emit('bye',{s:net.slot||0})}catch(e){}try{arena.stop()}catch(e){}ss.set('bc_rg','');
@@ -1400,7 +1493,7 @@ function Room(topic,onMsg,onUp){
 const GS_URL=(()=>{try{const q=new URLSearchParams(location.search).get('gs');if(q!=null)localStorage.setItem('bc_gs',q==='off'?'':q);return localStorage.getItem('bc_gs')||window.BC_GS||''}catch(e){return window.BC_GS||''}})();
 function GsRoom(onMsg,onUp){let ws=null,up=false;const raw=m=>{try{if(ws&&ws.readyState===1)ws.send(JSON.stringify(m))}catch(e){}};
  try{ws=new WebSocket(GS_URL)}catch(e){setTimeout(()=>onUp(false),0);return{emit(){},raw(){},close(){}}}
- ws.onopen=()=>{up=true;raw({t:'hello',name:me.nick});onUp(true)};
+ ws.onopen=async()=>{up=true;const t=await token().catch(()=>null);raw(t?{t:'hello',token:t}:{t:'hello',name:me.nick});onUp(true)};
  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}if(m&&m.t)onMsg(m)};
  ws.onclose=()=>{if(!up)onUp(false);else onMsg({t:'closed'})};ws.onerror=()=>{};
  return{raw,
@@ -1431,7 +1524,7 @@ function mmMsg(st,m){
  if(m.t==='start'){
   const humans=Array.from({length:m.n},(_,i)=>i);st.started=true;mq=null;
   net={role:'guest',room:st.room,stake:st.stake,peer:{id:null,nick:''},started:true,slot:st.slot,n:m.n,humans,humansN:m.n,server:true};
-  mode=MODES[st.k];mode.k=st.k;bal-=st.stake;save();renderMoney();if($('dlg').open)$('dlg').close();show('s-arena');$('e-wk').textContent='';
+  mode=MODES[st.k];mode.k=st.k;if(!logged())bal-=st.stake;renderMoney();setTimeout(refreshAcct,1500);if($('dlg').open)$('dlg').close();show('s-arena');$('e-wk').textContent='';
   arena.begin(m.n,finish,{net:{role:'guest',server:true,slot:st.slot,n:m.n,humans,init:m,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}}
 let net=null;        // partida online em andamento: {role,room,stake,peer:{id,nick},started}
 let pend=null;       // convite enviado aguardando resposta: {invite,to,nick,stake,room,until,tick}
@@ -1536,12 +1629,13 @@ function autoFs(on){const d=document,coarse=window.matchMedia&&matchMedia('(poin
 addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,250));
 function finish(w,info){
  const online=!!info.net,stake=online&&net?net.stake:bet,pot=(online&&net&&net.humansN?net.humansN:mode.n)*stake,mine=info.meIdx;let t,p,result=null;
- if(w===-2){bal+=stake;t='Partida cancelada';p='A conexão com o outro jogador caiu. Sua entrada de '+R$(stake)+' voltou.'}
- else if(w===mine){const pr=prize(pot);bal+=pr;result='win';t='Você venceu!';p='O prêmio de '+R$(pr)+' é seu ('+R$(pot)+' em entradas − 20% da casa).'}
+ const add=v=>{if(!logged())bal+=v}; // logado: quem paga/devolve é o servidor; o saldo é relido do banco
+ if(w===-2){add(stake);t='Partida cancelada';p='A conexão com o outro jogador caiu. Sua entrada de '+R$(stake)+' voltou.'}
+ else if(w===mine){const pr=prize(pot);add(pr);result='win';t='Você venceu!';p='O prêmio de '+R$(pr)+' é seu ('+R$(pot)+' em entradas − 20% da casa).'}
  else if(info.place){result='loss';t='Derrota';p='Você foi eliminado e ficou em '+info.place+'º lugar de '+mode.n+'.'}
- else if(w<0){bal+=stake;result='draw';t='Empate';p='O tempo acabou sem vencedor. Sua entrada de '+R$(stake)+' voltou.'}
+ else if(w<0){add(stake);result='draw';t='Empate';p='O tempo acabou sem vencedor. Sua entrada de '+R$(stake)+' voltou.'}
  else{result='loss';t='Derrota';p=info.name+' foi o último de pé e levou o prêmio.'}
- save();$('e-img').src=ASSET.ch[SK[w>=0&&w!==mine?info.skin:me.skin]];$('e-t').textContent=t;$('e-p').textContent=p+' Saldo: '+R$(bal)+'.';
+ save();if(logged())setTimeout(refreshAcct,1200);$('e-img').src=ASSET.ch[SK[w>=0&&w!==mine?info.skin:me.skin]];$('e-t').textContent=t;$('e-p').textContent=p+' Saldo: '+R$(bal)+'.';
  renderEnd(w,info,stake,pot,online);
  $('again').hidden=false;$('again').textContent=bal<bet?'Sem saldo · voltar ao menu':'Jogar de novo · '+R$(bet);
  const o=opp.slice();if(online)endNet();show('s-end');
@@ -1765,6 +1859,7 @@ if(intro){
  $('hello-ok').onclick=e=>{e.stopPropagation();intro.classList.add('out');setTimeout(()=>{intro.remove();poll(true);bgm.update()},560)}}
 if(/[#&]debug\b/.test(location.hash))window.__bc={arena,demo};
 render();renderMe();renderDemo();renderRank();try{applyPad()}catch(e){}
+refreshAcct();
 // antes de jogar valendo saldo (partida, criar/entrar em sala, aceitar convite) o aviso precisa estar aceito nesta sessão
 for(const id of ['d-ok']){const b=$(id),f=b&&b.onclick;if(f)b.onclick=function(e){rgGate(()=>f.call(this,e))}}
 try{bgm.update()}catch(e){}window.__bgm=bgm;

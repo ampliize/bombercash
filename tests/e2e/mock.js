@@ -4,6 +4,29 @@ const mkHtml=()=>fs.readFileSync(require('path').join(__dirname,'../../demo/inde
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'POST,GET,OPTIONS'};
 const srv=http.createServer((req,res)=>{
  if(req.method==='OPTIONS'){res.writeHead(204,cors);return res.end()}
+ // ---- conta real simulada: Supabase Auth, RPCs my_*, Edge Functions (account, pix-deposit, pix-withdraw) ----
+ if(req.url.startsWith('/auth/v1/')||req.url.startsWith('/functions/v1/')||/\/rest\/v1\/rpc\/my_/.test(req.url)||req.url.startsWith('/__pay')){let b='';req.on('data',c=>b+=c);req.on('end',()=>{
+  const A=global.ACC=global.ACC||{users:{},wallet:{},profiles:{},deps:[],wds:[]},send=(st,o)=>{res.writeHead(st,{...cors,'Content-Type':'application/json'});res.end(JSON.stringify(o))};
+  const a=b?JSON.parse(b):{},u=req.url.split('?')[0],bear=(req.headers.authorization||'').replace('Bearer ',''),who=bear.split('.').length===3?(()=>{try{return JSON.parse(Buffer.from(bear.split('.')[1],'base64url')).sub}catch(e){return null}})():null;
+  const jwt=(id,nick)=>{const h=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),pl=Buffer.from(JSON.stringify({sub:id,role:'authenticated',exp:Math.floor(Date.now()/1000)+3600,user_metadata:{nickname:nick}})).toString('base64url');return h+'.'+pl+'.'+require('crypto').createHmac('sha256','mock-secret').update(h+'.'+pl).digest('base64url')};
+  const sess=x=>({access_token:jwt(x.id,x.nick),refresh_token:'r-'+x.id,expires_in:3600,user:{id:x.id,email:x.email}});
+  if(u==='/auth/v1/signup'){if(A.users[a.email])return send(422,{msg:'User already registered'});const x=A.users[a.email]={id:require('crypto').randomUUID(),email:a.email,pass:a.password,nick:(a.data&&a.data.nickname)||'Jogador'};A.wallet[x.id]=0;return send(200,sess(x))}
+  if(u==='/auth/v1/token'){if(a.refresh_token){const x=Object.values(A.users).find(y=>'r-'+y.id===a.refresh_token);return x?send(200,sess(x)):send(400,{error_description:'invalid'})}
+   const x=A.users[a.email];return x&&x.pass===a.password?send(200,sess(x)):send(400,{error_description:'Invalid login credentials'})}
+  if(u==='/auth/v1/logout')return send(204,{});
+  if(u==='/__pay'){for(const d of A.deps.filter(d=>!d.paid)){d.paid=true;A.wallet[d.user]+=d.amount}return send(200,{ok:true})}
+  if(!who)return send(401,{error:'Faça login de novo.'});
+  if(u.endsWith('/my_profile'))return send(200,A.profiles[who]?[A.profiles[who]]:[]);
+  if(u.endsWith('/my_wallet'))return send(200,[{balance_cents:A.wallet[who]||0,escrow_cents:0}]);
+  if(u.endsWith('/my_withdrawals'))return send(200,A.wds.filter(w=>w.user===who).map(w=>({amount_cents:w.amount,status:w.status,pix_key_masked:w.mask,requested_at:new Date().toISOString()})));
+  if(u==='/functions/v1/account'){const cpf=String(a.cpf||'').replace(/\D/g,'');if(cpf.length!==11)return send(400,{error:'CPF inválido.'});if(Object.values(A.profiles).some(p=>p.cpf===cpf))return send(409,{error:'Este CPF já tem uma conta.'});
+   A.profiles[who]={nickname:a.nick,kyc:'approved',status:'active',cpf_last4:cpf.slice(-4),cpf};return send(200,{ok:true})}
+  if(u==='/functions/v1/pix-deposit'){if(!A.profiles[who])return send(409,{error:'Complete seu cadastro primeiro.'});if(!(a.amount_cents>=1000))return send(400,{error:'Valor entre R$ 10 e R$ 5.000.'});
+   const d={id:'dep-'+A.deps.length,user:who,amount:a.amount_cents,paid:false};A.deps.push(d);
+   return send(200,{id:d.id,amount_cents:d.amount,brCode:'00020126580014BR.GOV.BCB.PIX0136teste-bombercash5204000053039865802BR6304ABCD',qr:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',expiresAt:new Date(Date.now()+3600e3).toISOString()})}
+  if(u==='/functions/v1/pix-withdraw'){const p=A.profiles[who],cpf=String(a.cpf||'').replace(/\D/g,'');if(!p||p.cpf!==cpf)return send(409,{error:'A chave PIX precisa ser o CPF do titular da conta.'});if(a.amount_cents>(A.wallet[who]||0))return send(409,{error:'Saldo insuficiente.'});
+   A.wallet[who]-=a.amount_cents;const w={user:who,amount:a.amount_cents,status:a.amount_cents<=10000?'approved':'pending_review',mask:'***.***.'+cpf.slice(6,9)+'-'+cpf.slice(9)};A.wds.push(w);return send(200,{ok:true,status:w.status})}
+  return send(404,{error:'não encontrado'})});return}
  if(req.url.startsWith('/rest/v1/rpc/')){const fn=req.url.split('/').pop();let b='';req.on('data',c=>b+=c);req.on('end',()=>{
   const a=b?JSON.parse(b):{};let out={ok:true};
   if(fn==='bc_register')out={id:++uid,token:'00000000-0000-4000-8000-'+String(uid).padStart(12,'0'),nick:a.p_nick};

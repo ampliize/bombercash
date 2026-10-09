@@ -3,14 +3,14 @@ import { WebSocketServer } from 'ws';
 import { MODES } from './room.js';
 import { Matchmaker } from './match.js';
 import { NoopLedger, SupabaseLedger } from './ledger.js';
-import { verifyJwt } from './auth.js';
+import { verifyToken } from './auth.js';
 
 const PORT = +process.env.PORT || 2567;
 const MONEY = process.env.MONEY_MODE === '1'; // sem isso, só partidas de brincadeira (sem saldo)
 const SECRET = process.env.SUPABASE_JWT_SECRET || '';
 const ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const ledger = MONEY ? new SupabaseLedger({ url: process.env.SUPABASE_URL, serviceKey: process.env.SUPABASE_SERVICE_KEY }) : new NoopLedger();
-if (MONEY && !SECRET) throw new Error('MONEY_MODE exige SUPABASE_JWT_SECRET');
+if (MONEY && !SECRET && !process.env.SUPABASE_URL) throw new Error('MONEY_MODE exige SUPABASE_URL (chaves novas) ou SUPABASE_JWT_SECRET (chave legada)');
 
 const rooms = new Map();
 const log = (...a) => console.log(new Date().toISOString(), ...a);
@@ -25,13 +25,15 @@ wss.on('connection', ws => {
   const conn = { ws, room: null, seat: null, send: m => { try { if (ws.readyState === 1) ws.send(JSON.stringify(m)); } catch { /* fechado */ } }, setRoom(r, s) { this.room = r; this.seat = s; } };
   const rate = setInterval(() => { msgs = 0; }, 1000);
   const err = m => conn.send({ t: 'error', error: m });
-  ws.on('message', raw => {
+  let authing = false;
+  ws.on('message', async raw => {
     if (++msgs > 90) { ws.close(); return; }
     let m; try { m = JSON.parse(raw); } catch { return err('mensagem inválida'); }
     if (!m || typeof m !== 'object') return;
     if (!user) { // primeira mensagem identifica o jogador
       if (m.t !== 'hello') return err('identifique-se');
-      if (MONEY || m.token) { user = verifyJwt(m.token, SECRET); if (!user) { err('sessão inválida'); return ws.close(); } }
+      if (authing) return; authing = true;
+      if (MONEY || m.token) { user = await verifyToken(m.token, { secret: SECRET, supabaseUrl: process.env.SUPABASE_URL }); if (!user) { err('sessão inválida, faça login de novo'); return ws.close(); } }
       else { const nm = String(m.name || '').replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 14) || 'Jogador'; user = { id: 'teste-' + Math.random().toString(36).slice(2, 10), name: nm }; }
       return conn.send({ t: 'hello', id: user.id, money: MONEY });
     }

@@ -1,5 +1,5 @@
 // Aviso de jogo responsável (caixa + confirmar), sair do jogo, mapa sempre aleatório, ID com 7 dígitos, bomba inicial com alcance 1.
-const {chromium}=require('playwright-core');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const {chromium}=require('playwright-core'),{cpf,signup,kyc,deposit}=require('./acct');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
 (async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
  const c=await b.newContext({viewport:{width:900,height:800}});const p=await c.newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));
@@ -20,8 +20,11 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  await p.click('#rg-ok');await sleep(200);ok(await p.evaluate(()=>JSON.parse(localStorage.bc_bet))===10&&!(await p.$eval('#rg',d=>d.open)),'confirmou: valor R$ 10 aplicado');
  // partida: aviso já aceito nesta sessão, mapa sorteado, bomba alcance 1
  await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await sleep(200);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
+ ok(await p.$eval('#auth',d=>d.open)&&!(await p.evaluate(()=>window.__arena.active)),'sem conta: pede para entrar antes de jogar');
+ await p.click('#au-no');await signup(p,'r'+Date.now()+'@teste.com');await kyc(p,cpf(Date.now()%1e8+7),'Regras_'+String(Date.now()).slice(-4));await deposit(p,20);
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await sleep(200);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
  ok(/Servidor de partidas indisponível/.test(await p.textContent('#d-msg'))&&!(await p.evaluate(()=>window.__arena.active)),'sem servidor de partidas: não começa partida contra bots');
- ok(!(await p.$('#dep'))&&!(await p.$('#rm-open'))&&!(await p.$('#bt-pause')),'sem dinheiro demo, sem sala com amigos e sem pausa');
+ ok(!/demo/i.test(await p.textContent('header'))&&!(await p.$('button#dep'))&&!(await p.$('#rm-open'))&&!(await p.$('#bt-pause')),'sem dinheiro demo, sem sala com amigos e sem pausa');
  await p.evaluate(()=>window.__bcSolo());
  await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});await sleep(500);
  const st=await p.evaluate(()=>{const s=window.__arena._s();return{pw:s.players.map(q=>q.power),map:window.__arena.map}});

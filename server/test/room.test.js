@@ -78,3 +78,16 @@ test('JWT: aceita válido, rejeita adulterado/expirado/outro papel', () => {
   assert.equal(verifyJwt(jwt(ok, 's3cret', 'none'), 's3cret'), null);
   assert.equal(verifyJwt('lixo', 's3cret'), null);
 });
+
+import { generateKeyPairSync, sign as csign } from 'node:crypto';
+import { verifyToken } from '../src/auth.js';
+test('JWT ES256 (chaves novas do Supabase) via JWKS', async () => {
+  const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'k1', alg: 'ES256' };
+  const h = Buffer.from(JSON.stringify({ alg: 'ES256', kid: 'k1', typ: 'JWT' })).toString('base64url');
+  const p = Buffer.from(JSON.stringify({ sub: 'u-1', role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 60, user_metadata: { nickname: 'Bomba' } })).toString('base64url');
+  const sig = csign('sha256', Buffer.from(h + '.' + p), { key: privateKey, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+  const fetchImpl = async () => ({ ok: true, json: async () => ({ keys: [jwk] }) });
+  assert.deepEqual(await verifyToken(`${h}.${p}.${sig}`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), { id: 'u-1', name: 'Bomba' });
+  assert.equal(await verifyToken(`${h}.${p}.${sig.slice(0, -4)}AAAA`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), null);
+});

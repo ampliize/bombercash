@@ -1,14 +1,16 @@
 // Partida de verdade: 2 navegadores entram na fila do 1x1 com o mesmo valor; o servidor junta, começa e decide.
 // Requer o mock (npm run mock) na 8765; este teste sobe o servidor de jogo na 2599.
-const {chromium}=require('playwright-core'),{spawn}=require('child_process'),path=require('path');
+const {chromium}=require('playwright-core'),{cpf,signup,kyc,deposit}=require('./acct'),{spawn}=require('child_process'),path=require('path');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),GS='ws://127.0.0.1:2599';
 (async()=>{
- const gs=spawn('node',[path.join(__dirname,'../../server/src/index.js')],{env:{...process.env,PORT:'2599',COUNTDOWN:'3'},stdio:'inherit'});await sleep(800);
+ const gs=spawn('node',[path.join(__dirname,'../../server/src/index.js')],{env:{...process.env,PORT:'2599',COUNTDOWN:'3',SUPABASE_JWT_SECRET:'mock-secret'},stdio:'inherit'});await sleep(800);
  const fail=m=>{console.log('FALHOU:',m);gs.kill();process.exit(1)};
  const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});const pages=[];
  for(let i=0;i<3;i++){const c=await b.newContext({viewport:{width:900,height:800}});const p=await c.newPage();p.on('pageerror',e=>fail('P'+(i+1)+' pageerror: '+e.message));await p.goto('http://127.0.0.1:8765/?gs='+GS);pages.push(p)}
  await sleep(2000);
- for(const p of pages){await p.evaluate(()=>window.__bcEnter());await sleep(700);await p.click('#hello-ok')}
+ const T=Date.now();let i=0;
+ for(const p of pages){await p.evaluate(()=>window.__bcEnter());await sleep(700);await p.click('#hello-ok');i++;
+  await signup(p,'s'+i+'_'+T+'@teste.com');await kyc(p,cpf((T+i*7919)%1e8),'Srv'+i+'_'+String(T).slice(-4));await deposit(p,20)}
  await sleep(800);
  const [A,B,C]=pages;
  const queue=async(p,k,v)=>{await p.evaluate(v=>{const c=document.querySelector('#chips .chip[data-b="'+v+'"]');c&&c.click();const d=document.getElementById('rg');if(d.open){document.getElementById('rg-ck').click();document.getElementById('rg-ok').click()}},v);await sleep(200);
