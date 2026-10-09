@@ -6,7 +6,9 @@
     "test": "node room.test.js",
     "test:responsive": "node responsive.test.js",
     "test:audio": "node audio.test.js",
-    "test:layout": "node layout.test.js"
+    "test:layout": "node layout.test.js",
+    "test:splash": "node splash.test.js",
+    "test:splash-fallback": "node splash-fallback.test.js"
   },
   "dependencies": {
     "playwright-core": "^1.56.1",

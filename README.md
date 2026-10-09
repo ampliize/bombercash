@@ -40,3 +40,11 @@ Responsividade: o layout usa `dvh`, `safe-area` e `visualViewport`, os diálogos
 
 ## Posição dos controles (cada jogador monta o seu)
 Configurações → **Posição dos controles** → *Personalizar posição dos controles*: abre um editor em tela cheia onde dá para **arrastar o analógico, o botão BOMBA e a barra de menu** para qualquer lugar, com sliders de transparência e de tamanho. **Em pé e deitado guardam posições separadas.** No modo personalizado a arena usa o máximo da tela e os controles flutuam semitransparentes por cima. *Salvar* grava no aparelho (`bc_cfg.pos`), *Cancelar* descarta, *Restaurar* volta ao padrão; o switch "Layout personalizado" liga e desliga sem perder as posições. Teste: `npm run test:layout`.
+
+## Tela inicial animada
+A abertura começa **só na logomarca** (zoom + máscara suave + anel dourado), a câmera recua e a revelação abre em círculo até o fliperama, o mapa e o ambiente; centelhas, brilho na logo e pulso no "JOGUE AGORA" ficam em loop leve. Toque em qualquer momento acelera até o fim e abre o aviso de 18+ (a confirmação continua obrigatória); a saída faz um zoom de entrada no fliperama. `prefers-reduced-motion` mostra só o quadro final.
+
+**Arte (a fornecer pelo designer):** `demo/assets/splash-h.webp` (horizontal, 1672x941) e `demo/assets/splash-v.webp` (vertical, 941x1672, com a faixa 18+), de preferência WebP até ~400 KB cada. O jogo escolhe pela orientação da tela e preenche as laterais com a própria arte desfocada, então nada é cortado. **Sem os arquivos, a abertura antiga continua funcionando.**
+Os pontos da arte usados pela animação (centro da logo, retângulo da logo, painel "JOGUE AGORA") estão na tabela `G` da função `splash()` em `demo/index.html`, em frações da imagem; se a arte final mudar de proporção, é só ajustar esses números.
+
+Testes: `python3 make-placeholder-art.py <pasta>` gera arte provisória só para teste; com `ASSETS_DIR=<pasta> npm run mock` rodam `npm run test:splash` (fluidez, toque, giro, reduzir movimento) e `splash-frames.js` (quadros). Sem `ASSETS_DIR`, `npm run test:splash-fallback` confere a abertura antiga.

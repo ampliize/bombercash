@@ -13,6 +13,7 @@ const srv=http.createServer((req,res)=>{
   else if(fn==='bc_profile')out={ok:true,history:[]};
   global.reports=global.reports||[];if(fn==='bc_report_v3')global.reports.push(a);
   res.writeHead(200,{...cors,'Content-Type':'application/json'});res.end(JSON.stringify(out))});return}
+ if(req.url.startsWith('/assets/')&&process.env.ASSETS_DIR){const f=require('path').join(process.env.ASSETS_DIR,req.url.slice(8).split('?')[0]);if(fs.existsSync(f)){res.writeHead(200,{'Content-Type':'image/webp',...cors});return res.end(fs.readFileSync(f))}res.writeHead(404);return res.end()}
  if(req.url==='/__reports'){res.writeHead(200,{...cors});return res.end(JSON.stringify(global.reports||[]))}
  res.writeHead(200,{'Content-Type':'text/html'});res.end(html)});
 const wss=new WebSocketServer({server:srv});const topics=new Map();
