@@ -533,9 +533,9 @@ try{const qs=new URLSearchParams(location.search);
 const LOGO_W=1448,LOGO_H=1086,SPARK=[0.483,0.198];
 const LAY={
   L:{w:1672,h:941,cols:13,rows:7,scr:{top:360.5,bot:719.5,tl:522,tr:1146,bl:487.6,br:1183.4},balls:[[552.5,727.5,27.5],[1057.7,732.5,27.5]],
-     logo:{x:631.4,y:-11.9,w:417},btn:[743,741,942,819],fuses:[[128,722,26],[1648,702,30]],big:0.47},
+     logo:{x:631.4,y:-11.9,w:417},btn:[743,741,942,819],fuses:[[128,722,26],[1648,702,30]],big:0.47,key:[440,66,1232,830]},
   P:{w:941,h:1672,cols:11,rows:7,scr:{top:649,bot:1063.5,tl:158,tr:788,bl:113.5,br:830},balls:[],
-     logo:{x:234.9,y:191.4,w:492.3},btn:[358,1103,588,1190],fuses:[[45,1418,30],[908,1428,30]],big:0.80}
+     logo:{x:234.9,y:191.4,w:492.3},btn:[358,1103,588,1190],fuses:[[45,1418,30],[908,1428,30]],big:0.80,key:[100,170,841,1205]}
 };
 const root=document.getElementById('bomber-cash'),cv=root.querySelector('canvas'),ctx=cv.getContext('2d'),backdrop=root.querySelector('.bc-bg');
 const IMG={};
@@ -561,7 +561,9 @@ function resize(){
   const r=root.getBoundingClientRect(),w=Math.max(50,r.width),h=Math.max(50,r.height);
   const k=CFG.layout||(w/h<0.95?'P':'L');if(k!==key){setLayout(k);if(!ti)ti=CFG.intro?0:T_D;}
   dpr=Math.min(window.devicePixelRatio||1,2);
-  fitK=CFG.fit==='cover'?Math.max(w/lay.w,h/lay.h):Math.min(w/lay.w,h/lay.h);
+  // fill: preenche a tela toda (como cover), mas nunca corta a logo, a tela do fliperama e o JOGUE AGORA (lay.key)
+  if(CFG.fit==='fill'){const K=lay.key;fitK=Math.min(Math.max(w/lay.w,h/lay.h),w/(K[2]-K[0]),h/(K[3]-K[1]));}
+  else fitK=CFG.fit==='cover'?Math.max(w/lay.w,h/lay.h):Math.min(w/lay.w,h/lay.h);
   if(fitK*dpr>1.6)dpr=1.6/fitK; // não renderiza acima de 1.6x a arte
   cw=Math.round(w*dpr);ch=Math.round(h*dpr);if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch;}
 }
@@ -608,7 +610,8 @@ function render(dt){
   const t=ti,W=lay.w,H=lay.h,bg=IMG[key];
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,cw,ch);
   if(!bg.ok||!IMG.logo.ok)return;
-  const k=fitK*dpr,ox=(cw-W*k)/2,oy=(ch-H*k)/2;
+  const k=fitK*dpr;let ox=(cw-W*k)/2,oy=(ch-H*k)/2;
+  if(CFG.fit==='fill'){const K=lay.key,place=(scr,art,c)=>art<=scr?(scr-art)/2:Math.min(0,Math.max(scr-art,scr/2-c*k));ox=place(cw,W*k,(K[0]+K[2])/2);oy=place(ch,H*k,(K[1]+K[3])/2);}
   // câmera
   const still=CFG.still||CFG.loop; // modo gravação: fundo parado = GIF/vídeo bem mais leve
   const tr=clamp((t-T_C)/(T_D-T_C),0,1),tb=t-T_B;
