@@ -5,7 +5,8 @@
     "mock": "node mock.js",
     "test": "node room.test.js",
     "test:responsive": "node responsive.test.js",
-    "test:audio": "node audio.test.js"
+    "test:audio": "node audio.test.js",
+    "test:layout": "node layout.test.js"
   },
   "dependencies": {
     "playwright-core": "^1.56.1",

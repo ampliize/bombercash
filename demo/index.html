@@ -230,6 +230,36 @@ body.playing{-webkit-user-select:none;user-select:none}
 #s-arena.imm .ibtn.txt{width:auto;padding:0 10px;font-size:12px;white-space:nowrap}
 #s-arena.imm .timer{min-width:40px;font-size:14px}
 #s-arena.imm .pill,#s-arena.imm .keys,#s-arena.imm .rot{display:none}
+
+/* ---------- layout personalizado: cada jogador posiciona analogico, BOMBA e barra ---------- */
+.console.free{display:block;width:auto;max-width:none}
+.console.free .scr{margin:0 auto;border-radius:14px}
+.console.free .joy{position:fixed;z-index:7;transform:translate(-50%,-50%);background:none;border-radius:0;height:auto;box-shadow:none;display:flex;align-items:center;justify-content:center;opacity:var(--pad-op,.8)}
+.console.free .jl{left:var(--sx,20%);top:var(--sy,80%);width:calc(var(--as,140px)*1.3);height:calc(var(--as,140px)*1.3)}
+.console.free .jr{left:var(--bx,80%);top:var(--by,80%);width:calc(var(--bs,132px)*1.3);height:calc(var(--bs,132px)*1.3)}
+.console.free .joy .pill{display:none}
+.console.free.nopad .joy{display:none}
+#s-arena.free .atop{position:fixed;transform:translate(-50%,-50%);z-index:8;width:max-content;max-width:calc(100vw - 8px);min-height:0;padding:3px 6px;background:#0b0c1ecc;border-radius:12px;gap:4px}
+#s-arena.free .hud,#s-arena.free .keys,#s-arena.free .rot{display:none}
+#s-arena.free .ibtn{width:32px;height:32px}
+#s-arena.free .ibtn.txt{width:auto;padding:0 10px;font-size:12px;white-space:nowrap}
+#s-arena.free .timer{min-width:40px;font-size:14px}
+dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#0b0c1ef2;overflow:hidden;color:var(--ink)}
+#ed::backdrop{background:#000}
+#ed .ed-arena{position:absolute;border:2px dashed #5b6bd6;border-radius:12px;background:repeating-linear-gradient(45deg,#ffffff08 0 12px,#0000 12px 24px);display:grid;place-items:center;color:#7f86c9;font:400 14px Bungee,Impact,sans-serif;pointer-events:none}
+#ed .ed-item{position:absolute;transform:translate(-50%,-50%);touch-action:none;cursor:grab;outline:2px dashed var(--gold);outline-offset:6px;border-radius:50%;opacity:var(--pad-op,.8);z-index:6;user-select:none;-webkit-user-select:none}
+#ed .ed-item.drag{cursor:grabbing;outline-color:#fff}
+#ed .ed-item .stick,#ed .ed-item .bombbtn{pointer-events:none}
+#ed .ed-item[data-k=bar]{border-radius:12px;opacity:1;display:flex;gap:4px;align-items:center;padding:3px 6px;background:#1b1c47;white-space:nowrap;outline-offset:4px}
+#ed .ed-item[data-k=bar] b{font-family:Bungee;font-weight:400;font-size:14px;color:var(--gold);padding:0 6px}
+#ed .ed-item[data-k=bar] i{width:32px;height:32px;border-radius:10px;border:2px solid var(--line);background:var(--panel);display:grid;place-items:center;font-style:normal;font-size:15px}
+#ed .ed-tools{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,92vw);max-height:92%;overflow:auto;background:#1b1c47f0;border:2px solid var(--line);border-radius:14px;padding:10px 14px;z-index:5}
+#ed .ed-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px}
+#ed .ed-h small{color:var(--gold);font-family:Bungee;font-size:11px}
+#ed .rng{margin:6px 0 0;font-size:12px}
+#ed .rng input{margin:2px 0}
+#ed .row{margin-top:10px}
+@media (max-height:520px){#ed .ed-tools{width:min(540px,92vw);display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px;padding:8px 14px}#ed .ed-h,#ed .ed-tools .note,#ed .ed-tools .row{grid-column:1/-1}#ed .ed-tools .note{margin:4px 0 0!important}#ed .row{margin-top:6px}}
 .console.swap .jl{grid-area:jr;border-radius:0 0 46px 0}.console.swap .jr{grid-area:jl;border-radius:0 0 0 46px}
 .console.swap .jl .pill{right:auto;left:10px}.console.swap .jr .pill{left:auto;right:10px}
 .console.land.swap .jl{border-radius:0 64px 64px 0}.console.land.swap .jr{border-radius:64px 0 0 64px}
@@ -440,6 +470,17 @@ body.playing{-webkit-user-select:none;user-select:none}
 <dialog id="wait"><div class="logo" style="font-size:20px" id="w-t"></div><div class="spin"></div><p id="w-msg" style="text-align:center;font-weight:800"></p><div class="row"><button id="w-no">Cancelar</button></div></dialog>
 
 <div id="inv" popover="manual" role="alertdialog" aria-labelledby="inv-t"><span class="av" id="inv-av"></span><div><b id="inv-t"></b><small id="inv-s"></small></div><div class="row"><button id="inv-no">Recusar</button><button class="ok" id="inv-yes">Aceitar</button></div></div>
+<dialog id="ed" aria-label="Posição dos controles"><div class="ed-arena" id="ed-arena"><span>ÁREA DO JOGO</span></div>
+ <div class="ed-item" id="ed-stick" data-k="stick"><div class="stick"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i><span class="knob"></span></div></div>
+ <div class="ed-item" id="ed-bomb" data-k="bomb"><div class="bombbtn"><i></i>BOMBA</div></div>
+ <div class="ed-item" id="ed-bar" data-k="bar"><i>⚙</i><b>2:30</b><i>♪</i><i>⏸</i><i>⛶</i></div>
+ <div class="ed-tools"><div class="ed-h"><b>Arraste os controles</b><small id="ed-or">horizontal</small></div>
+  <label class="rng"><span>Transparência <output id="e-opa-v"></output></span><input type="range" id="e-opa" min="30" max="100" step="5"></label>
+  <label class="rng"><span>Analógico <output id="e-size-v"></output></span><input type="range" id="e-size" min="70" max="150" step="5"></label>
+  <label class="rng"><span>Botão BOMBA <output id="e-bomb-v"></output></span><input type="range" id="e-bomb" min="70" max="150" step="5"></label>
+  <p class="note" style="margin:8px 0 0;font-size:11px">Cada orientação (em pé e deitado) guarda a sua posição.</p>
+  <div class="row"><button type="button" id="ed-reset">Restaurar</button><button type="button" id="ed-cancel">Cancelar</button><button type="button" class="ok" id="ed-save">Salvar</button></div></div></dialog>
+
 <div id="toast" popover="manual" role="status" aria-live="polite"></div>
 
 <dialog id="cfg"><div class="logo" style="font-size:20px">Configurações</div>
@@ -455,6 +496,9 @@ body.playing{-webkit-user-select:none;user-select:none}
  <label class="rng"><span>Tamanho do botão BOMBA <output id="c-bomb-v"></output></span><input type="range" id="c-bomb" min="70" max="150" step="5"><small><i>Menor</i><i>Maior</i></small></label>
  <label class="tog"><span>Inverter lados: analógico à direita, bomba à esquerda</span><input type="checkbox" id="c-swap"></label>
  <label class="tog"><span>Vibração ao tocar</span><input type="checkbox" id="c-hap"></label>
+ <div class="cfg-sec">Posição dos controles</div>
+ <label class="tog"><span>Layout personalizado (controles livres, cada um no seu lugar)</span><input type="checkbox" id="c-custom"></label>
+ <button type="button" class="ok" id="c-edit" style="width:100%;margin:8px 0 0">Personalizar posição dos controles</button>
  <div class="cfg-sec">Som</div>
  <label class="rng"><span>Música <output id="c-mus-v"></output></span><input type="range" id="c-mus" min="0" max="100" step="5"><small><i>Desligada</i><i>Alta</i></small></label>
  <label class="rng"><span>Efeitos sonoros <output id="c-sfx-v"></output></span><input type="range" id="c-sfx" min="0" max="100" step="5"><small><i>Desligados</i><i>Altos</i></small></label>
@@ -1282,8 +1326,9 @@ if('IntersectionObserver' in window)new IntersectionObserver(es=>{dmView=es[0].i
 const keys=new Set(),con=$('console'),cv=$('arena');
 let padOn=ls.get('bc_pad',true),opp=[];
 /* configurações do analógico: sens 1-10 (zona morta), size 70-150 (% do tamanho base) */
-const CFG_DEF={sens:6,size:100,scr:100,bomb:100,swap:false,float:false,haptic:true,fs:true,mus:60,sfx:80},STICK_BASE=140,clampN=(v,a,b,d)=>{v=Number(v);return isFinite(v)?Math.max(a,Math.min(b,v)):d};
-const cfg=(()=>{const c=ls.get('bc_cfg',null)||{};return{sens:Math.round(clampN(c.sens,1,10,CFG_DEF.sens)),size:Math.round(clampN(c.size,70,150,CFG_DEF.size)),scr:Math.round(clampN(c.scr,60,100,CFG_DEF.scr)),bomb:Math.round(clampN(c.bomb,70,150,CFG_DEF.bomb)),swap:!!c.swap,float:!!c.float,haptic:c.haptic!==false,fs:c.fs!==false,mus:Math.round(clampN(c.mus,0,100,CFG_DEF.mus)),sfx:Math.round(clampN(c.sfx,0,100,CFG_DEF.sfx))}})();
+const POS_DEF={p:{stick:[.24,.82],bomb:[.78,.82],bar:[.5,.035]},l:{stick:[.13,.66],bomb:[.87,.66],bar:[.5,.06]}},clonePos=o=>JSON.parse(JSON.stringify(o)),CFG_DEF={sens:6,size:100,scr:100,bomb:100,swap:false,float:false,haptic:true,fs:true,mus:60,sfx:80,layout:'fixed',opa:80},STICK_BASE=140,clampN=(v,a,b,d)=>{v=Number(v);return isFinite(v)?Math.max(a,Math.min(b,v)):d};
+const normPos=o=>{const r=clonePos(POS_DEF);for(const a of ['p','l'])for(const k of ['stick','bomb','bar']){const v=o&&o[a]&&o[a][k];if(Array.isArray(v)&&v.length===2)r[a][k]=[clampN(v[0],0,1,r[a][k][0]),clampN(v[1],0,1,r[a][k][1])]}return r};
+const cfg=(()=>{const c=ls.get('bc_cfg',null)||{};return{sens:Math.round(clampN(c.sens,1,10,CFG_DEF.sens)),size:Math.round(clampN(c.size,70,150,CFG_DEF.size)),scr:Math.round(clampN(c.scr,60,100,CFG_DEF.scr)),bomb:Math.round(clampN(c.bomb,70,150,CFG_DEF.bomb)),swap:!!c.swap,float:!!c.float,haptic:c.haptic!==false,fs:c.fs!==false,mus:Math.round(clampN(c.mus,0,100,CFG_DEF.mus)),sfx:Math.round(clampN(c.sfx,0,100,CFG_DEF.sfx)),layout:c.layout==='custom'?'custom':'fixed',opa:Math.round(clampN(c.opa,30,100,CFG_DEF.opa)),pos:normPos(c.pos)}})();
 const deadZone=()=>.55-.47*(cfg.sens-1)/9;
 const arena=BC.create({canvas:cv,keys,
  onMsg:t=>{$('amsg').textContent=t},
@@ -1296,8 +1341,10 @@ const arena=BC.create({canvas:cv,keys,
 function fit(){
  if(!$('s-arena').classList.contains('on'))return;
  const de=document.documentElement,vv=window.visualViewport,vw=Math.min(de.clientWidth,window.innerWidth||1e9,vv&&vv.width?Math.ceil(vv.width):1e9),vh=Math.min(de.clientHeight,window.innerHeight||1e9,vv&&vv.height?Math.ceil(vv.height):1e9),land=vw>vh*1.12;
- const imm=land&&vh<=560;$('s-arena').classList.toggle('imm',imm);con.classList.toggle('swap',!!cfg.swap);con.classList.toggle('land',land);con.classList.toggle('nopad',!padOn);{const big=mode&&mode.n>4,coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;$('rot').hidden=land||!(big||coarse);$('rot').textContent=big?'Mapa grande: gire o celular para jogar na horizontal.':'Dica: gire o celular na horizontal para ver o jogo bem maior.'}
+ const free=cfg.layout==='custom',imm=land&&vh<=560&&!free;$('s-arena').classList.toggle('imm',imm);$('s-arena').classList.toggle('free',free);con.classList.toggle('free',free);con.classList.toggle('swap',!!cfg.swap);con.classList.toggle('land',land);con.classList.toggle('nopad',!padOn);{const big=mode&&mode.n>4,coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;$('rot').hidden=land||!(big||coarse);$('rot').textContent=big?'Mapa grande: gire o celular para jogar na horizontal.':'Dica: gire o celular na horizontal para ver o jogo bem maior.'}
  const jl=con.querySelector('.jl'),jr=con.querySelector('.jr');jl.style.height=jr.style.height='';
+ if(free){fitFree(vw,vh,land);return}
+ $('atop').style.left=$('atop').style.top='';
  const topH=(imm?0:$('atop').offsetHeight)+$('rot').offsetHeight,want=Math.round(STICK_BASE*cfg.size/100),wantB=Math.round(140*cfg.bomb/100);let stick,bs;
  if(land){let joy=Math.round(Math.max(Math.max(124,Math.min(vw*.19,206)),Math.min(Math.max(want,wantB)+30,vw*.3)));
   if(imm&&padOn&&cfg.size<=100&&cfg.bomb<=100){const wantW=Math.round((vh-10)*cv.width/cv.height)+12,room=Math.floor((vw-4-wantW)/2),vis=e=>e.offsetParent!==null,wd=a=>a.filter(vis).reduce((t,e)=>t+e.offsetWidth+4,0)+6,barW=Math.max(wd([...document.querySelectorAll('#atop .ibtn')].filter(e=>!e.classList.contains('txt'))),wd([...document.querySelectorAll('#atop .ibtn.txt,#atop .timer')]));joy=Math.max(96,barW,Math.min(joy,room))}
@@ -1309,6 +1356,16 @@ function fit(){
  const sp=imm?8:10,aw=Math.min(vw-4,1500)-2*joyW-sp-(land?8:0),ah=vh-topH-minPad-(imm?2:land?10:16)-kh-(imm?sp:land?8:10),ar=cv.width/cv.height;
  const w=Math.max(140,Math.floor(Math.min(aw,ah*ar)*cfg.scr/100)),h=Math.round(w/ar);cv.style.width=w+'px';cv.style.height=h+'px';
  if(!land&&padOn){const free=vh-topH-h-(land?10:16)-kh-14;jl.style.height=jr.style.height=Math.max(minPad,Math.min(360,free))+'px'}}
+function freeSizes(vw,vh){const k=Math.min(vw,vh);return{stick:Math.round(Math.max(60,Math.min(STICK_BASE*cfg.size/100,k*.5))),bs:Math.round(Math.max(70,Math.min(140*cfg.bomb/100,k*.5)))}}
+function fitFree(vw,vh,land){
+ const{stick,bs}=freeSizes(vw,vh),ar=cv.width/cv.height,sp=8,P=cfg.pos[land?'l':'p'];
+ const w=Math.max(140,Math.floor(Math.min(vw-4-sp,(vh-2-sp)*ar)*cfg.scr/100)),h=Math.round(w/ar);cv.style.width=w+'px';cv.style.height=h+'px';
+ con.style.setProperty('--as',stick+'px');con.style.setProperty('--bs',bs+'px');con.style.setProperty('--pad-op',cfg.opa/100);
+ const put=(k,size)=>{const z=Math.round(size*1.3);return[Math.round(Math.max(z/2,Math.min(vw-z/2,P[k][0]*vw))),Math.round(Math.max(z/2,Math.min(vh-z/2,P[k][1]*vh)))]};
+ const[sx,sy]=put('stick',stick),[bx,by]=put('bomb',bs);
+ con.style.setProperty('--sx',sx+'px');con.style.setProperty('--sy',sy+'px');con.style.setProperty('--bx',bx+'px');con.style.setProperty('--by',by+'px');
+ const bar=$('atop'),bw=bar.offsetWidth,bh=bar.offsetHeight;
+ bar.style.left=Math.round(Math.max(bw/2+2,Math.min(vw-bw/2-2,P.bar[0]*vw)))+'px';bar.style.top=Math.round(Math.max(bh/2+2,Math.min(vh-bh/2-2,P.bar[1]*vh)))+'px'}
 let fsAuto=false;
 function autoFs(on){const d=document,coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches,isFs=d.fullscreenElement||d.webkitFullscreenElement;
  if(on){if(!cfg.fs||!coarse||!canFs||isFs)return;const r=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen,p=r.call(fsEl);fsAuto=true;if(p&&p.then)p.then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{fsAuto=false})}
@@ -1366,16 +1423,45 @@ function makeStick(el,zone,onDir,opt){
  zone.addEventListener('pointermove',e=>{if(e.pointerId===pid)upd(e)});
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])zone.addEventListener(ev,end);
  return{reset(){pid=null;center();set('');unfloat()}}}
-const gameStick=makeStick($('stick'),con.querySelector('.jl'),d=>{['a','d','w','s'].forEach(k=>keys.delete(k));if(d){keys.add(d);buzz()}},{float:()=>cfg.float});
+const gameStick=makeStick($('stick'),con.querySelector('.jl'),d=>{['a','d','w','s'].forEach(k=>keys.delete(k));if(d){keys.add(d);buzz()}},{float:()=>cfg.float&&cfg.layout!=='custom'});
 arena.setVol(cfg.mus,cfg.sfx);
 for(const ev of ['pointerdown','touchend','keydown'])addEventListener(ev,()=>arena.unlock(),{passive:true});
 (function noZoom(){let last=0;document.addEventListener('touchend',e=>{const n=Date.now();if(document.body.classList.contains('playing')&&n-last<350&&!(e.target.closest&&e.target.closest('input,select,textarea')))e.preventDefault();last=n},{passive:false});for(const ev of ['gesturestart','gesturechange','gestureend'])document.addEventListener(ev,e=>e.preventDefault());document.addEventListener('dblclick',e=>{if(document.body.classList.contains('playing'))e.preventDefault()},{passive:false})})();
+/* ---------- editor de posição dos controles ---------- */
+const ed=$('ed');let edDraft=null,edSnap=null,edOpening=false;
+const edLand=()=>innerWidth>innerHeight*1.12,clampV=(v,a,b)=>Math.max(a,Math.min(b,v));
+function edRender(){
+ const vw=innerWidth,vh=innerHeight,land=edLand(),{stick,bs}=freeSizes(vw,vh),ar=cv.width/cv.height||1.15,sp=8;
+ ed.style.setProperty('--as',stick+'px');ed.style.setProperty('--bs',bs+'px');ed.style.setProperty('--pad-op',cfg.opa/100);
+ const w=Math.floor(Math.min(vw-4-sp,(vh-2-sp)*ar)*cfg.scr/100),h=Math.round(w/ar);$('ed-arena').style.cssText=`left:${Math.round((vw-w-sp)/2)}px;top:2px;width:${w+sp}px;height:${h+sp}px`;
+ const P=edDraft[land?'l':'p'];
+ for(const el of ed.querySelectorAll('.ed-item')){const k=el.dataset.k,hw=el.offsetWidth/2,hh=el.offsetHeight/2;el.style.left=clampV(P[k][0]*vw,hw,vw-hw)+'px';el.style.top=clampV(P[k][1]*vh,hh,vh-hh)+'px'}
+ $('ed-or').textContent=land?'deitado':'em pé';
+ $('e-opa').value=cfg.opa;$('e-opa-v').textContent=cfg.opa+'%';$('e-size').value=cfg.size;$('e-size-v').textContent=cfg.size+'%';$('e-bomb').value=cfg.bomb;$('e-bomb-v').textContent=cfg.bomb+'%'}
+function edOpen(){edSnap={opa:cfg.opa,size:cfg.size,bomb:cfg.bomb};edDraft=clonePos(cfg.pos);edOpening=true;$('cfg').close();ed.showModal();edRender()}
+$('c-edit').onclick=edOpen;
+$('c-custom').onchange=e=>{cfg.layout=e.target.checked?'custom':'fixed';saveCfg()};
+$('ed-save').onclick=()=>{cfg.pos=clonePos(edDraft);cfg.layout='custom';saveCfg();ed.close()};
+$('ed-cancel').onclick=()=>{Object.assign(cfg,edSnap);saveCfg();ed.close()};
+$('ed-reset').onclick=()=>{edDraft=clonePos(POS_DEF);edRender()};
+ed.addEventListener('cancel',e=>{e.preventDefault();$('ed-cancel').click()});
+ed.addEventListener('close',()=>{edOpening=false;if(cfgPaused&&arena.active&&arena.paused)arena.togglePause();cfgPaused=false});
+$('e-opa').oninput=e=>{cfg.opa=Math.round(clampN(e.target.value,30,100,CFG_DEF.opa));edRender()};
+$('e-size').oninput=e=>{cfg.size=Math.round(clampN(e.target.value,70,150,CFG_DEF.size));edRender()};
+$('e-bomb').oninput=e=>{cfg.bomb=Math.round(clampN(e.target.value,70,150,CFG_DEF.bomb));edRender()};
+for(const el of ed.querySelectorAll('.ed-item')){let pid=null,ox=0,oy=0;
+ el.addEventListener('pointerdown',e=>{pid=e.pointerId;try{el.setPointerCapture(pid)}catch(_){}const r=el.getBoundingClientRect();ox=e.clientX-(r.left+r.width/2);oy=e.clientY-(r.top+r.height/2);el.classList.add('drag');e.preventDefault()});
+ el.addEventListener('pointermove',e=>{if(e.pointerId!==pid)return;const vw=innerWidth,vh=innerHeight,hw=el.offsetWidth/2,hh=el.offsetHeight/2,cx=clampV(e.clientX-ox,hw,vw-hw),cy=clampV(e.clientY-oy,hh,vh-hh);
+  el.style.left=cx+'px';el.style.top=cy+'px';edDraft[edLand()?'l':'p'][el.dataset.k]=[Math.round(cx/vw*1e4)/1e4,Math.round(cy/vh*1e4)/1e4]});
+ for(const ev of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(ev,()=>{pid=null;el.classList.remove('drag')})}
+addEventListener('resize',()=>{if(ed.open)edRender()});addEventListener('orientationchange',()=>setTimeout(()=>{if(ed.open)edRender()},250));
+
 /* configurações */
 const DIRN={'':'parado',w:'cima',s:'baixo',a:'esquerda',d:'direita'};
 const testStick=makeStick($('c-stick'),$('c-zone'),d=>{$('c-dir').textContent=DIRN[d]});
 let cfgPaused=false;
 function renderCfg(){$('c-pad').checked=padOn;$('c-sens').value=cfg.sens;$('c-size').value=cfg.size;$('c-sens-v').textContent=cfg.sens+' / 10';$('c-size-v').textContent=cfg.size+'%';
- $('c-float').checked=cfg.float;$('c-swap').checked=cfg.swap;$('c-hap').checked=cfg.haptic;$('c-scr').value=cfg.scr;$('c-scr-v').textContent=cfg.scr+'%';$('c-bomb').value=cfg.bomb;$('c-bomb-v').textContent=cfg.bomb+'%';$('c-fs').checked=cfg.fs;$('c-mus').value=cfg.mus;$('c-mus-v').textContent=cfg.mus?cfg.mus+'%':'desligada';$('c-sfx').value=cfg.sfx;$('c-sfx-v').textContent=cfg.sfx?cfg.sfx+'%':'desligados';
+ $('c-float').checked=cfg.float;$('c-swap').checked=cfg.swap;$('c-hap').checked=cfg.haptic;$('c-scr').value=cfg.scr;$('c-scr-v').textContent=cfg.scr+'%';$('c-bomb').value=cfg.bomb;$('c-bomb-v').textContent=cfg.bomb+'%';$('c-fs').checked=cfg.fs;$('c-custom').checked=cfg.layout==='custom';$('c-mus').value=cfg.mus;$('c-mus-v').textContent=cfg.mus?cfg.mus+'%':'desligada';$('c-sfx').value=cfg.sfx;$('c-sfx-v').textContent=cfg.sfx?cfg.sfx+'%':'desligados';
  const two=window.matchMedia&&matchMedia('(max-height:520px) and (orientation:landscape)').matches;
  $('cfg').style.setProperty('--as',Math.round(Math.min(STICK_BASE*cfg.size/100,two?170:($('cfg').clientWidth||340)-70))+'px')}
 function saveCfg(){ls.set('bc_cfg',cfg);renderCfg();arena.setVol(cfg.mus,cfg.sfx);fit()}
@@ -1392,9 +1478,9 @@ $('c-hap').onchange=e=>{cfg.haptic=e.target.checked;saveCfg();if(cfg.haptic)buzz
 $('c-fs').onchange=e=>{cfg.fs=e.target.checked;saveCfg()};
 $('c-mus').oninput=e=>{cfg.mus=Math.round(clampN(e.target.value,0,100,CFG_DEF.mus));saveCfg()};
 $('c-sfx').oninput=e=>{cfg.sfx=Math.round(clampN(e.target.value,0,100,CFG_DEF.sfx));saveCfg()};$('c-sfx').onchange=()=>arena.sample();
-$('c-def').onclick=()=>{Object.assign(cfg,CFG_DEF);saveCfg()};
+$('c-def').onclick=()=>{Object.assign(cfg,CFG_DEF,{pos:clonePos(POS_DEF)});saveCfg()};
 $('c-ok').onclick=()=>$('cfg').close();
-$('cfg').addEventListener('close',()=>{testStick.reset();if(cfgPaused&&arena.active&&arena.paused)arena.togglePause();cfgPaused=false});
+$('cfg').addEventListener('close',()=>{testStick.reset();if(edOpening)return;if(cfgPaused&&arena.active&&arena.paused)arena.togglePause();cfgPaused=false});
 for(const b of document.querySelectorAll('[data-act="pause"],[data-act="mute"]')){b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');buzz();if(b.dataset.act==='pause')arena.togglePause();else setSnd()});for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>b.classList.remove('on'))}
 con.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear()});
