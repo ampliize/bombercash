@@ -21,7 +21,7 @@ servidor → `hello`, `joined`, `lobby`, `start`, `snap {s}`, `end {winner,resul
 Sem `MONEY_MODE` só rodam salas de brincadeira (sem saldo). **A service key só existe no servidor, nunca no front nem no repositório.**
 
 ## Dinheiro
-Pré-requisito: aplicar a migration `20261009140000_public_svc_game_server.sql` (ainda NÃO aplicada no Supabase; precisa do seu "APLICAR").
+Pré-requisito: migration `20261009140000_public_svc_game_server.sql` (aplicada no Supabase em 2026-10-09; só `service_role` executa).
 Fluxo: sala cheia → `svc_match_open` (escrow; se alguém não cobre, ninguém joga) → partida → `svc_match_settle` (80/20, afiliado) ou `svc_match_refund` (empate/queda do servidor). Falha ao liquidar fica no log para revisão e a partida continua `open` no razão.
 
 ## Testes
