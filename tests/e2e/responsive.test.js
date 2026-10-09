@@ -18,7 +18,7 @@ const check=(m,label)=>{const bad=[];const ov=(a,b)=>a&&b&&a[0]<b[0]+b[2]&&b[0]<
  const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
  for(const [n,w,h,touch] of devs){
   const c=await b.newContext({viewport:{width:w,height:h},isMobile:!!touch,hasTouch:!!touch,deviceScaleFactor:2});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
-  await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.click('#intro');await sleep(1000);await p.click('#hello-ok');await sleep(400);
+  await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(1000);await p.click('#hello-ok');await sleep(400);
   const dm=await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click();const d=document.getElementById('dlg'),r=d.getBoundingClientRect();return{bottom:Math.round(r.bottom),vh:innerHeight,scrolls:d.scrollHeight>d.clientHeight}});
   await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(4200);
   const m1=await p.evaluate(measure);console.log(n.padEnd(7),(w+'x'+h).padEnd(9),check(m1,'padrao'),dm.bottom>dm.vh+1?'| DIALOGO MODO ESTOURA':'', errs.length?'ERR '+errs[0]:'');
@@ -35,6 +35,6 @@ const check=(m,label)=>{const bad=[];const ov=(a,b)=>a&&b&&a[0]<b[0]+b[2]&&b[0]<
   }
   await c.close()}
  // dialogo de configuracoes em tela pequena
- for(const [n,w,h] of [['Fold',280,653],['short-l',740,360],['SE',375,667]]){const c=await b.newContext({viewport:{width:w,height:h},isMobile:true,hasTouch:true});const p=await c.newPage();await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.click('#intro');await sleep(1000);await p.click('#hello-ok');await sleep(400);
+ for(const [n,w,h] of [['Fold',280,653],['short-l',740,360],['SE',375,667]]){const c=await b.newContext({viewport:{width:w,height:h},isMobile:true,hasTouch:true});const p=await c.newPage();await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(1000);await p.click('#hello-ok');await sleep(400);
   const r=await p.evaluate(()=>{document.getElementById('cfg-open').click();const d=document.getElementById('cfg'),q=d.getBoundingClientRect();return{top:Math.round(q.top),bottom:Math.round(q.bottom),vh:innerHeight,scroll:d.scrollHeight>d.clientHeight}});console.log('config em',n,JSON.stringify(r),r.bottom<=r.vh+1&&r.top>=-1?'cabe (rola por dentro: '+r.scroll+')':'ESTOURA');await p.screenshot({path:'cfg_'+n+'.png'});await c.close()}
  await b.close();process.exit(0)})().catch(e=>{console.log('ERRO',e.message);process.exit(1)});

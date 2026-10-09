@@ -8,7 +8,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms)),GS='ws://127.0.0.1:2599';
  const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});const pages=[];
  for(let i=0;i<2;i++){const c=await b.newContext({viewport:{width:900,height:800}});const p=await c.newPage();p.on('pageerror',e=>fail('P'+(i+1)+' pageerror: '+e.message));await p.goto('http://127.0.0.1:8765/?gs='+GS);pages.push(p)}
  await sleep(2500);
- for(const p of pages){await p.click('#intro');await sleep(1200);await p.click('#hello-ok')}
+ for(const p of pages){await p.evaluate(()=>window.__bcEnter());await sleep(1200);await p.click('#hello-ok')}
  await sleep(1500);
  const [A,B]=pages;
  await A.click('#rm-open');await A.click('#rm-create');await A.waitForFunction(()=>/^\d{4}$/.test(document.getElementById('rm-c').textContent),null,{timeout:8000});

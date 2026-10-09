@@ -2,7 +2,7 @@
 
 Node 20+ e `ws` puro (sem Colyseus: o protocolo é pequeno e o resto das regras já está em `sim.js`).
 O cliente só manda **intenção** (`{t:'in',dx,dy,bomb}`); o servidor move, solta bombas, explode, mata e decide o vencedor.
-Mapa/itens saem de um PRNG semeado (`seed`), então a partida é reproduzível: `resultHash` = sha256(seed, mapa, entradas, vencedor).
+Empate (tempo acabou com 2+ de pé, ou morreram no mesmo passo) vira duelo na lava entre os finalistas até sobrar 1; o snapshot leva `du` (número do duelo). Mapa/itens saem de um PRNG semeado (`seed`), então a partida é reproduzível: `resultHash` = sha256(seed, mapa, entradas, vencedor).
 
 | Arquivo | Papel |
 |---|---|

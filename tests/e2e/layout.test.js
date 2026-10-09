@@ -3,7 +3,7 @@ const ok=(c,m)=>{console.log((c?'OK  ':'FALHA ')+m);if(!c)process.exitCode=1};
 (async()=>{
  const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
  const c=await b.newContext({viewport:{width:844,height:390},isMobile:true,hasTouch:true});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
- await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.click('#intro');await sleep(900);await p.click('#hello-ok');await sleep(400);
+ await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(900);await p.click('#hello-ok');await sleep(400);
  // abre configuracoes -> editor
  await p.evaluate(()=>document.getElementById('cfg-open').click());await sleep(300);
  await p.evaluate(()=>document.getElementById('c-edit').click());await sleep(400);
@@ -45,7 +45,7 @@ const ok=(c,m)=>{console.log((c?'OK  ':'FALHA ')+m);if(!c)process.exitCode=1};
  await p.setViewportSize({width:844,height:390});await p.reload();await sleep(1200);
  const kept=await p.evaluate(()=>JSON.parse(localStorage.getItem('bc_cfg')).layout);ok(kept==='custom','layout persiste apos recarregar');
  // cancelar nao salva
- await p.click('#intro');await sleep(900);await p.click('#hello-ok');await sleep(400);
+ await p.evaluate(()=>window.__bcEnter());await sleep(900);await p.click('#hello-ok');await sleep(400);
  await p.evaluate(()=>document.getElementById('cfg-open').click());await sleep(300);await p.evaluate(()=>document.getElementById('c-edit').click());await sleep(300);
  await drag('#ed-stick',-300,0);await p.evaluate(()=>document.getElementById('ed-cancel').click());await sleep(300);
  const s2=await p.evaluate(()=>JSON.parse(localStorage.getItem('bc_cfg')).pos.l.stick[0]);ok(s2===saved.pos.l.stick[0],'cancelar nao altera a posicao salva');

@@ -4,7 +4,7 @@ const {chromium}=require('playwright-core');const sleep=ms=>new Promise(r=>setTi
  const c=await b.newContext({viewport:{width:844,height:390},isMobile:true,hasTouch:true});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
  await p.addInitScript(()=>{window.__au={osc:0,src:0,state:'-'};const AC=window.AudioContext;const po=AC.prototype.createOscillator,ps=AC.prototype.createBufferSource;
   AC.prototype.createOscillator=function(){window.__au.osc++;window.__au.state=this.state;return po.apply(this,arguments)};AC.prototype.createBufferSource=function(){window.__au.src++;return ps.apply(this,arguments)}});
- await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.click('#intro');await sleep(900);await p.click('#hello-ok');await sleep(400);
+ await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(900);await p.click('#hello-ok');await sleep(400);
  const au=()=>p.evaluate(()=>({...window.__au,fs:!!document.fullscreenElement}));
  console.log('viewport meta:',await p.evaluate(()=>document.querySelector('meta[name=viewport]').content));
  console.log('antes de jogar (lobby, sem som):',JSON.stringify(await au()));

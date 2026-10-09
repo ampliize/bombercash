@@ -3,7 +3,7 @@ const {chromium}=require('playwright-core');const sleep=ms=>new Promise(r=>setTi
 let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
 (async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
  const c=await b.newContext({viewport:{width:900,height:700}});const p=await c.newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));
- await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.click('#intro');await sleep(1000);await p.click('#hello-ok');await sleep(500);
+ await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(1000);await p.click('#hello-ok');await sleep(500);
  await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await p.evaluate(()=>document.getElementById('d-ok').click());await p.waitForFunction(()=>window.__arena.active&&window.__arena._s().players.length>1,null,{timeout:8000});await sleep(300);
  const st=()=>p.evaluate(()=>{const c=document.getElementById('count'),s=window.__arena._s(),me=s.players[window.__arena.meIdx];return{vis:!c.hidden,txt:c.textContent,x:Math.round(me.x),t:document.getElementById('timer').textContent,bots:s.players.filter((q,i)=>i!==window.__arena.meIdx).map(q=>Math.round(q.x)+','+Math.round(q.y)).join(' ')}});
  const a=await st();ok(a.vis&&/^(10|9)A partida começa em/.test(a.txt),'mostra a contagem no início: "'+a.txt+'"');

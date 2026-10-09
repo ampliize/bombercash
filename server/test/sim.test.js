@@ -48,12 +48,38 @@ test('replay determinístico com mesmas entradas', () => {
   assert.equal(play(), play());
 });
 
-test('empate por tempo e morte súbita fecham a arena', () => {
+test('empate (parados até a morte súbita/tempo): duelo na lava até sobrar 1', () => {
   const s = new Sim({ seed: 3, map: 2, n: 2 });
-  run(s, 100);
-  assert.equal(s.sd.on, true);
-  run(s, 60);
-  assert.equal(s.ended, true);
+  for (let i = 0; i < 30 * 152 && !s.duel; i++) s.step(1 / 30);
+  assert.equal(s.ended, false, 'empate não encerra a partida');
+  assert.equal(s.duel, 1, 'começou o duelo');
+  assert.ok(s.players.every(p => p.alive), 'finalistas voltam');
+  assert.deepEqual(s.players.map(p => [Math.floor(p.x / T), Math.floor(p.y / T)]), [[1, 1], [13, 11]]);
+  assert.ok(s.players.every(p => p.speed === 140 && p.bombMax === 1 && p.power === 2));
+  assert.ok(s.snapshot().t < 0 && s.snapshot().du === 1, 'contagem do duelo vai no snapshot');
+  run(s, 80);
+  assert.equal(s.ended, true); assert.ok(s.winner >= 0, 'sempre sai um vencedor');
+});
+
+test('parados no duelo: a lava decide, nunca empata (vários seeds)', () => {
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = new Sim({ seed, map: seed % 7, n: seed % 2 ? 2 : 4 });
+    s.matchT = 151; s.step(1 / 30);
+    assert.equal(s.duel, 1);
+    for (let i = 0; i < 30 * 200 && !s.ended; i++) s.step(1 / 30);
+    assert.equal(s.ended, true, 'seed ' + seed); assert.ok(s.winner >= 0, 'seed ' + seed);
+  }
+});
+
+test('morreram no mesmo instante: duelo só entre eles', () => {
+  const s = new Sim({ seed: 8, map: 0, n: 4 });
+  s.kill(s.players[3]); s.step(1 / 30);           // o 4º caiu antes
+  s.players[0].alive = false; s.players[0].deadTick = s.tick + 1;
+  s.players[2].alive = false; s.players[2].deadTick = s.tick + 1;
+  s.kill(s.players[1]); s.players[1].deadTick = s.tick + 1;
+  s.step(1 / 30);
+  assert.equal(s.duel, 1);
+  assert.deepEqual(s.players.map(p => p.alive), [true, true, true, false]);
 });
 
 test('jogador que sai perde', () => {
