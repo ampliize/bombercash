@@ -13,8 +13,8 @@ Mapa/itens saem de um PRNG semeado (`seed`), então a partida é reproduzível: 
 | `src/index.js` | WebSocket + `/health` |
 
 ## Protocolo (JSON)
-cliente → `hello {name | token}`, `create {mode:'1x1'|'4x4'|'8x8', stake}`, `join {code}`, `in {dx,dy,bomb}`
-servidor → `hello`, `joined`, `lobby`, `start`, `snap {s}`, `end {winner,resultHash,settled}`, `abort`, `error`
+cliente → `hello {name | token}`, `create {mode:'1x1'|'4x4'|'8x8', stake}`, `join {code}`, `start` (só quem criou, ≥2 pessoas), `in {dx,dy,bomb}`
+servidor → `hello`, `joined`, `lobby {names,you}`, `start {seed,map,W,H,n,w,br,names,skins}`, `snap {s}`, `end {winner,resultHash,settled}`, `abort`, `error`
 
 ## Variáveis de ambiente (Easypanel)
 `PORT` · `ALLOWED_ORIGINS` (domínios do front, separados por vírgula) · `MONEY_MODE=1` + `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` + `SUPABASE_JWT_SECRET`.

@@ -39,7 +39,8 @@ wss.on('connection', ws => {
     } else if (m.t === 'join' && !room) {
       const r0 = rooms.get(String(m.code)); if (!r0) return err('sala não encontrada');
       const r = r0.join(ws, user); if (r.err) return err(r.err); room = r0; seat = r.seat;
-    } else if (m.t === 'in' && room && seat) room.input(seat, m);
+    } else if (m.t === 'start' && room && seat) { const r = room.requestStart(seat); if (r.err) err(r.err); }
+    else if (m.t === 'in' && room && seat) room.input(seat, m);
   });
   ws.on('close', () => { clearInterval(rate); if (room && seat) room.drop(seat); });
   ws.on('error', () => {});

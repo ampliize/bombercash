@@ -13,6 +13,7 @@ export class Room {
     this.n = MODES[mode]; this.seats = []; this.state = 'lobby'; this.matchId = randomUUID(); this.sim = null; this.timer = null; this.starting = false;
   }
   send(seat, msg) { try { if (seat.ws.readyState === 1) seat.ws.send(JSON.stringify(msg)); } catch { /* conexão caiu */ } }
+  lobby() { const names = this.seats.map(s => s.name); for (const s of this.seats) this.send(s, { t: 'lobby', names, n: this.n, you: s.slot }); }
   bcast(msg) { for (const s of this.seats) this.send(s, msg); }
   join(ws, user) {
     if (this.state !== 'lobby') return { err: 'partida em andamento' };
@@ -21,9 +22,14 @@ export class Room {
     const seat = { ws, userId: user.id, name: user.name, slot: this.seats.length, lastSeen: Date.now() };
     this.seats.push(seat);
     this.send(seat, { t: 'joined', code: this.code, slot: seat.slot, n: this.n, mode: this.mode, stake: this.stakeCents });
-    this.bcast({ t: 'lobby', names: this.seats.map(s => s.name), n: this.n });
+    this.lobby();
     if (this.seats.length === this.n) this.start().catch(e => this.abort('erro ao iniciar: ' + e.message));
     return { ok: true, seat };
+  }
+  // quem criou a sala (vaga 0) pode começar antes de lotar, com pelo menos 2 pessoas
+  requestStart(seat) {
+    if (this.state !== 'lobby' || seat.slot !== 0 || this.seats.length < 2) return { err: 'só quem criou a sala começa, com pelo menos 2 pessoas' };
+    this.start().catch(e => this.abort('erro ao iniciar: ' + e.message)); return { ok: true };
   }
   async start() {
     if (this.starting) return; this.starting = true;
@@ -31,17 +37,16 @@ export class Room {
     try { // aposta: debita e prende em escrow ANTES de a partida existir; se qualquer um não cobrir, ninguém joga
       await this.ledger.open({ matchId: this.matchId, mode: this.mode, stakeCents: this.stakeCents, userIds: this.seats.map(s => s.userId) });
     } catch (e) { this.bcast({ t: 'abort', reason: 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
-    this.sim = new Sim({ seed, map, n: this.n });
+    this.sim = new Sim({ seed, map, n: this.seats.length });
     this.state = 'play'; this.freeze = 2.8; this.tickN = 0; this.inputLog = [];
     const skins = this.seats.map((_, i) => i % 4);
     this.sim.players.forEach((p, i) => { p.skin = skins[i]; });
-    this.bcast({ t: 'start', seed, map, W: this.sim.W, H: this.sim.H, n: this.n, names: this.seats.map(s => s.name), skins, matchId: this.matchId });
+    this.bcast({ t: 'start', seed, map, W: this.sim.W, H: this.sim.H, n: this.seats.length, w: this.sim.encWorld(), br: [...this.sim.bridges], stake: this.stakeCents, names: this.seats.map(s => s.name), skins, matchId: this.matchId });
     this.timer = setInterval(() => this.tick(), TICK * 1000);
   }
   input(seat, d) {
     if (this.state !== 'play' || !this.sim || this.freeze > 0 || !d || typeof d !== 'object') return;
     seat.lastSeen = Date.now();
-    const now = Date.now(); if (seat.lastIn && now - seat.lastIn < 15) return; seat.lastIn = now; // limite de ~66 msg/s
     const dx = Math.sign(+d.dx || 0), dy = Math.sign(+d.dy || 0), bomb = !!d.bomb;
     this.inputLog.push([this.tickN, seat.slot, dx, dy, bomb ? 1 : 0]);
     this.sim.input(seat.slot, { dx, dy, bomb });
@@ -55,13 +60,13 @@ export class Room {
   }
   drop(seat) { // desconexão = derrota (regra do produto)
     if (seat.gone) return; seat.gone = true;
-    if (this.state === 'lobby') { this.seats = this.seats.filter(s => s !== seat); this.seats.forEach((s, i) => { s.slot = i; }); this.bcast({ t: 'lobby', names: this.seats.map(s => s.name), n: this.n }); if (!this.seats.length) this.close(); return; }
+    if (this.state === 'lobby') { this.seats = this.seats.filter(s => s !== seat); this.seats.forEach((s, i) => { s.slot = i; }); this.lobby(); if (!this.seats.length) this.close(); return; }
     if (this.sim && this.state === 'play') this.sim.leave(seat.slot);
   }
   async finish() {
     if (this.state !== 'play') return; this.state = 'done'; clearInterval(this.timer);
     const w = this.sim.winner, winner = w >= 0 ? this.seats[w] : null;
-    const resultHash = createHash('sha256').update(JSON.stringify({ seed: this.sim.seed, map: this.sim.map, n: this.n, inputs: this.inputLog, w })).digest('hex');
+    const resultHash = createHash('sha256').update(JSON.stringify({ seed: this.sim.seed, map: this.sim.map, n: this.sim.N, inputs: this.inputLog, w })).digest('hex');
     let paid = null;
     try {
       if (winner) paid = await this.ledger.settle({ matchId: this.matchId, winnerId: winner.userId, seed: this.sim.seed, resultHash });

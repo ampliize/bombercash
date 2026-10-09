@@ -576,7 +576,7 @@ const canvas=o.canvas,ctx=canvas.getContext('2d'),demo=!!o.demo,keys=o.keys||new
 let W=15,H=13,M=0,N=4,seed=0,world=[],bridges=new Set(),players=[],bombs=[],flames=[],items=[],particles=[],floats=[];
 let map=0,fixedMap=-1,active=false,paused=false,ended=false,matchT=0,matchId=0,last=0,muted=demo,audio=null,onEnd=null,resetAt=0,frameCv=null,frameOk=false,hudAt=0,shake=0,names=[],forced=null,introT=0;
 let sd={on:false,order:[],idx:0,next:0,every:.4,falling:[],blocks:new Set(),doomed:new Set()};
-let sdStart=SD_START,net=null,meIdx=0,freeze=0,seq=1,snapAcc=0,inAcc=0,lastRx=0,gotSnap=false,seenBlast=new Set(),winner=null;
+let sDir=[0,0],sdStart=SD_START,net=null,meIdx=0,freeze=0,seq=1,snapAcc=0,inAcc=0,lastRx=0,gotSnap=false,seenBlast=new Set(),winner=null;
 const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,at=(x,y)=>x>=0&&x<W&&y>=0&&y<H,id=(x,y)=>y*W+x,solid=(x,y)=>!at(x,y)||world[y][x]>0;
 const r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100,guest=()=>net&&net.role==='guest';
 const hsh=(x,y,q)=>{const n=Math.sin((x+seed)*127.1+y*311.7+(q||0)*74.7)*43758.5453;return n-Math.floor(n)};
@@ -637,7 +637,7 @@ function start(){
  canvas.width=Math.round((W*T+2*M)*SS);canvas.height=Math.round((H*T+2*M)*SS);frameOk=false;frameCv=null;
  matchT=0;ended=false;resetAt=0;MUS.sd=false;bombs=[];flames=[];items=[];particles=[];floats=[];shake=0;
  sd={on:false,order:[],idx:0,next:0,every:.4,falling:[],blocks:new Set(),doomed:new Set()};
- seq=1;snapAcc=inAcc=0;gotSnap=false;seenBlast=new Set();winner=null;lastRx=performance.now();freeze=net?2.8:0;
+ seq=1;snapAcc=inAcc=0;sDir=[0,0];gotSnap=false;seenBlast=new Set();winner=null;lastRx=performance.now();freeze=net?2.8:0;
  const starts=(N>4?[[1,1],[W-2,H-2],[W-2,1],[1,H-2],[(W-1)/2,1],[(W-1)/2,H-2],[1,(H-1)/2],[W-2,(H-1)/2]]:[[1,1],[W-2,H-2],[W-2,1],[1,H-2]]).slice(0,N);
  if(init){world=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>{const c=init.w.charCodeAt(y*W+x)-48;return c===4?2:c}));bridges=new Set(init.br)}
  else{
@@ -655,7 +655,7 @@ function start(){
   if(mp.k==='isl')safe.add(id((W-1)/2,(H-1)/2));
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(!world[y][x]&&!safe.has(id(x,y))&&!bridges.has(id(x,y))&&Math.random()<dens)world[y][x]=1}
  const skins=init?init.skins:(forced&&forced.length>=N?forced:deal(N)),bn=shuf(BOTS.slice()),nm=init?init.names:names;
- meIdx=demo?-1:guest()?(net.slot||1):0;
+ meIdx=demo?-1:guest()?(net.server?net.slot|0:(net.slot||1)):0;
  players=starts.map(([x,y],i)=>{const skin=skins[i],me=i===meIdx,ctrl=me?'me':net&&(!net.humans||net.humans.includes(i))?'net':'ai';return{i,x:(x+.5)*T,y:(y+.5)*T,tx:(x+.5)*T,ty:(y+.5)*T,alive:true,me,ctrl,ai:!me,skin,rare:skin>=4,face:'down',bombMax:1,power:2,speed:ctrl==='ai'?112:125,cooldown:0,think:Math.random()*.2,dir:[0,0],goal:null,shield:0,inv:0,curse:0,placeAt:-1e9,mv:0,deadAt:0,
   name:String(nm[i]||(ctrl==='ai'?'Bot '+bn[(demo?i:i-1)%bn.length]:'Você'))}});
  const me=players[meIdx];if(!me)say('');else{say((me.rare?'★ SKIN RARA ★ ':'SEU BONECO: ')+SKIN_NAMES[me.skin].toUpperCase());introT=net?2.8:1.9}
@@ -805,6 +805,9 @@ function applySnap(s){const now=performance.now(),first=!gotSnap,me=players[meId
   else if(was!==v){world[y][x]=v;if(was===1&&v===0&&!first)crateFx(x,y)}}
  if(s.sd&&!sd.on){sd.on=true;sdAnnounce()}
  s.p.forEach((a,i)=>{const p=players[i];if(!p)return;
+  if(i===meIdx&&net.server&&p.alive){const d=Math.hypot(p.x-a[0],p.y-a[1]),mv=sDir[0]||sDir[1];
+   /* o servidor manda na posição: longe demais, teleporta; parado, encaixa; andando, corrige só desvio grande (o servidor está ~1 ping atrás) */
+   if(first||d>T*1.5){p.x=a[0];p.y=a[1]}else if(!mv){p.x+=(a[0]-p.x)*.35;p.y+=(a[1]-p.y)*.35}else if(d>T*.45){p.x+=(a[0]-p.x)*.2;p.y+=(a[1]-p.y)*.2}}
   if(i!==meIdx){p.tx=a[0];p.ty=a[1];if(first||Math.hypot(p.x-a[0],p.y-a[1])>T*2.5){p.x=a[0];p.y=a[1]}p.face=FACES[a[2]]||'down';if(a[3])p.mv=now}
   if(p.alive&&!a[4]){p.alive=false;p.deadAt=now;sound(190,.22)}
   if(i===meIdx&&!first&&(a[5]>p.bombMax||a[6]>p.power||a[7]>p.speed||a[8]>p.shield||a[9]>p.inv+1))sound(850,.2,'sine');
@@ -835,11 +838,13 @@ function guestUpdate(dt,now){
  if(me.alive&&freeze<=0){
   const dx=Number(keys.has('ArrowRight')||keys.has('d'))-Number(keys.has('ArrowLeft')||keys.has('a')),dy=Number(keys.has('ArrowDown')||keys.has('s'))-Number(keys.has('ArrowUp')||keys.has('w'));move(me,dx,dy,dt);
   if(keys.has(' ')&&me.cooldown<=0){const x=Math.round((me.x-T/2)/T),y=Math.round((me.y-T/2)/T);
-   if(at(x,y)&&world[y][x]===0&&!bombs.some(b=>b.x===x&&b.y===y)&&bombs.filter(b=>b.owner===me).length<me.bombMax){net.send('bomb',{x,y,s:meIdx});me.cooldown=.23;me.placeAt=now;sound(600,.075)}}}
+   if(at(x,y)&&world[y][x]===0&&!bombs.some(b=>b.x===x&&b.y===y)&&bombs.filter(b=>b.owner===me).length<me.bombMax){net.send('bomb',{x,y,s:meIdx,dx,dy});me.cooldown=.23;me.placeAt=now;sound(600,.075)}}
+  if(net.server&&(dx!==sDir[0]||dy!==sDir[1]||inAcc>=.1)){sDir=[dx,dy];inAcc=0;net.send('in',{dx,dy})}}
+ else if(net.server&&(sDir[0]||sDir[1])){sDir=[0,0];net.send('in',{dx:0,dy:0})}
  for(const b of bombs){b.t=Math.max(0,b.t-dt);for(const p of [...b.pass])if(Math.abs(p.x-(b.x+.5)*T)>=T/2+15||Math.abs(p.y-(b.y+.5)*T)>=T/2+15)b.pass.delete(p)}
  for(const f of flames.slice()){f.t-=dt;if(f.t<=0)flames.splice(flames.indexOf(f),1)}
  for(const f of sd.falling)f.t=Math.max(0,f.t-dt);
- inAcc+=dt;if(inAcc>=.1){inAcc=0;net.send('in',{s:meIdx,x:r1(me.x),y:r1(me.y),f:FACES.indexOf(me.face),m:now-me.mv<130?1:0})}}
+ inAcc+=dt;if(!net.server&&inAcc>=.1){inAcc=0;net.send('in',{s:meIdx,x:r1(me.x),y:r1(me.y),f:FACES.indexOf(me.face),m:now-me.mv<130?1:0})}}
 
 function endInfo(w,place){const me=players[meIdx];return{skin:w?w.skin:-1,name:w?w.name:'',duration:Math.round(matchT),map:MAPS[map].name,meIdx,net:!!net,place:place||0,meAlive:!!(me&&me.alive)}}
 /* place>0: o jogador humano foi eliminado numa partida contra bots (terminou nessa colocação) e a partida acaba ali */
@@ -1212,6 +1217,39 @@ function Room(topic,onMsg,onUp){
   close(){dead=true;clearInterval(hb);try{ws.close()}catch(e){}},get up(){return joined}}}
 
 /* ---------- convites 1x1 ---------- */
+/* ---------- servidor de jogo autoritativo (opcional) ----------
+   Com ?gs=wss://… (fica salvo; ?gs=off desliga) a sala com amigos roda no servidor: ele simula tudo e decide o vencedor.
+   Este aparelho só manda direção e bomba, prevê o próprio movimento e corrige pelo estado que chega. */
+const GS_URL=(()=>{try{const q=new URLSearchParams(location.search).get('gs');if(q!=null)localStorage.setItem('bc_gs',q==='off'?'':q);return localStorage.getItem('bc_gs')||window.BC_GS||''}catch(e){return window.BC_GS||''}})();
+function GsRoom(onMsg,onUp){let ws=null,up=false;const raw=m=>{try{if(ws&&ws.readyState===1)ws.send(JSON.stringify(m))}catch(e){}};
+ try{ws=new WebSocket(GS_URL)}catch(e){setTimeout(()=>onUp(false),0);return{emit(){},raw(){},close(){}}}
+ ws.onopen=()=>{up=true;raw({t:'hello',name:me.nick});onUp(true)};
+ ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}if(m&&m.t)onMsg(m)};
+ ws.onclose=()=>{if(!up)onUp(false);else onMsg({t:'closed'})};ws.onerror=()=>{};
+ return{raw,
+  emit(ev,x){if(ev==='in')raw({t:'in',dx:x.dx|0,dy:x.dy|0});else if(ev==='bomb')raw({t:'in',dx:x.dx|0,dy:x.dy|0,bomb:1});else if(ev==='bye')this.close()},
+  close(){try{ws.close()}catch(e){}}}}
+function rmJoinServer(role,code){
+ const st={role,code:code||'…',room:null,roster:[],slot:null,stake:bet,started:false,server:true,hi:0,to:0,msg:''};rm=st;
+ $('rm-msg').textContent='Conectando ao servidor…';$('rm-lobby').hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=st.code;
+ st.to=setTimeout(()=>{if(rm===st&&st.slot==null){st.msg='O servidor de jogo não respondeu.';rmLeave()}},9000);
+ st.room=GsRoom(m=>gsMsg(st,m),ok=>{if(rm!==st)return;if(!ok){st.msg='Não foi possível conectar ao servidor de jogo.';rmLeave()}})}
+function gsMsg(st,m){
+ if(m.t==='hello'){if(rm===st)st.room.raw(st.role==='host'?{t:'create',mode:'4x4'}:{t:'join',code:st.code});return}
+ if(m.t==='snap'){if(net&&net.room===st.room&&net.started)arena.netRecv('snap',m.s);return}
+ if(m.t==='abort'||m.t==='closed'||m.t==='error'){
+  if(rm===st&&(m.t!=='error'||st.slot==null)){st.msg=m.t==='closed'?'A conexão com o servidor caiu.':(m.error||m.reason||'Sala encerrada.');rmLeave();return}
+  if(m.t==='abort'&&net&&net.room===st.room){toast('Partida cancelada: '+(m.reason||''));return}
+  if(m.t==='error')toast(m.error);return}
+ if(rm!==st)return;
+ if(m.t==='joined'){clearTimeout(st.to);st.code=m.code;st.slot=m.slot;st.role=m.slot===0?'host':'guest';st.roster=[{s:m.slot,id:me.id,nick:me.nick}];rmRender()}
+ else if(m.t==='lobby'){st.slot=m.you;st.role=m.you===0?'host':'guest';st.roster=m.names.map((nick,s)=>({s,id:s===m.you?me.id:-(s+1),nick:String(nick).slice(0,16)}));rmRender()}
+ else if(m.t==='start'){
+  if(bal<st.stake){toast('Saldo insuficiente para a entrada de '+R$(st.stake)+'.');rmLeave(true);return}
+  const humans=Array.from({length:m.n},(_,i)=>i);st.started=true;rm=null;clearTimeout(st.to);
+  net={role:'guest',room:st.room,stake:st.stake,peer:{id:null,nick:''},started:true,slot:st.slot,n:m.n,humans,humansN:m.n,server:true};
+  mode=MODES['4x4'];mode.k='4x4';bal-=st.stake;save();renderMoney();if($('rm').open)$('rm').close();show('s-arena');$('e-wk').textContent='';
+  arena.begin(m.n,finish,{net:{role:'guest',server:true,slot:st.slot,n:m.n,humans,init:m,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}}
 let net=null;        // partida online em andamento: {role,room,stake,peer:{id,nick},started}
 let pend=null;       // convite enviado aguardando resposta: {invite,to,nick,stake,room,until,tick}
 let shownInv=null,dismissed=new Set(),pollT=0;
@@ -1285,7 +1323,7 @@ const rmCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=
 function rmRender(){if(!rm)return;const lob=$('rm-lobby');lob.hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=rm.code;
  $('rm-list').innerHTML=rm.roster.map(r=>`<li><b>${esc(r.nick)}</b> · jogador ${r.s+1}${r.id===me.id?' (você)':''}${r.s===0?' · anfitrião':''}</li>`).join('');
  const host=rm.role==='host';$('rm-start').hidden=!host;$('rm-start').disabled=rm.roster.length<2;
- $('rm-msg').textContent=host?(rm.roster.length<2?'Passe o código para os amigos entrarem. É preciso pelo menos 2 pessoas.':rm.roster.length+' na sala. Quando todos entrarem, toque em Começar. Vagas vazias viram bots.'):'Aguardando o anfitrião começar… Entrada de '+R$(rm.stake)+'.'}
+ $('rm-msg').textContent=host?(rm.roster.length<2?'Passe o código para os amigos entrarem. É preciso pelo menos 2 pessoas.':rm.roster.length+' na sala. Quando todos entrarem, toque em Começar.'+(rm.server?'':' Vagas vazias viram bots.')):'Aguardando o anfitrião começar… Entrada de '+R$(rm.stake)+'.'}
 function rmReset(){const r=rm;rm=null;if(r){clearInterval(r.hi);clearTimeout(r.to)}$('rm-lobby').hidden=true;$('rm-menu').hidden=false;$('rm-start').hidden=true;return r}
 function rmLeave(silent){const r=rmReset();if(r&&r.room&&!r.started){if(r.role==='host')r.room.emit('bye',{s:0});else r.room.emit('leave',{id:me.id});const rr=r.room;setTimeout(()=>rr.close(),300)}if($('rm').open)$('rm').close();if(!silent&&r&&r.msg)toast(r.msg)}
 function rmEmitStart(){if(!net||net.role!=='host'||!rmStartMsg)return;net.room.emit('start',rmStartMsg)}
@@ -1321,13 +1359,14 @@ $('rm-open').onclick=async()=>{
  if(net||pend||arena.active||rm){toast('Termine a partida atual antes.');return}
  if(!await ensurePlayer()){toast('Sem conexão com o servidor agora.');return}
  $('rm-stake').textContent=R$(bet);rmReset();$('rm').showModal()};
-$('rm-create').onclick=()=>{if(bal<bet){toast('Saldo insuficiente para a entrada de '+R$(bet)+'.');return}rmJoinRoom('host',rmCode())};
-$('rm-form').onsubmit=e=>{e.preventDefault();const c=$('rm-code').value.trim().toUpperCase();if(c.length<4){toast('Digite o código da sala.');return}rmJoinRoom('guest',c)};
+$('rm-create').onclick=()=>{if(bal<bet){toast('Saldo insuficiente para a entrada de '+R$(bet)+'.');return}if(GS_URL)rmJoinServer('host');else rmJoinRoom('host',rmCode())};
+$('rm-form').onsubmit=e=>{e.preventDefault();const c=$('rm-code').value.trim().toUpperCase();if(c.length<4){toast('Digite o código da sala.');return}if(GS_URL)rmJoinServer('guest',c);else rmJoinRoom('guest',c)};
 $('rm-copy').onclick=()=>{try{navigator.clipboard.writeText(rm?rm.code:'');toast('Código copiado.')}catch(e){}};
 $('rm-close').onclick=()=>rmLeave(true);
 $('rm').addEventListener('cancel',e=>{e.preventDefault();rmLeave(true)});
 $('rm-start').onclick=()=>{
  if(!rm||rm.role!=='host'||rm.roster.length<2)return;
+ if(rm.server){rm.room.raw({t:'start'});return}
  if(bal<rm.stake){toast('Saldo insuficiente para a entrada de '+R$(rm.stake)+'.');return}
  const r=rm,humans=r.roster.map(x=>x.s),names=r.roster.map(x=>x.nick),slots={};r.roster.forEach(x=>slots[x.id]=x.s);
  r.started=true;clearInterval(r.hi);rm=null;

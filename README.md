@@ -23,6 +23,12 @@ Como funciona (demo): o anfitrião simula a partida e manda o estado 10x por seg
     CHROME_PATH=/caminho/do/chrome npm test    # cria sala, entra com 2, joga, termina e confere o prêmio
 O mock substitui o Supabase só no servidor de teste; o arquivo do demo não muda.
 
+### Sala no servidor de jogo (autoritativo)
+Abra o jogo com `?gs=wss://SEU-SERVIDOR` (fica salvo no aparelho; `?gs=off` volta ao modo antigo). A sala com amigos passa a rodar no `server/`:
+o código vira 4 dígitos, quem criou toca em Começar (2 a 4 pessoas, sem bots), o servidor move os bonecos, explode as bombas e decide o vencedor.
+O aparelho só manda direção/bomba e corrige a própria posição pelo estado do servidor (mexer no boneco pelo console não adianta).
+Teste: suba o mock (`npm run mock` em `tests/e2e`) e rode `npm run test:server` (sobe o servidor na porta 2599 e joga com 2 navegadores).
+
 ## Ajustes de tela e controles (Configurações)
 Disponíveis no lobby e durante a partida (engrenagem). Ficam salvos no aparelho (`localStorage`, chave `bc_cfg`):
 - Mostrar controle na tela; sensibilidade e tamanho do analógico; **analógico flutuante** (aparece onde o dedo toca).
