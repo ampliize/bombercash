@@ -171,6 +171,8 @@ body.playing{overflow:hidden;overscroll-behavior:none}
 .scr{grid-area:scr;position:relative;background:#0b0b10;padding:8px;border-radius:14px 14px 0 0;box-shadow:inset 0 0 0 2px #26262e;justify-self:center;line-height:0}
 .console.nopad .scr{border-radius:14px}
 .scr canvas{display:block;border-radius:5px;background:#07081a;touch-action:none}
+.vp{position:relative;overflow:hidden;border-radius:5px;background:#07081a;margin:0 auto}
+.vp.cam canvas{position:absolute;left:0;top:0;border-radius:0;will-change:transform}
 .amsg{position:absolute;left:0;right:0;top:42%;text-align:center;pointer-events:none;font-family:Bungee,Impact,sans-serif;font-size:clamp(20px,5vw,40px);text-shadow:3px 4px #141b32,0 0 17px #000;line-height:1.1}
 .stats{position:absolute;left:14px;bottom:14px;background:#000a;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;display:flex;gap:10px;line-height:1.2;pointer-events:none}
 .stats i{font-style:normal;display:inline-flex;align-items:center;gap:3px}
@@ -261,7 +263,9 @@ body.playing{-webkit-user-select:none;user-select:none}
 
 /* ---------- layout personalizado: cada jogador posiciona analogico, BOMBA e barra ---------- */
 .console.free{display:block;width:auto;max-width:none}
-.console.free .scr{margin:0 auto;border-radius:14px}
+.console.free .scr{position:fixed;margin:0;border-radius:14px;z-index:1}
+#s-arena.free{height:100vh;height:100dvh;overflow:hidden}
+html:has(#s-arena.on.free),html:has(#s-arena.on.free) body{overflow:hidden;overscroll-behavior:none}
 .console.free .joy{position:fixed;z-index:7;transform:translate(-50%,-50%);background:none;border-radius:0;height:auto;box-shadow:none;display:flex;align-items:center;justify-content:center;opacity:var(--pad-op,.8)}
 .console.free .jl{left:var(--sx,20%);top:var(--sy,80%);width:calc(var(--as,140px)*1.3);height:calc(var(--as,140px)*1.3)}
 .console.free .jr{left:var(--bx,80%);top:var(--by,80%);width:calc(var(--bs,132px)*1.3);height:calc(var(--bs,132px)*1.3)}
@@ -274,7 +278,8 @@ body.playing{-webkit-user-select:none;user-select:none}
 #s-arena.free .timer{min-width:40px;font-size:14px}
 dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#0b0c1ef2;overflow:hidden;color:var(--ink)}
 #ed::backdrop{background:#000}
-#ed .ed-arena{position:absolute;border:2px dashed #5b6bd6;border-radius:12px;background:repeating-linear-gradient(45deg,#ffffff08 0 12px,#0000 12px 24px);display:grid;place-items:center;color:#7f86c9;font:400 14px Bungee,Impact,sans-serif;pointer-events:none}
+#ed .ed-arena{position:absolute;border:2px dashed #5b6bd6;border-radius:12px;background:repeating-linear-gradient(45deg,#ffffff08 0 12px,#0000 12px 24px);display:grid;place-items:start center;color:#c9cdf5;font:400 12px Bungee,Impact,sans-serif;pointer-events:none;overflow:hidden}
+#ed .ed-arena span{margin-top:6px;padding:3px 10px;border-radius:99px;background:#0b0c1ecc}
 #ed .ed-item{position:absolute;transform:translate(-50%,-50%);touch-action:none;cursor:grab;outline:2px dashed var(--gold);outline-offset:6px;border-radius:50%;opacity:var(--pad-op,.8);z-index:6;user-select:none;-webkit-user-select:none}
 #ed .ed-item.drag{cursor:grabbing;outline-color:#fff}
 #ed .ed-item .stick,#ed .ed-item .bombbtn{pointer-events:none}
@@ -450,7 +455,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <div class="console" id="console">
   <div class="joy jl"><button class="pill" data-act="mute" aria-label="Som"><b>−</b>SOM</button>
    <div class="stick" id="stick" role="group" aria-label="Analógico"><i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i><span class="knob"></span></div></div>
-  <div class="scr"><canvas id="arena" width="720" height="624" aria-label="Arena"></canvas><div class="stats" id="stats"></div><div id="amsg" class="amsg" aria-live="polite"></div></div>
+  <div class="scr"><div class="vp" id="vp"><canvas id="arena" width="720" height="624" aria-label="Arena"></canvas></div><div class="stats" id="stats"></div><div id="amsg" class="amsg" aria-live="polite"></div></div>
   <div class="joy jr"><button class="pill" data-act="pause" aria-label="Pausar"><b>+</b>PAUSA</button>
    <button class="bombbtn" id="bombbtn" data-akey=" " aria-label="Soltar bomba"><i></i>BOMBA</button></div>
  </div>
@@ -519,6 +524,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
  <label class="tog"><span>Analógico flutuante (aparece onde você toca)</span><input type="checkbox" id="c-float"></label>
  <div class="cfg-sec">Tela do jogo</div>
  <label class="rng"><span>Tamanho da tela do jogo <output id="c-scr-v"></output></span><input type="range" id="c-scr" min="60" max="100" step="5"><small><i>Menor</i><i>Máximo da tela</i></small></label>
+ <label class="tog"><span>Câmera automática: em tela pequena aproxima o mapa e segue o seu boneco</span><input type="checkbox" id="c-cam"></label>
  <label class="tog"><span>Tela cheia e horizontal ao iniciar a partida (celular)</span><input type="checkbox" id="c-fs"></label>
  <div class="cfg-sec">Botões</div>
  <label class="rng"><span>Tamanho do botão BOMBA <output id="c-bomb-v"></output></span><input type="range" id="c-bomb" min="70" max="150" step="5"><small><i>Menor</i><i>Maior</i></small></label>
@@ -1006,6 +1012,7 @@ return{
  setMap(i){fixedMap=i;map=i<0?map:i;if(active)start()},
  togglePause,toggleMute(){muted=!muted;if(muted)musStop();else if(active&&!ended&&!demo)musStart();return muted},
  setVol(m,s){musVol=Math.max(0,Math.min(1,m/100));sfxVol=Math.max(0,Math.min(1,s/100));if(audio){const t=audio.currentTime;aSfx.gain.setTargetAtTime(sfxVol,t,.03);if(MUS.on)aMus.gain.setTargetAtTime(musVol*.5,t,.05)}if(musVol<=0)musStop();else if(active&&!muted&&!demo&&!ended&&!MUS.on)musStart()},
+ drawNow(){try{if(players.length)draw()}catch(e){}},
  sample(){sfx('up');setTimeout(()=>sfx('put'),200)},unlock(){try{actx()}catch(e){}},
  get muted(){return muted},get paused(){return paused},get active(){return active},_s(){return{players,bombs,flames,items,world,sd,matchT,ended,W,H,freeze}},get online(){return !!net},get meIdx(){return meIdx},get map(){return map}};
 }
@@ -1397,15 +1404,15 @@ if('IntersectionObserver' in window)new IntersectionObserver(es=>{dmView=es[0].i
 const keys=new Set(),con=$('console'),cv=$('arena');
 let padOn=ls.get('bc_pad',true),opp=[];
 /* configurações do analógico: sens 1-10 (zona morta), size 70-150 (% do tamanho base) */
-const POS_DEF={p:{stick:[.24,.82],bomb:[.78,.82],bar:[.5,.035]},l:{stick:[.13,.66],bomb:[.87,.66],bar:[.5,.06]}},clonePos=o=>JSON.parse(JSON.stringify(o)),CFG_DEF={sens:6,size:100,scr:100,bomb:100,swap:false,float:false,haptic:true,fs:true,mus:60,sfx:80,layout:'fixed',opa:80},STICK_BASE=140,clampN=(v,a,b,d)=>{v=Number(v);return isFinite(v)?Math.max(a,Math.min(b,v)):d};
+const POS_DEF={p:{stick:[.24,.82],bomb:[.78,.82],bar:[.5,.035]},l:{stick:[.13,.66],bomb:[.87,.66],bar:[.5,.06]}},clonePos=o=>JSON.parse(JSON.stringify(o)),CFG_DEF={sens:6,size:100,scr:100,bomb:100,swap:false,float:false,haptic:true,fs:true,mus:60,sfx:80,layout:'fixed',opa:80,cam:true},STICK_BASE=140,clampN=(v,a,b,d)=>{v=Number(v);return isFinite(v)?Math.max(a,Math.min(b,v)):d};
 const normPos=o=>{const r=clonePos(POS_DEF);for(const a of ['p','l'])for(const k of ['stick','bomb','bar']){const v=o&&o[a]&&o[a][k];if(Array.isArray(v)&&v.length===2)r[a][k]=[clampN(v[0],0,1,r[a][k][0]),clampN(v[1],0,1,r[a][k][1])]}return r};
-const cfg=(()=>{const c=ls.get('bc_cfg',null)||{};return{sens:Math.round(clampN(c.sens,1,10,CFG_DEF.sens)),size:Math.round(clampN(c.size,70,150,CFG_DEF.size)),scr:Math.round(clampN(c.scr,60,100,CFG_DEF.scr)),bomb:Math.round(clampN(c.bomb,70,150,CFG_DEF.bomb)),swap:!!c.swap,float:!!c.float,haptic:c.haptic!==false,fs:c.fs!==false,mus:Math.round(clampN(c.mus,0,100,CFG_DEF.mus)),sfx:Math.round(clampN(c.sfx,0,100,CFG_DEF.sfx)),layout:c.layout==='custom'?'custom':'fixed',opa:Math.round(clampN(c.opa,30,100,CFG_DEF.opa)),pos:normPos(c.pos)}})();
+const cfg=(()=>{const c=ls.get('bc_cfg',null)||{};return{sens:Math.round(clampN(c.sens,1,10,CFG_DEF.sens)),size:Math.round(clampN(c.size,70,150,CFG_DEF.size)),scr:Math.round(clampN(c.scr,60,100,CFG_DEF.scr)),bomb:Math.round(clampN(c.bomb,70,150,CFG_DEF.bomb)),swap:!!c.swap,cam:c.cam!==false,float:!!c.float,haptic:c.haptic!==false,fs:c.fs!==false,mus:Math.round(clampN(c.mus,0,100,CFG_DEF.mus)),sfx:Math.round(clampN(c.sfx,0,100,CFG_DEF.sfx)),layout:c.layout==='custom'?'custom':'fixed',opa:Math.round(clampN(c.opa,30,100,CFG_DEF.opa)),pos:normPos(c.pos)}})();
 const deadZone=()=>.55-.47*(cfg.sens-1)/9;
 const arena=BC.create({canvas:cv,keys,
  onMsg:t=>{$('amsg').textContent=t},
  onPause:p=>{$('bt-pause').classList.toggle('off',p);$('bt-pause').setAttribute('aria-pressed',String(p))},
  onStart:s=>{$('hud').dataset.map=s.name;me.skin=s.skins[s.meIdx];$('bombbtn').style.setProperty('--bp',me.skin*20+'%');$('bt-pause').disabled=s.net;
-  opp=s.names.map((n,i)=>i===s.meIdx?null:(s.net&&net?(net.humans?(net.humans.includes(i)?{nick:n}:{nick:n,bot:true}):{id:net.peer.id,nick:n}):{nick:n,bot:true})).filter(Boolean);saveMe();renderMe();fit()},
+  opp=s.names.map((n,i)=>i===s.meIdx?null:(s.net&&net?(net.humans?(net.humans.includes(i)?{nick:n}:{nick:n,bot:true}):{id:net.peer.id,nick:n}):{nick:n,bot:true})).filter(Boolean);saveMe();renderMe();cam.snap=true;fit()},
  onHud:h=>{$('timer').textContent=mmss(h.time);$('timer').classList.toggle('sd',!!h.sd&&!h.ended);
   $('hud').innerHTML=h.players.map(p=>`<span class="av${p.alive?'':' dead'}" title="${esc(p.name)}" style="${avStyle(p.skin)};--c:${p.rare?'#ffd76a':BC.COL[p.i%8]}"></span>`).join('')+`<span class="hud-map">${esc($('hud').dataset.map||'')}</span>`;
   const m=h.me;$('stats').innerHTML=m?`<i style="--p:20%">${m.bombs}</i><i style="--p:0%">${m.power}</i><i style="--p:40%">${m.speed}</i>`+(m.shield?'<i style="--p:60%"></i>':'')+(m.inv>1.2?`<i style="--p:80%">${Math.ceil(m.inv)}s</i>`:'')+(m.curse>0?`<i style="--p:100%">${Math.ceil(m.curse)}s</i>`:''):''}});
@@ -1425,12 +1432,32 @@ function fit(){
  con.style.setProperty('--as',Math.max(60,Math.round(stick))+'px');con.style.setProperty('--bs',Math.max(70,Math.round(bs))+'px');
  const joyW=land&&padOn?jl.offsetWidth:0,minPad=!land&&padOn?jl.offsetHeight:0,keysEl=document.querySelector('.keys'),kh=keysEl&&keysEl.offsetHeight?keysEl.offsetHeight+10:0;
  const sp=imm?8:10,aw=Math.min(vw-4,1500)-2*joyW-sp-(land?8:0),ah=vh-topH-minPad-(imm?2:land?10:16)-kh-(imm?sp:land?8:10),ar=cv.width/cv.height;
- const w=Math.max(140,Math.floor(Math.min(aw,ah*ar)*cfg.scr/100)),h=Math.round(w/ar);cv.style.width=w+'px';cv.style.height=h+'px';
+ const{bh:h}=view(aw,ah);{const sc=$('s-arena').querySelector('.scr');sc.style.left=sc.style.top=''}
  if(!land&&padOn){const free=vh-topH-h-(land?10:16)-kh-14;jl.style.height=jr.style.height=Math.max(minPad,Math.min(360,free))+'px'}}
+/* ---------- tamanho da tela do jogo e câmera ----------
+   Cabe o mapa inteiro na área disponível. Se assim cada bloco ficar pequeno demais para o dedo/olho (celular),
+   a câmera aproxima até o bloco ter TMIN px e passa a seguir o seu boneco, sem sair da borda do mapa. */
+const cam={on:false,x:0,y:0,cw:0,ch:0,bw:0,bh:0,snap:true,last:0};
+function camGeom(aw,ah,src){const c=src||cv,ar=c.width/c.height,k=72/c.width,coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches,tmin=cfg.cam?(coarse?34:30):0;
+ const fw=Math.max(140,Math.floor(Math.min(aw,ah*ar)*cfg.scr/100));
+ if(fw*k>=tmin){const fh=Math.round(fw/ar);return{on:false,cw:fw,ch:fh,bw:fw,bh:fh}}
+ const cw=Math.round(tmin/k),ch=Math.round(cw/ar);return{on:true,cw,ch,bw:Math.min(cw,Math.floor(aw*cfg.scr/100)),bh:Math.min(ch,Math.floor(ah*cfg.scr/100))}}
+function view(aw,ah){const g=camGeom(aw,ah),vp=$('vp');if(g.on!==cam.on||g.cw!==cam.cw)cam.snap=true;Object.assign(cam,g);
+ cv.style.width=g.cw+'px';cv.style.height=g.ch+'px';vp.style.width=g.bw+'px';vp.style.height=g.bh+'px';vp.classList.toggle('cam',g.on);
+ if(!g.on)cv.style.transform='';else camTick(true);return g}
+function camTick(now){
+ if(!cam.on)return;const s=arena._s(),ps=s.players||[];let p=ps[arena.meIdx];if(!p||!p.alive)p=ps.find(q=>q.alive)||p;
+ const sc=cam.cw/(cv.width/1.5),M=(cv.width/1.5-s.W*48)/2;let tx=cam.x,ty=cam.y;
+ if(p){tx=(p.x+M)*sc-cam.bw/2;ty=(p.y+M)*sc-cam.bh/2}
+ tx=Math.max(0,Math.min(cam.cw-cam.bw,tx));ty=Math.max(0,Math.min(cam.ch-cam.bh,ty));
+ const t=performance.now(),dt=Math.min(.1,(t-cam.last)/1000);cam.last=t;
+ if(cam.snap||now===true){cam.x=tx;cam.y=ty;cam.snap=now===true?cam.snap:false}else{const k=Math.min(1,dt*9);cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k}
+ cv.style.transform=`translate3d(${-Math.round(cam.x)}px,${-Math.round(cam.y)}px,0)`}
+(function camLoop(){try{if(cam.on&&arena.active)camTick()}catch(e){}requestAnimationFrame(camLoop)})();
 function freeSizes(vw,vh){const k=Math.min(vw,vh);return{stick:Math.round(Math.max(60,Math.min(STICK_BASE*cfg.size/100,k*.5))),bs:Math.round(Math.max(70,Math.min(140*cfg.bomb/100,k*.5)))}}
 function fitFree(vw,vh,land){
  const{stick,bs}=freeSizes(vw,vh),ar=cv.width/cv.height,sp=8,P=cfg.pos[land?'l':'p'];
- const w=Math.max(140,Math.floor(Math.min(vw-4-sp,(vh-2-sp)*ar)*cfg.scr/100)),h=Math.round(w/ar);cv.style.width=w+'px';cv.style.height=h+'px';
+ const g=view(vw-sp,vh-sp),sc=$('s-arena').querySelector('.scr');sc.style.left=Math.max(0,Math.floor((vw-g.bw-sp-2)/2))+'px';sc.style.top=Math.max(0,Math.floor((vh-g.bh-sp-2)/2))+'px';
  con.style.setProperty('--as',stick+'px');con.style.setProperty('--bs',bs+'px');con.style.setProperty('--pad-op',cfg.opa/100);
  const put=(k,size)=>{const z=Math.round(size*1.3);return[Math.round(Math.max(z/2,Math.min(vw-z/2,P[k][0]*vw))),Math.round(Math.max(z/2,Math.min(vh-z/2,P[k][1]*vh)))]};
  const[sx,sy]=put('stick',stick),[bx,by]=put('bomb',bs);
@@ -1501,15 +1528,19 @@ for(const ev of ['pointerdown','touchend','keydown'])addEventListener(ev,()=>are
 /* ---------- editor de posição dos controles ---------- */
 const ed=$('ed');let edDraft=null,edSnap=null,edOpening=false;
 const edLand=()=>innerWidth>innerHeight*1.12,clampV=(v,a,b)=>Math.max(a,Math.min(b,v));
+let edSrc=null,edImg='';
+function edShot(){edSrc=arena.active?cv:$('demo');edImg='';try{if(!arena.active)demo.drawNow();if(edSrc&&edSrc.width>0)edImg=edSrc.toDataURL('image/jpeg',.72)}catch(e){edImg=''}}
 function edRender(){
  const vw=innerWidth,vh=innerHeight,land=edLand(),{stick,bs}=freeSizes(vw,vh),ar=cv.width/cv.height||1.15,sp=8;
  ed.style.setProperty('--as',stick+'px');ed.style.setProperty('--bs',bs+'px');ed.style.setProperty('--pad-op',cfg.opa/100);
- const w=Math.floor(Math.min(vw-4-sp,(vh-2-sp)*ar)*cfg.scr/100),h=Math.round(w/ar);$('ed-arena').style.cssText=`left:${Math.round((vw-w-sp)/2)}px;top:2px;width:${w+sp}px;height:${h+sp}px`;
+ /* mesma conta da partida no layout personalizado: mapa centralizado ocupando a tela, com a câmera automática */
+ const src=edSrc||cv,g=camGeom(vw-sp,vh-sp,src),ea=$('ed-arena');
+ ea.style.cssText=`left:${Math.floor((vw-g.bw-sp)/2)}px;top:${Math.floor((vh-g.bh-sp)/2)}px;width:${g.bw+sp}px;height:${g.bh+sp}px`+(edImg?`;background:#07081a url(${edImg}) center/${g.cw}px ${g.ch}px no-repeat`:'');
  const P=edDraft[land?'l':'p'];
  for(const el of ed.querySelectorAll('.ed-item')){const k=el.dataset.k,hw=el.offsetWidth/2,hh=el.offsetHeight/2;el.style.left=clampV(P[k][0]*vw,hw,vw-hw)+'px';el.style.top=clampV(P[k][1]*vh,hh,vh-hh)+'px'}
  $('ed-or').textContent=land?'deitado':'em pé';
  $('e-opa').value=cfg.opa;$('e-opa-v').textContent=cfg.opa+'%';$('e-size').value=cfg.size;$('e-size-v').textContent=cfg.size+'%';$('e-bomb').value=cfg.bomb;$('e-bomb-v').textContent=cfg.bomb+'%'}
-function edOpen(){edSnap={opa:cfg.opa,size:cfg.size,bomb:cfg.bomb};edDraft=clonePos(cfg.pos);edOpening=true;$('cfg').close();ed.showModal();edRender()}
+function edOpen(){edSnap={opa:cfg.opa,size:cfg.size,bomb:cfg.bomb};edDraft=clonePos(cfg.pos);edOpening=true;edShot();$('cfg').close();ed.showModal();edRender()}
 $('c-edit').onclick=edOpen;
 $('c-custom').onchange=e=>{cfg.layout=e.target.checked?'custom':'fixed';saveCfg()};
 $('ed-save').onclick=()=>{cfg.pos=clonePos(edDraft);cfg.layout='custom';saveCfg();ed.close()};
@@ -1532,7 +1563,7 @@ const DIRN={'':'parado',w:'cima',s:'baixo',a:'esquerda',d:'direita'};
 const testStick=makeStick($('c-stick'),$('c-zone'),d=>{$('c-dir').textContent=DIRN[d]});
 let cfgPaused=false;
 function renderCfg(){$('c-pad').checked=padOn;$('c-sens').value=cfg.sens;$('c-size').value=cfg.size;$('c-sens-v').textContent=cfg.sens+' / 10';$('c-size-v').textContent=cfg.size+'%';
- $('c-float').checked=cfg.float;$('c-swap').checked=cfg.swap;$('c-hap').checked=cfg.haptic;$('c-scr').value=cfg.scr;$('c-scr-v').textContent=cfg.scr+'%';$('c-bomb').value=cfg.bomb;$('c-bomb-v').textContent=cfg.bomb+'%';$('c-fs').checked=cfg.fs;$('c-custom').checked=cfg.layout==='custom';$('c-mus').value=cfg.mus;$('c-mus-v').textContent=cfg.mus?cfg.mus+'%':'desligada';$('c-sfx').value=cfg.sfx;$('c-sfx-v').textContent=cfg.sfx?cfg.sfx+'%':'desligados';
+ $('c-float').checked=cfg.float;$('c-swap').checked=cfg.swap;$('c-hap').checked=cfg.haptic;$('c-scr').value=cfg.scr;$('c-scr-v').textContent=cfg.scr+'%';$('c-bomb').value=cfg.bomb;$('c-bomb-v').textContent=cfg.bomb+'%';$('c-fs').checked=cfg.fs;$('c-cam').checked=cfg.cam;$('c-custom').checked=cfg.layout==='custom';$('c-mus').value=cfg.mus;$('c-mus-v').textContent=cfg.mus?cfg.mus+'%':'desligada';$('c-sfx').value=cfg.sfx;$('c-sfx-v').textContent=cfg.sfx?cfg.sfx+'%':'desligados';
  const two=window.matchMedia&&matchMedia('(max-height:520px) and (orientation:landscape)').matches;
  $('cfg').style.setProperty('--as',Math.round(Math.min(STICK_BASE*cfg.size/100,two?170:($('cfg').clientWidth||340)-70))+'px')}
 function saveCfg(){ls.set('bc_cfg',cfg);renderCfg();arena.setVol(cfg.mus,cfg.sfx);fit()}
@@ -1540,6 +1571,7 @@ function openCfg(){cfgPaused=false;if(arena.active&&!arena.paused&&!arena.online
 $('cfg-open').onclick=openCfg;$('bt-cfg').onclick=openCfg;
 $('c-sens').oninput=e=>{cfg.sens=Math.round(clampN(e.target.value,1,10,CFG_DEF.sens));saveCfg()};
 $('c-size').oninput=e=>{cfg.size=Math.round(clampN(e.target.value,70,150,CFG_DEF.size));saveCfg()};
+$('c-cam').onchange=e=>{cfg.cam=e.target.checked;saveCfg()};
 $('c-pad').onchange=e=>{padOn=e.target.checked;ls.set('bc_pad',padOn);fit()};
 $('c-scr').oninput=e=>{cfg.scr=Math.round(clampN(e.target.value,60,100,CFG_DEF.scr));saveCfg()};
 $('c-bomb').oninput=e=>{cfg.bomb=Math.round(clampN(e.target.value,70,150,CFG_DEF.bomb));saveCfg()};
