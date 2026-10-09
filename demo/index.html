@@ -309,6 +309,7 @@ body.playing{overflow:hidden;overscroll-behavior:none}
   </div></header>
  <h2>Valor por partida</h2><div class="chips" id="chips"></div>
  <h2>Escolha o modo</h2><div class="rail" id="rail"></div>
+ <div class="row" style="margin:12px 0"><button class="ok" id="rm-open" type="button">Sala com amigos · jogar juntos por código (até 4)</button></div>
 
  <h2>Veja o jogo rodando <small>prévia ao vivo de cada modo e mapa</small></h2>
  <div class="demo m2" id="demo-box">
@@ -398,6 +399,16 @@ body.playing{overflow:hidden;overscroll-behavior:none}
  <ul class="hist" id="pf-hist"></ul>
  <div class="row"><button id="pf-close">Fechar</button></div></dialog>
 
+<dialog id="rm"><div class="logo" style="font-size:20px">Sala com amigos</div>
+ <div id="rm-menu">
+  <p class="note">Um cria a sala e passa o código. Os outros entram com o código. Até 4 pessoas jogam juntas e as vagas vazias viram bots. Entrada: <b id="rm-stake"></b> por jogador; o vencedor leva tudo.</p>
+  <div class="row"><button class="ok" id="rm-create" type="button">Criar sala</button></div>
+  <form class="srch" id="rm-form"><input id="rm-code" maxlength="5" placeholder="Código da sala" autocomplete="off" autocapitalize="characters" aria-label="Código da sala"><button class="ok">Entrar</button></form>
+ </div>
+ <div id="rm-lobby" hidden><div class="idbox"><span>Código da sala<br><b id="rm-c">…</b></span><button id="rm-copy" type="button">Copiar</button></div>
+  <ul class="plist" id="rm-list"></ul><p class="note" id="rm-msg"></p></div>
+ <div class="row"><button id="rm-close" type="button">Fechar</button><button class="ok" id="rm-start" type="button" hidden>Começar</button></div></dialog>
+
 <dialog id="wait"><div class="logo" style="font-size:20px" id="w-t"></div><div class="spin"></div><p id="w-msg" style="text-align:center;font-weight:800"></p><div class="row"><button id="w-no">Cancelar</button></div></dialog>
 
 <div id="inv" popover="manual" role="alertdialog" aria-labelledby="inv-t"><span class="av" id="inv-av"></span><div><b id="inv-t"></b><small id="inv-s"></small></div><div class="row"><button id="inv-no">Recusar</button><button class="ok" id="inv-yes">Aceitar</button></div></div>
@@ -485,8 +496,8 @@ function start(){
   if(mp.k==='isl')safe.add(id((W-1)/2,(H-1)/2));
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(!world[y][x]&&!safe.has(id(x,y))&&!bridges.has(id(x,y))&&Math.random()<dens)world[y][x]=1}
  const skins=init?init.skins:(forced&&forced.length>=N?forced:deal(N)),bn=shuf(BOTS.slice()),nm=init?init.names:names;
- meIdx=demo?-1:guest()?1:0;
- players=starts.map(([x,y],i)=>{const skin=skins[i],me=i===meIdx,ctrl=me?'me':net?'net':'ai';return{i,x:(x+.5)*T,y:(y+.5)*T,tx:(x+.5)*T,ty:(y+.5)*T,alive:true,me,ctrl,ai:!me,skin,rare:skin>=4,face:'down',bombMax:1,power:2,speed:ctrl==='ai'?112:125,cooldown:0,think:Math.random()*.2,dir:[0,0],goal:null,shield:0,inv:0,curse:0,placeAt:-1e9,mv:0,deadAt:0,
+ meIdx=demo?-1:guest()?(net.slot||1):0;
+ players=starts.map(([x,y],i)=>{const skin=skins[i],me=i===meIdx,ctrl=me?'me':net&&(!net.humans||net.humans.includes(i))?'net':'ai';return{i,x:(x+.5)*T,y:(y+.5)*T,tx:(x+.5)*T,ty:(y+.5)*T,alive:true,me,ctrl,ai:!me,skin,rare:skin>=4,face:'down',bombMax:1,power:2,speed:ctrl==='ai'?112:125,cooldown:0,think:Math.random()*.2,dir:[0,0],goal:null,shield:0,inv:0,curse:0,placeAt:-1e9,mv:0,deadAt:0,
   name:String(nm[i]||(ctrl==='ai'?'Bot '+bn[(demo?i:i-1)%bn.length]:'Você'))}});
  const me=players[meIdx];if(!me)say('');else{say((me.rare?'★ SKIN RARA ★ ':'SEU BONECO: ')+SKIN_NAMES[me.skin].toUpperCase());introT=net?2.8:1.9}
  o.onStart&&o.onStart({map,name:mp.name,desc:mp.desc,W,H,N,meIdx,net:!!net,skins:players.map(p=>p.skin),names:players.map(p=>p.name)});hud(true)}
@@ -645,12 +656,12 @@ function applySnap(s){const now=performance.now(),first=!gotSnap,me=players[meId
  sd.falling=s.fl.map(a=>({x:a[0],y:a[1],t:a[2]}));
  if(s.e&&!ended)finishMatch(s.wi>=0?players[s.wi]:null)}
 function netRecv(ev,d){if(!net||!active)return;const now=performance.now();lastRx=now;
- if(net.role==='host'){const p=players[1];if(!p)return;
+ if(net.role==='host'){const p=players[d&&d.s>0&&d.s<players.length?d.s:1];if(!p||p.ctrl!=='net')return;
   if(ev==='in'){const cx=Math.floor(d.x/T),cy=Math.floor(d.y/T);if(at(cx,cy)&&world[cy][cx]!==2){p.tx=d.x;p.ty=d.y;p.face=FACES[d.f]||'down';if(d.m)p.mv=now}}
   else if(ev==='bomb'){if(!ended&&freeze<=0&&Math.abs((d.x+.5)*T-p.tx)<T*1.3&&Math.abs((d.y+.5)*T-p.ty)<T*1.3)place(p,d.x|0,d.y|0)}
   else if(ev==='bye'){if(p.alive&&!ended){p.alive=false;p.deadAt=now;say(p.name.toUpperCase()+' SAIU');introT=1.5}}}
  else if(ev==='snap')applySnap(d);
- else if(ev==='bye'){if(!ended)finishMatch(players[meIdx])}}
+ else if(ev==='bye'){if(!ended&&!(d&&d.s>0))finishMatch(players[meIdx])}}
 function ease(p,dt){const d=Math.hypot(p.tx-p.x,p.ty-p.y);if(d>T*2.5){p.x=p.tx;p.y=p.ty}else if(d>.2){const k=Math.min(1,dt*15);p.x+=(p.tx-p.x)*k;p.y+=(p.ty-p.y)*k}}
 function guestUpdate(dt,now){
  if(ended){for(const f of flames.slice()){f.t-=dt;if(f.t<=0)flames.splice(flames.indexOf(f),1)}return}
@@ -662,11 +673,11 @@ function guestUpdate(dt,now){
  if(me.alive&&freeze<=0){
   const dx=Number(keys.has('ArrowRight')||keys.has('d'))-Number(keys.has('ArrowLeft')||keys.has('a')),dy=Number(keys.has('ArrowDown')||keys.has('s'))-Number(keys.has('ArrowUp')||keys.has('w'));move(me,dx,dy,dt);
   if(keys.has(' ')&&me.cooldown<=0){const x=Math.round((me.x-T/2)/T),y=Math.round((me.y-T/2)/T);
-   if(at(x,y)&&world[y][x]===0&&!bombs.some(b=>b.x===x&&b.y===y)&&bombs.filter(b=>b.owner===me).length<me.bombMax){net.send('bomb',{x,y});me.cooldown=.23;me.placeAt=now;sound(600,.075)}}}
+   if(at(x,y)&&world[y][x]===0&&!bombs.some(b=>b.x===x&&b.y===y)&&bombs.filter(b=>b.owner===me).length<me.bombMax){net.send('bomb',{x,y,s:meIdx});me.cooldown=.23;me.placeAt=now;sound(600,.075)}}}
  for(const b of bombs){b.t=Math.max(0,b.t-dt);for(const p of [...b.pass])if(Math.abs(p.x-(b.x+.5)*T)>=T/2+15||Math.abs(p.y-(b.y+.5)*T)>=T/2+15)b.pass.delete(p)}
  for(const f of flames.slice()){f.t-=dt;if(f.t<=0)flames.splice(flames.indexOf(f),1)}
  for(const f of sd.falling)f.t=Math.max(0,f.t-dt);
- inAcc+=dt;if(inAcc>=.1){inAcc=0;net.send('in',{x:r1(me.x),y:r1(me.y),f:FACES.indexOf(me.face),m:now-me.mv<130?1:0})}}
+ inAcc+=dt;if(inAcc>=.1){inAcc=0;net.send('in',{s:meIdx,x:r1(me.x),y:r1(me.y),f:FACES.indexOf(me.face),m:now-me.mv<130?1:0})}}
 
 function endInfo(w,place){const me=players[meIdx];return{skin:w?w.skin:-1,name:w?w.name:'',duration:Math.round(matchT),map:MAPS[map].name,meIdx,net:!!net,place:place||0,meAlive:!!(me&&me.alive)}}
 /* place>0: o jogador humano foi eliminado numa partida contra bots (terminou nessa colocação) e a partida acaba ali */
@@ -822,7 +833,7 @@ function frame(t){const dt=Math.max(0,Math.min(.035,(t-last)/1000||.016));last=t
 function togglePause(){if(!active||ended||net)return paused;paused=!paused;say(paused?'PAUSADO':'');o.onPause&&o.onPause(paused);return paused}
 requestAnimationFrame(frame);
 return{
- begin(n,cb,opt){opt=opt||{};sdStart=opt.sdAt>0?opt.sdAt:SD_START;net=opt.net||null;if(net)n=2;names=opt.names||[];forced=opt.skins||null;N=n;W=n>4?21:15;H=n>4?15:13;onEnd=cb||null;keys.clear();fixedMap=opt.map>=0?opt.map:-1;map=fixedMap>=0?fixedMap:(demo&&opt.keep?map:rnd(0,MAPS.length-1));paused=false;start();active=true;last=performance.now();o.onPause&&o.onPause(false)},
+ begin(n,cb,opt){opt=opt||{};sdStart=opt.sdAt>0?opt.sdAt:SD_START;net=opt.net||null;if(net)n=net.n||2;names=opt.names||[];forced=opt.skins||null;N=n;W=n>4?21:15;H=n>4?15:13;onEnd=cb||null;keys.clear();fixedMap=opt.map>=0?opt.map:-1;map=fixedMap>=0?fixedMap:(demo&&opt.keep?map:rnd(0,MAPS.length-1));paused=false;start();active=true;last=performance.now();o.onPause&&o.onPause(false)},
  stop(){active=false;matchId++;net=null},
  netRecv,getInit(){return{map,W,H,seed,skins:players.map(p=>p.skin),names:players.map(p=>p.name),w:encWorld(),br:[...bridges]}},
  setMap(i){fixedMap=i;map=i<0?map:i;if(active)start()},
@@ -1102,7 +1113,65 @@ async function poll(now){
     if(inv&&!busy()&&!$('intro'))showInv(inv);else if(shownInv&&(!inv||busy()))hideInv()}}catch(e){}}
  pollT=setTimeout(poll,pend||(net&&!net.started)?2000:6000)}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll(true)});
-addEventListener('pagehide',()=>{if(net&&net.started&&arena.active)net.room.emit('bye',{})});
+addEventListener('pagehide',()=>{if(net&&net.started&&arena.active)net.room.emit('bye',{s:net.slot||0})});
+
+/* ---------- sala com amigos: 2 a 4 humanos por código (o anfitrião simula; vagas vazias viram bots) ---------- */
+let rm=null,rmStartMsg=null;
+const rmCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<5;i++)c+=a[Math.floor(Math.random()*a.length)];return c};
+function rmRender(){if(!rm)return;const lob=$('rm-lobby');lob.hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=rm.code;
+ $('rm-list').innerHTML=rm.roster.map(r=>`<li><b>${esc(r.nick)}</b> · jogador ${r.s+1}${r.id===me.id?' (você)':''}${r.s===0?' · anfitrião':''}</li>`).join('');
+ const host=rm.role==='host';$('rm-start').hidden=!host;$('rm-start').disabled=rm.roster.length<2;
+ $('rm-msg').textContent=host?(rm.roster.length<2?'Passe o código para os amigos entrarem. É preciso pelo menos 2 pessoas.':rm.roster.length+' na sala. Quando todos entrarem, toque em Começar. Vagas vazias viram bots.'):'Aguardando o anfitrião começar… Entrada de '+R$(rm.stake)+'.'}
+function rmReset(){const r=rm;rm=null;if(r){clearInterval(r.hi);clearTimeout(r.to)}$('rm-lobby').hidden=true;$('rm-menu').hidden=false;$('rm-start').hidden=true;return r}
+function rmLeave(silent){const r=rmReset();if(r&&r.room&&!r.started){if(r.role==='host')r.room.emit('bye',{s:0});else r.room.emit('leave',{id:me.id});const rr=r.room;setTimeout(()=>rr.close(),300)}if($('rm').open)$('rm').close();if(!silent&&r&&r.msg)toast(r.msg)}
+function rmEmitStart(){if(!net||net.role!=='host'||!rmStartMsg)return;net.room.emit('start',rmStartMsg)}
+function rmMsg(ev,d){
+ if(rm&&!rm.started){
+  if(rm.role==='host'){
+   if(ev==='join'&&d&&d.id){let e=rm.roster.find(r=>r.id===+d.id);
+    if(!e){if(rm.roster.length>=4){rm.room.emit('full',{id:+d.id});return}e={s:rm.roster.length,id:+d.id,nick:String(d.nick||'Jogador').slice(0,16)};rm.roster.push(e)}
+    rm.room.emit('roster',{list:rm.roster,stake:rm.stake});rmRender()}
+   else if(ev==='leave'&&d){const i=rm.roster.findIndex(r=>r.id===+d.id);if(i>0){rm.roster.splice(i,1);rm.roster.forEach((r,k)=>r.s=k);rm.room.emit('roster',{list:rm.roster,stake:rm.stake});rmRender()}}}
+  else{
+   if(ev==='roster'&&d&&d.list){const mine=d.list.find(r=>r.id===me.id);if(!mine)return;
+    if(bal<d.stake){rm.msg='Saldo insuficiente para a entrada de '+R$(d.stake)+'.';rmLeave();return}
+    clearInterval(rm.hi);clearTimeout(rm.to);rm.slot=mine.s;rm.roster=d.list;rm.stake=d.stake;rmRender()}
+   else if(ev==='full'&&d&&+d.id===me.id){rm.msg='Essa sala já está cheia.';rmLeave()}
+   else if(ev==='bye'){rm.msg='O anfitrião cancelou a sala.';rmLeave()}
+   else if(ev==='start'&&d&&d.slots&&d.slots[me.id]!=null){
+    const s=d.slots[me.id],r=rm;rm=null;clearInterval(r.hi);clearTimeout(r.to);
+    if(bal<d.stake){toast('Saldo insuficiente para a entrada de '+R$(d.stake)+'.');r.room.close();$('rm').close();return}
+    net={role:'guest',room:r.room,stake:d.stake,peer:{id:null,nick:''},started:true,slot:s,n:4,humans:d.humans,humansN:d.humans.length};
+    mode=MODES['4x4'];mode.k='4x4';bal-=d.stake;save();renderMoney();if($('rm').open)$('rm').close();show('s-arena');$('e-wk').textContent='';
+    arena.begin(4,finish,{net:{role:'guest',slot:s,n:4,humans:d.humans,init:d,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit()}}
+  return}
+ if(net&&net.started)arena.netRecv(ev,d)}
+function rmJoinRoom(role,code){
+ const st={role,code,room:null,roster:[],slot:role==='host'?0:null,stake:bet,started:false,hi:0,to:0,msg:''};rm=st;
+ st.room=Room('rm-'+code,rmMsg,up=>{if(rm!==st)return;
+  if(!up){st.msg='Não foi possível abrir a sala online agora.';rmLeave();return}
+  if(role==='host'){st.roster=[{s:0,id:me.id,nick:me.nick}];rmRender()}
+  else{const hi=()=>st.room.emit('join',{id:me.id,nick:me.nick,skin:me.skin||0});hi();st.hi=setInterval(hi,800);
+   st.to=setTimeout(()=>{if(rm===st&&st.slot==null){st.msg='Sala não encontrada. Confira o código.';rmLeave()}},9000);$('rm-msg').textContent='Entrando…';$('rm-lobby').hidden=false;$('rm-menu').hidden=true;$('rm-c').textContent=code}})}
+$('rm-open').onclick=async()=>{
+ if(net||pend||arena.active||rm){toast('Termine a partida atual antes.');return}
+ if(!await ensurePlayer()){toast('Sem conexão com o servidor agora.');return}
+ $('rm-stake').textContent=R$(bet);rmReset();$('rm').showModal()};
+$('rm-create').onclick=()=>{if(bal<bet){toast('Saldo insuficiente para a entrada de '+R$(bet)+'.');return}rmJoinRoom('host',rmCode())};
+$('rm-form').onsubmit=e=>{e.preventDefault();const c=$('rm-code').value.trim().toUpperCase();if(c.length<4){toast('Digite o código da sala.');return}rmJoinRoom('guest',c)};
+$('rm-copy').onclick=()=>{try{navigator.clipboard.writeText(rm?rm.code:'');toast('Código copiado.')}catch(e){}};
+$('rm-close').onclick=()=>rmLeave(true);
+$('rm').addEventListener('cancel',e=>{e.preventDefault();rmLeave(true)});
+$('rm-start').onclick=()=>{
+ if(!rm||rm.role!=='host'||rm.roster.length<2)return;
+ if(bal<rm.stake){toast('Saldo insuficiente para a entrada de '+R$(rm.stake)+'.');return}
+ const r=rm,humans=r.roster.map(x=>x.s),names=r.roster.map(x=>x.nick),slots={};r.roster.forEach(x=>slots[x.id]=x.s);
+ r.started=true;clearInterval(r.hi);rm=null;
+ net={role:'host',room:r.room,stake:r.stake,peer:{id:null,nick:''},started:true,slot:0,n:4,humans,humansN:humans.length};
+ mode=MODES['4x4'];mode.k='4x4';bal-=r.stake;save();renderMoney();$('rm').close();show('s-arena');$('e-wk').textContent='';
+ arena.begin(4,finish,{map:mapSel,names,net:{role:'host',n:4,slot:0,humans,send:(e2,x)=>net&&net.room.emit(e2,x)}});fit();
+ rmStartMsg=Object.assign(arena.getInit(),{stake:r.stake,humans,slots});
+ for(const t of [0,500,1300,2500,4000])setTimeout(rmEmitStart,t)};
 
 /* ---------- prévia ao vivo ---------- */
 let dmMode='4x4',dmMap=-1,dmView=false;
@@ -1132,7 +1201,7 @@ const arena=BC.create({canvas:cv,keys,
  onMsg:t=>{$('amsg').textContent=t},
  onPause:p=>{$('bt-pause').classList.toggle('off',p);$('bt-pause').setAttribute('aria-pressed',String(p))},
  onStart:s=>{$('hud').dataset.map=s.name;me.skin=s.skins[s.meIdx];$('bombbtn').style.setProperty('--bp',me.skin*20+'%');$('bt-pause').disabled=s.net;
-  opp=s.names.map((n,i)=>i===s.meIdx?null:(s.net&&net?{id:net.peer.id,nick:n}:{nick:n,bot:true})).filter(Boolean);saveMe();renderMe();fit()},
+  opp=s.names.map((n,i)=>i===s.meIdx?null:(s.net&&net?(net.humans?(net.humans.includes(i)?{nick:n}:{nick:n,bot:true}):{id:net.peer.id,nick:n}):{nick:n,bot:true})).filter(Boolean);saveMe();renderMe();fit()},
  onHud:h=>{$('timer').textContent=mmss(h.time);$('timer').classList.toggle('sd',!!h.sd&&!h.ended);
   $('hud').innerHTML=h.players.map(p=>`<span class="av${p.alive?'':' dead'}" title="${esc(p.name)}" style="${avStyle(p.skin)};--c:${p.rare?'#ffd76a':BC.COL[p.i%8]}"></span>`).join('')+`<span class="hud-map">${esc($('hud').dataset.map||'')}</span>`;
   const m=h.me;$('stats').innerHTML=m?`<i style="--p:20%">${m.bombs}</i><i style="--p:0%">${m.power}</i><i style="--p:40%">${m.speed}</i>`+(m.shield?'<i style="--p:60%"></i>':'')+(m.inv>1.2?`<i style="--p:80%">${Math.ceil(m.inv)}s</i>`:'')+(m.curse>0?`<i style="--p:100%">${Math.ceil(m.curse)}s</i>`:''):''}});
@@ -1153,7 +1222,7 @@ function fit(){
 addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,250));
 function go(){hideInv();show('s-arena');$('e-wk').textContent='';arena.begin(mode.n,finish,{map:mapSel,names:[me.nick],skins:window.__bcSkins||null,sdAt:window.__bcSdAt});fit()}
 function finish(w,info){
- const online=!!info.net,stake=online&&net?net.stake:bet,pot=mode.n*stake,mine=info.meIdx;let t,p,result=null;
+ const online=!!info.net,stake=online&&net?net.stake:bet,pot=(online&&net&&net.humansN?net.humansN:mode.n)*stake,mine=info.meIdx;let t,p,result=null;
  if(w===-2){bal+=stake;t='Partida cancelada';p='A conexão com o outro jogador caiu. Sua entrada de '+R$(stake)+' voltou.'}
  else if(w===mine){bal+=pot;result='win';t='Você venceu!';p='O prêmio de '+R$(pot)+' é seu.'}
  else if(info.place){result='loss';t='Derrota';p='Você foi eliminado e ficou em '+info.place+'º lugar de '+mode.n+'.'}
@@ -1164,7 +1233,7 @@ function finish(w,info){
  const o=opp.slice();if(online)endNet();show('s-end');
  if(result)report(result,info,stake,online?'friend':'bots',o);else $('e-wk').textContent=''}
 $('ar-back').onclick=()=>{
- if(net&&net.started&&arena.active){net.room.emit('bye',{});const st=net.stake,o=opp.slice();endNet();arena.stop();keys.clear();mode=MODES['1x1'];mode.k='1x1';
+ if(net&&net.started&&arena.active){net.room.emit('bye',{s:net.slot||0});const st=net.stake,o=opp.slice();endNet();arena.stop();keys.clear();mode=MODES['1x1'];mode.k='1x1';
   report('loss',{map:null,duration:0},st,'friend',o);toast('Você saiu da partida: derrota por desistência.')}
  else{arena.stop();keys.clear()}
  renderMoney();show('s-lobby');loadRank()};
