@@ -75,3 +75,7 @@ Quando a câmera aproxima (celular em pé), a janela mostra um número inteiro d
 - **Movimento nos trilhos:** o boneco anda centralizado no corredor e, se bater numa quina, escorrega sozinho para a faixa livre (até ~60% de bloco), como no Bomberman clássico. A mesma regra está no servidor (`walkStep`).
 - Teste: `npm run test:custom` (setas, paletas, ícones, classificação e prêmio).
 
+## Bloqueio de captura de tela
+A página escurece por completo (tela preta por cima de tudo) quando alguém começa um atalho de print: **Cmd+Shift** no Mac (antes do 3/4/5) e **Win+Shift** no Windows (antes do S do Recorte); **PrintScreen** apaga a tela por ~2s e limpa a área de transferência; quando a janela perde o foco ou a aba some (ferramenta de recorte, gravador de tela, troca de app no celular) a tela fica preta até voltar; imprimir (Ctrl+P) sai preto. Botão direito e arrastar imagem ficam bloqueados no jogo.
+**Limite honesto:** nenhum site consegue impedir o print do sistema. No Windows a tecla PrintScreen sozinha chega ao navegador depois que a imagem já foi tirada, e no celular o print pelos botões físicos nem chega ao navegador. Bloqueio de verdade (tela preta no print e na gravação) só no app nativo: Android com `FLAG_SECURE` (dá para empacotar este PWA com TWA/Capacitor); no iPhone dá para detectar o print, não impedir. Teste: `npm run test:shield`.
+

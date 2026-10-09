@@ -12,7 +12,8 @@
     "test:camera": "node camera.test.js",
     "test:count": "node count.test.js",
     "test:duel": "node duel.test.js",
-    "test:custom": "node custom.test.js"
+    "test:custom": "node custom.test.js",
+    "test:shield": "node shield.test.js"
   },
   "dependencies": {
     "playwright-core": "^1.56.1",

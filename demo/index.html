@@ -345,6 +345,11 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
 .keys{margin:8px 0 0;text-align:center}
 @media (max-width:700px),(max-height:520px){.keys{display:none}}
 
+/* proteção contra captura: tela preta por cima de tudo (ver blindagem no fim do script) */
+#shield{position:fixed;inset:0;z-index:2147483647;background:#000;display:none;align-items:flex-end;justify-content:center;padding-bottom:24px;pointer-events:none}
+#shield.on{display:flex}#shield span{color:#222;font:800 12px Nunito,sans-serif}
+@media print{body>*{display:none!important}body{background:#000!important}#shield{display:flex!important}}
+#arena,#demo,#intro,.res,.erank{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #intro{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,#47206a,#10112e 72%);overflow:hidden;cursor:pointer}
 #intro.out{animation:ifade .55s ease forwards;pointer-events:none}
 @keyframes ifade{to{opacity:0;visibility:hidden}}
@@ -553,6 +558,7 @@ dialog#ed{width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;
   <div class="row"><button type="button" id="ed-reset">Restaurar</button><button type="button" id="ed-cancel">Cancelar</button><button type="button" class="ok" id="ed-save">Salvar</button></div></div></dialog>
 
 <div id="toast" popover="manual" role="status" aria-live="polite"></div>
+<div id="shield" aria-hidden="true"><span>Captura de tela bloqueada</span></div>
 
 <dialog id="cfg"><div class="logo" style="font-size:20px">Configurações</div>
  <div class="cfg-grid"><div>
@@ -1821,13 +1827,37 @@ function startScreen(onPlay){
  function setV(){const src='assets/start-'+pick()+'.mp4';if(vid.getAttribute('src')!==src){vid.setAttribute('src',src);const p=vid.play();if(p&&p.catch)p.catch(()=>{})}}
  function useVideo(){if(mode==='video'||mode==='legacy')return;mode='video';try{fr.remove()}catch(e){}vid.hidden=false;vid.onerror=()=>{mode='legacy';vid.remove();intro.classList.remove('st-on','st-vid')};
   setV();vid.classList.add('on');intro.classList.add('st-on','st-vid')}
- function hook(w){try{const d=w.document;['pointerdown','keydown'].forEach(ev=>d.addEventListener(ev,()=>{try{bgm.unlock()}catch(e){}},{passive:true}));d.addEventListener('keydown',e=>{if(e.key==='Enter')onPlay()})}catch(e){}}
+ function hook(w){try{const d=w.document;try{shield.onKeys(d)}catch(_){}['pointerdown','keydown'].forEach(ev=>d.addEventListener(ev,()=>{try{bgm.unlock()}catch(e){}},{passive:true}));d.addEventListener('keydown',e=>{if(e.key==='Enter')onPlay()})}catch(e){}}
  let n=0;const chk=()=>{if(mode)return;let w;try{w=fr.contentWindow;if(w&&w.BomberCash&&w.BomberCash.ready()){mode='frame';fr.classList.add('on');intro.classList.add('st-on');hook(w);return}}catch(e){useVideo();return}
   if(++n>60){useVideo();return}setTimeout(chk,100)};chk(); // a animação pode ter carregado antes deste script
  fr.addEventListener('error',useVideo);
  addEventListener('message',e=>{if(fr.isConnected&&e.source===fr.contentWindow&&e.data&&e.data.type==='bombercash:play')onPlay()});
  addEventListener('resize',()=>{if(mode==='video')setV()});
  return{get mode(){return mode}}}
+/* ---------- bloqueio de captura de tela (melhor esforço no navegador) ----------
+   Navegador não tem como impedir o print do sistema; o que dá para fazer é apagar a tela no momento em que o atalho começa:
+   Cmd+Shift (Mac: 3/4/5) e Win+Shift (Recorte: S) acendem a tela preta antes da tecla final; PrintScreen apaga a tela e limpa
+   a área de transferência; perder o foco/sair da aba (ferramentas de recorte, gravação, troca de app) também apaga; imprimir sai preto.
+   No celular o print por botões físicos não chega ao navegador: só o app nativo (Android FLAG_SECURE) bloqueia de verdade. */
+const shield=(()=>{const el=$('shield');let hold=0,mods=false,away=false;
+ const upd=()=>el.classList.toggle('on',mods||away||Date.now()<hold);
+ const flash=ms=>{hold=Math.max(hold,Date.now()+ms);upd();setTimeout(upd,ms+20)};
+ const key=e=>{const k=e.key;
+  if(k==='PrintScreen'||e.code==='PrintScreen'){flash(1800);try{navigator.clipboard&&navigator.clipboard.writeText('')}catch(_){}}
+  mods=e.type==='keydown'&&(e.metaKey||k==='Meta'||k==='OS')&&(e.shiftKey||k==='Shift');
+  if(e.type==='keydown'&&e.ctrlKey&&(k==='p'||k==='P'||k==='s'||k==='S')){e.preventDefault();flash(800)}
+  upd()};
+ const onKeys=d=>{d.addEventListener('keydown',key,true);d.addEventListener('keyup',key,true)};onKeys(document);
+ const inFrame=()=>{const a=document.activeElement;return a&&a.tagName==='IFRAME'};
+ addEventListener('blur',()=>setTimeout(()=>{if(!inFrame()&&!document.hasFocus()){away=true;upd()}},0));
+ addEventListener('focus',()=>{away=false;mods=false;upd()});
+ document.addEventListener('visibilitychange',()=>{away=document.hidden||(!document.hasFocus()&&!inFrame());upd()});
+ addEventListener('pagehide',()=>{away=true;upd()});addEventListener('pageshow',()=>{away=false;upd()});
+ addEventListener('beforeprint',()=>{away=true;upd()});addEventListener('afterprint',()=>{away=false;upd()});
+ document.addEventListener('contextmenu',e=>{if(e.target.closest('canvas,#intro,#s-end,img'))e.preventDefault()});
+ document.addEventListener('dragstart',e=>{if(e.target.closest('canvas,img'))e.preventDefault()});
+ return{onKeys,get on(){return el.classList.contains('on')}}})();
+window.__shield=shield;
 const intro=$('intro');
 if(intro){
  const enter=()=>{if(intro.classList.contains('msg'))return;try{bgm.unlock()}catch(e){}intro.classList.add('msg');setTimeout(()=>$('hello-ok').focus(),350);try{arena.sample()}catch(e){}};
