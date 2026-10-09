@@ -25,7 +25,7 @@ $$;
 
 create function public.my_roles() returns setof core.app_role
 language sql stable security definer set search_path = '' as $$
-  select role from core.user_roles where user_id = auth.uid()
+  select role from core.user_roles where user_id = auth.uid() and revoked_at is null
 $$;
 
 -- ---------------------------------------------------------------- painel (cada ação confere o papel)

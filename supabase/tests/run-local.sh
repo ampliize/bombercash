@@ -13,4 +13,7 @@ PSQL="psql -h /tmp -p $PORT -U postgres -v ON_ERROR_STOP=1 -q -X"
 $PSQL -c "create database bc" postgres; PSQL="$PSQL -d bc"
 $PSQL -f "$HERE/auth_stub.sql"
 for f in "$ROOT"/supabase/migrations/*.sql; do echo ">> $(basename "$f")"; $PSQL -f "$f"; done
+if [ -n "${DUMP_FN:-}" ]; then
+  $PSQL -At -c "select n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||') '||md5(p.prosrc) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='core' or (n.nspname='public' and (p.proname like 'my\_%' or p.proname like 'admin\_%')) order by 1" > "$DUMP_FN"
+fi
 $PSQL -f "$HERE/core.test.sql"
