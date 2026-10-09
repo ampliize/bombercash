@@ -1,15 +1,16 @@
 const {chromium}=require('playwright-core');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const devsAll=[['SE-p',375,667,1],['S8-p',360,640,1],['iP14-p',390,844,1],['PM-p',430,932,1],['Fold-p',280,653,1],['SE-l',667,375,1],['iP14-l',844,390,1],['short-l',740,360,1],['PM-l',932,430,1],['tab-p',768,1024,0],['tab-l',1024,768,0],['lap',1366,768,0],['fhd',1920,1080,0],['uw',2560,1080,0]];
+const devsAll=[['SE-p',375,667,1],['S8-p',360,640,1],['iP14-p',390,844,1],['PM-p',430,932,1],['Fold-p',280,653,1],['SE1-l',568,320,1],['SE-l',667,375,1],['iP14-l',844,390,1],['short-l',740,360,1],['PM-l',932,430,1],['tab-p',768,1024,0],['tab-l',1024,768,0],['lap',1366,768,0],['fhd',1920,1080,0],['uw',2560,1080,0]];
 const only=process.argv[2]?process.argv[2].split(','):null;const devs=devsAll.filter(d=>!only||only.includes(d[0]));
 const measure=()=>{const r=e=>{const q=e&&e.getBoundingClientRect();return q?[Math.round(q.left),Math.round(q.top),Math.round(q.width),Math.round(q.height)]:null};
  const de=document.documentElement,top=[...document.querySelectorAll('#atop > *')].filter(e=>e.offsetParent!==null).map(e=>e.getBoundingClientRect().right);
- return{vw:innerWidth,vh:innerHeight,scrollW:de.scrollWidth,scrollH:Math.max(de.scrollHeight,document.body.scrollHeight),cv:r(document.getElementById('arena')),stick:r(document.getElementById('stick')),bomb:r(document.getElementById('bombbtn')),jl:r(document.querySelector('.jl')),jr:r(document.querySelector('.jr')),topRight:Math.max(...top),swap:document.querySelector('.console').classList.contains('swap')}};
+ return{vw:innerWidth,vh:innerHeight,scrollW:de.scrollWidth,scrollH:Math.max(de.scrollHeight,document.body.scrollHeight),cv:r(document.getElementById('arena')),stick:r(document.getElementById('stick')),bomb:r(document.getElementById('bombbtn')),jl:r(document.querySelector('.jl')),jr:r(document.querySelector('.jr')),topRight:Math.max(...top),bar:[...document.querySelectorAll('#atop .ibtn,#atop .timer')].filter(e=>e.offsetParent!==null).map(e=>{const q=e.getBoundingClientRect();return[Math.round(q.left),Math.round(q.top),Math.round(q.width),Math.round(q.height)]}),imm:document.getElementById('s-arena').classList.contains('imm'),swap:document.querySelector('.console').classList.contains('swap')}};
 const check=(m,label)=>{const bad=[];const ov=(a,b)=>a&&b&&a[0]<b[0]+b[2]&&b[0]<a[0]+a[2]&&a[1]<b[1]+b[3]&&b[1]<a[1]+a[3];
  if(m.scrollW>m.vw+1)bad.push('scrollX');if(m.scrollH>m.vh+1)bad.push('scrollY '+m.scrollH);
  if(m.topRight>m.vw+1)bad.push('barra do topo estoura '+Math.round(m.topRight));
  if(m.cv&&(m.cv[0]<0||m.cv[0]+m.cv[2]>m.vw+1||m.cv[1]+m.cv[3]>m.vh+1))bad.push('canvas fora');
  for(const k of ['stick','bomb'])if(m[k]&&(m[k][0]<0||m[k][0]+m[k][2]>m.vw+1||m[k][1]+m[k][3]>m.vh+1||m[k][2]<44))bad.push(k+' ruim '+m[k]);
+ if(m.imm&&m.bar.some(b=>ov(b,m.cv)))bad.push('botao da barra sobre o canvas');
  if(ov(m.cv,m.stick))bad.push('stick sobre canvas');if(ov(m.cv,m.bomb))bad.push('bomba sobre canvas');
  if(m.jl&&m.jr){const stickRight=(m.stick[0]+m.stick[2]/2)>m.vw/2;if(m.swap&&!stickRight)bad.push('swap nao inverteu');if(!m.swap&&stickRight)bad.push('lado errado')}
  return label+' canvas '+JSON.stringify(m.cv)+' bomba '+m.bomb[2]+'px '+(bad.length?'PROBLEMAS: '+bad.join('; '):'ok')};

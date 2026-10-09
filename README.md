@@ -31,3 +31,9 @@ Disponíveis no lobby e durante a partida (engrenagem). Ficam salvos no aparelho
 - "Voltar ao padrão" restaura tudo.
 
 Responsividade: o layout usa `dvh`, `safe-area` e `visualViewport`, os diálogos rolam por dentro em telas baixas e a barra do topo se compacta abaixo de 380px (Galaxy Fold, 280px). Teste: `npm run test:responsive` em `tests/e2e` (14 tamanhos, de 280x653 a 2560x1080, no padrão e com as opções ligadas; confere sobra de rolagem, sobreposição, controles fora da tela e lado invertido).
+
+## Visão do jogo no celular, zoom e som
+- **Celular deitado:** a barra do topo flutua sobre os painéis e a arena usa quase toda a altura (16% a 22% maior que antes; os painéis de botões encolhem sozinhos, sem cobrir a arena). Em pé, o jogo mostra a dica para girar o celular. Ao iniciar a partida o jogo tenta **tela cheia + horizontal** (Android/Chrome; o iPhone não permite, então só a dica aparece). Dá para desligar em Configurações.
+- **Sem zoom por toque duplo ou pinça** durante a partida (viewport `user-scalable=no`, `touch-action: manipulation` e bloqueio de gestos).
+- **Som:** efeitos sintetizados (explosão, bomba, item, caveira, escudo, morte, alarme de morte súbita, vitória e derrota) e música em loop (Lá menor, 128 BPM, acelera para 156 na morte súbita), gerados com WebAudio, sem arquivos nem direitos autorais. Configurações → **Som**: volume da música (0 desliga) e dos efeitos; o botão SOM silencia tudo. Pausa e aba em segundo plano suspendem o áudio.
+- Testes: `npm run test:responsive` (tamanhos 280x653 a 2560x1080, barra sobre a arena, lado invertido) e `npm run test:audio` (música, efeitos, mudo, volume e bloqueio de zoom).
