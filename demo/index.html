@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#10112e">
+<link rel="preload" as="image" href="assets/splash-h.webp" media="(orientation:landscape)" type="image/webp">
+<link rel="preload" as="image" href="assets/splash-v.webp" media="(orientation:portrait)" type="image/webp">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>BOMBER CASH – entre amigos</title>
@@ -1549,8 +1551,8 @@ function splash(){
  const intro=$('intro');if(!intro)return null;
  const art=$('sp-art'),cam=$('sp-cam'),stage=$('sp-stage'),bg=$('sp-bg'),fxc=$('sp-fx'),vig=$('sp-vig'),veil=$('sp-veil'),g2=fxc.getContext('2d');
  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
- const G={h:{src:'assets/splash-h.webp',ar:1672/941,lx:.5,ly:.16,zs:2.2,logo:[.37,0,.26,.29],cta:[.5,.835,.22,.1],scr:[.5,.52]},
-          v:{src:'assets/splash-v.webp',ar:941/1672,lx:.505,ly:.23,zs:1.9,logo:[.25,.1,.55,.21],cta:[.505,.69,.4,.07],scr:[.5,.5]}};
+ const G={h:{src:'assets/splash-h.webp',ar:1672/941,lx:.5,ly:.15,zs:2.2,logo:[.37,0,.26,.29],cta:[.502,.83,.17,.085],scr:[.5,.574]},
+          v:{src:'assets/splash-v.webp',ar:941/1672,lx:.515,ly:.207,zs:1.9,logo:[.24,.1,.55,.21],cta:[.504,.687,.31,.06],scr:[.505,.514]}};
  const T1=1,T2=3.8,C=(a,b=0,c=1)=>Math.max(b,Math.min(c,a)),L=(a,b,x)=>a+(b-a)*x;
  const eIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,eO4=x=>1-Math.pow(1-x,4),eBack=x=>{const c=1.70158;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)},eS=x=>.5-.5*Math.cos(Math.PI*x);
  let k=null,g=null,W=0,H=0,dpr=1,zs=2,t=0,speed=1,raf=0,last=0,paused=false,active=false,done=false,req=null,exiting=false,burst=false,emit=0,amb=0;const P=[];
@@ -1594,7 +1596,7 @@ function splash(){
   const cb=req;req=null;cb&&cb()}
  function loop(ts){raf=requestAnimationFrame(loop);if(paused)return;const dt=Math.min(.05,(ts-(last||ts))/1000);last=ts;if(document.hidden)return;t+=dt*speed;render(dt);
   if(!done&&t>=T2){done=true;intro.classList.add('cta')}if(req&&done&&!exiting)doExit()}
- function start(){if(active)return;active=true;size();intro.classList.remove('pre');intro.classList.add('art','go');
+ function start(){if(active||intro.classList.contains('legacy')||intro.classList.contains('msg'))return;active=true;size();intro.classList.remove('pre');intro.classList.add('art','go');
   if(reduce){t=T2+2;done=true;render(0);intro.classList.add('cta')}else raf=requestAnimationFrame(loop)}
  const fallback=()=>{if(!active){intro.classList.remove('pre');intro.classList.add('legacy')}};
  setup(orient());intro.classList.add('pre');art.onload=start;art.onerror=fallback;setTimeout(fallback,3500);
