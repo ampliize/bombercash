@@ -665,7 +665,7 @@ dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
  <p class="cl-sub">A cada <b>24 horas</b> tem <b>1 ClashToken</b> esperando por você. Com <b>6</b>, troque por <b>R$ 2,00</b> no saldo ou entre no <b>Mata-mata 4 · ClashToken</b>: o vencedor ganha <b>R$ 2,00</b>.</p>
  <div class="cl-bal">Você tem <b id="cl-bal">0</b> ClashTokens</div><div class="cl-days" id="cl-days" aria-hidden="true"></div><p class="cl-when" id="cl-when"></p>
  <button type="button" class="cl-swap" id="cl-swap">Trocar 6 ClashTokens por R$ 2,00</button>
- <p class="note" id="cl-msg">1 ClashToken a cada 24 horas para cada conta (CPF). O ClashToken em si não se compra nem se saca: só vira saldo pela troca de 6 por R$ 2,00 ou vencendo a sala dourada.</p>
+ <p class="note" id="cl-msg">1 ClashToken a cada 24 horas para cada conta (CPF). A troca por R$ 2,00 vale por 3 semanas a partir de cada recarga de R$ 10,00 ou mais; passou disso, faça uma nova recarga. O ClashToken não se compra nem se saca.</p>
  <div class="row"><button type="button" id="cl-no">Fechar</button><button type="button" class="ok gold" id="cl-go">Coletar +1</button></div></dialog>
 <dialog id="auth" aria-labelledby="au-t"><div class="logo" style="font-size:20px" id="au-t">Entrar</div>
  <div class="seg" id="au-tabs" role="group"><button type="button" data-v="in" aria-pressed="true">Entrar</button><button type="button" data-v="up" aria-pressed="false">Criar conta</button></div>
@@ -1392,7 +1392,8 @@ async function refreshClash(){
 function renderClash(){$('tok').textContent=clash.bal;const b=$('tok-open');b.textContent=clash.can?'Coletar +1':'⏱ '+left24(clash.next);b.classList.toggle('on',!!clash.can);b.classList.toggle('done',!clash.can);
  if($('clash').open)drawClash();if(typeof renderMoney==='function'&&$('rail').children.length)renderMoney()}
 let clashT=0;
-function drawClash(){const n=Math.min(6,clash.bal);$('cl-swap').disabled=clash.bal<6||(!DEMO&&!!clash.anon);$('cl-bal').textContent=clash.bal;$('cl-when').textContent=clash.can?(clash.anon?'Entre na sua conta para coletar.':'Seu ClashToken está liberado agora!'):'Próxima coleta: '+brTime(clash.next)+' (horário de Brasília)';$('cl-days').innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
+function drawClash(){const n=Math.min(6,clash.bal);$('cl-swap').disabled=clash.bal<6||(!DEMO&&!!clash.anon);
+ $('cl-swap').textContent=!DEMO&&!clash.anon&&!clash.depOk?'Trocar 6 por R$ 2,00 · precisa de recarga de R$ 10,00':'Trocar 6 ClashTokens por R$ 2,00'+(!DEMO&&clash.depUntil?' (até '+new Date(clash.depUntil).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'})+')':'');$('cl-bal').textContent=clash.bal;$('cl-when').textContent=clash.can?(clash.anon?'Entre na sua conta para coletar.':'Seu ClashToken está liberado agora!'):'Próxima coleta: '+brTime(clash.next)+' (horário de Brasília)';$('cl-days').innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
  const go=$('cl-go');clearInterval(clashT);
  if(clash.can){go.disabled=false;go.textContent=clash.anon?'Entrar para coletar':'Coletar +1'}
  else{go.disabled=true;const tick=()=>{go.textContent='Próxima em '+left24(clash.next);if(Date.now()>=clash.next){clearInterval(clashT);refreshClash()}};tick();clashT=setInterval(tick,1000)}}
@@ -1402,9 +1403,11 @@ function openClash(){drawClash();if(!$('clash').open)$('clash').showModal();try{
 $('clash').addEventListener('close',()=>clearInterval(clashT));
 $('cl-no').onclick=()=>$('clash').close();
 /* troca: 6 ClashTokens -> R$ 2,00 no saldo (pago pelo caixa da empresa) */
-$('cl-swap').onclick=async()=>{if(clash.bal<6)return;$('cl-swap').disabled=true;
+$('cl-swap').onclick=async()=>{if(clash.bal<6)return;
+ if(!DEMO&&!clash.depOk){$('clash').close();openDep();$('dp-msg').textContent='Para trocar ClashTokens por R$ 2,00 é preciso ter feito uma recarga de pelo menos R$ 10,00 nas últimas 3 semanas.';return}
+ $('cl-swap').disabled=true;
  try{if(DEMO){clashAdd(-6);bal=Math.round((bal+2)*100)/100;save();renderMoney()}
-  else{const r=await urpc('clash_exchange');if(!r||!r.ok)throw new Error(r&&r.error||'troca');clash.bal=r.balance;await refreshAcct()}
+  else{const r=await urpc('clash_exchange');if(r&&r.error==='deposit_required'){clash.depOk=false;$('clash').close();openDep();$('dp-msg').textContent='Passaram as 3 semanas do seu último depósito: faça uma recarga de R$ 10,00 para trocar.';return}if(!r||!r.ok)throw new Error(r&&r.error||'troca');clash.bal=r.balance;await refreshAcct()}
   $('cl-msg').textContent='Pronto! R$ 2,00 entraram no seu saldo.';toast('6 ClashTokens trocados por R$ 2,00.')}
  catch(e){$('cl-msg').textContent='Não deu para trocar agora. Tente de novo.'}
  renderClash()};$('tok-open').onclick=openClash;

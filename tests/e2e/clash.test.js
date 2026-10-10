@@ -30,25 +30,29 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  const box=await p.evaluate(()=>{const a=document.getElementById('dep-open').getBoundingClientRect(),w=document.getElementById('wd-open').getBoundingClientRect(),s=document.getElementById('bal').getBoundingClientRect();return{stack:s.bottom<=a.top&&a.bottom<=w.top,left:Math.abs(a.left-w.left)<2}});
  ok(box.stack&&box.left,'saldo, Depositar e Sacar um abaixo do outro');
  // sala dourada
- // troca direta: 6 ClashTokens -> R$ 2,00
- await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n:4})})});
- await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens');
- await p.click('#tok-open',{force:true});await sleep(200);ok(!(await p.$eval('#cl-swap',e=>e.disabled)),'botão Trocar 6 por R$ 2,00 liberado');
- await p.click('#cl-swap');await sleep(900);
- ok(await p.textContent('#tok')==='0'&&await p.textContent('#bal')==='R$ 2,00'&&await p.$eval('#cl-swap',e=>e.disabled),'trocou: 0 ClashTokens e R$ 2,00 no saldo');await p.click('#cl-no');
+ const give=n=>p.evaluate(async n=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n})})},n);
+ const gold=async()=>{await p.evaluate(()=>{const d=document.getElementById('dlg');if(d.open)d.close();document.querySelector('#rail .card[data-k="4x4t"]').click()});await sleep(300)};
+ await give(4);await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens');
  ok(await p.$eval('.card.mg',c=>/6 CLASHTOKENS/i.test(c.textContent)&&/R\$ 2,00/.test(c.textContent)),'sala dourada no menu: Jogar · 6 ClashTokens, prêmio R$ 2,00');
- await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);
- ok(/6 ClashTokens/.test(await p.textContent('#d-ok'))&&/0 ClashTokens de 6/.test(await p.textContent('#d-msg'))&&/R\$ 2,00/.test(await p.textContent('#d-l')),'diálogo da sala dourada mostra entrada, prêmio R$ 2,00 e quanto falta');
- await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
- ok(await p.$eval('#clash',d=>d.open)&&/6 ClashTokens/.test(await p.textContent('#cl-msg')),'sem 6 tokens: abre a coleta explicando');
- await p.click('#cl-no');await p.evaluate(()=>document.getElementById('dlg').open&&document.getElementById('d-no').click());
- await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n:6})})});
- await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens (recarregou)');
- await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
+ // sem depósito: nem sala dourada nem troca
+ await gold();ok(/R\$ 2,00/.test(await p.textContent('#d-l'))&&/falta/.test(await p.textContent('#d-l')),'diálogo da sala dourada: prêmio R$ 2,00 e depósito em 3 semanas "falta"');
+ await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
  ok(await p.$eval('#dep',d=>d.open)&&/3 semanas/.test(await p.textContent('#dp-msg')),'sem depósito nas últimas 3 semanas: pede depósito antes da sala dourada');
  await p.click('#dp-no');await p.evaluate(()=>document.getElementById('dlg').open&&document.getElementById('d-no').click());
+ await p.click('#tok-open',{force:true});await sleep(200);ok(/recarga de R\$ 10,00/.test(await p.textContent('#cl-swap')),'troca avisa que precisa de recarga');
+ await p.click('#cl-swap');await sleep(400);ok(await p.$eval('#dep',d=>d.open)&&/R\$ 10,00 nas últimas 3 semanas/.test(await p.textContent('#dp-msg'))&&await p.textContent('#tok')==='6','sem recarga nas 3 semanas a troca pede depósito e não mexe nos tokens');
+ await p.click('#dp-no');
+ // recarga de R$ 10,00: dentro das 3 semanas troca sem depositar de novo
  await deposit(p,10);await enter(p);
- await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
+ await p.click('#tok-open',{force:true});await sleep(200);ok(!(await p.$eval('#cl-swap',e=>e.disabled))&&/até \d\d\/\d\d/.test(await p.textContent('#cl-swap')),'com recarga: troca liberada até a data das 3 semanas');
+ await p.click('#cl-swap');await sleep(900);
+ ok(await p.textContent('#tok')==='0'&&await p.textContent('#bal')==='R$ 12,00'&&await p.$eval('#cl-swap',e=>e.disabled),'trocou: 0 ClashTokens e R$ 2,00 a mais no saldo (R$ 12,00)');await p.click('#cl-no');
+ await gold();ok(/0 ClashTokens de 6/.test(await p.textContent('#d-msg')),'diálogo da sala dourada mostra quanto falta');
+ await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
+ ok(await p.$eval('#clash',d=>d.open)&&/6 ClashTokens/.test(await p.textContent('#cl-msg')),'sem 6 tokens: abre a coleta explicando');
+ await p.click('#cl-no');
+ await give(6);await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens de novo (recarregou)');
+ await gold();await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
  ok(/Servidor de partidas indisponível/.test(await p.textContent('#d-msg')),'com 6 tokens e depósito de R$ 10,00 vai para a fila do servidor (aqui sem servidor)');
  // ---- demo: coleta abre sozinha e partida dourada contra bots ----
  const q=await (await b.newContext({viewport:{width:900,height:800}})).newPage();q.on('pageerror',e=>ok(false,'pageerror '+e.message));await q.addInitScript(init);
