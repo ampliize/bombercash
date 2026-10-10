@@ -3,14 +3,16 @@ import { Sim } from './sim.js';
 
 export const TICK = 1 / 30, SNAP_EVERY = 2; // simula a 30 Hz, envia estado a 15 Hz
 export const COUNTDOWN = Number(process.env.COUNTDOWN ?? 10); // segundos de contagem antes de liberar os bonecos
-export const MODES = { '1x1': 2, '4x4': 4, '8x8': 8 };
+export const MODES = { '1x1': 2, '4x4': 4, '8x8': 8, '4x4t': 4 }; // 4x4t: mata-mata 4 por ClashToken
+export const TOKEN_ENTRY = { '4x4t': 6 };
 const STAKES = [200, 500, 1000, 2000, 5000, 10000];
 
 export class Room {
-  constructor({ code, mode, stakeCents = 0, ledger, onClose, log = () => {} }) {
+  constructor({ code, mode, stakeCents = 0, ledger, tokenLedger, onClose, log = () => {} }) {
     if (!MODES[mode]) throw new Error('modo inválido');
     if (stakeCents && !STAKES.includes(stakeCents)) throw new Error('valor de aposta inválido');
     Object.assign(this, { code, mode, stakeCents, ledger, onClose, log });
+    this.tokens = TOKEN_ENTRY[mode] || 0; if (this.tokens) { this.stakeCents = 0; this.ledger = tokenLedger; }
     this.n = MODES[mode]; this.seats = []; this.state = 'lobby'; this.matchId = randomUUID(); this.sim = null; this.timer = null; this.starting = false;
   }
   send(seat, msg) { try { if (seat.ws.readyState === 1) seat.ws.send(JSON.stringify(msg)); } catch { /* conexão caiu */ } }
@@ -31,13 +33,15 @@ export class Room {
     if (this.starting) return; this.starting = true;
     const seed = (Math.random() * 0x7fffffff) | 0, map = Math.floor(Math.random() * 7);
     try { // aposta: debita e prende em escrow ANTES de a partida existir; se qualquer um não cobrir, ninguém joga
-      await this.ledger.open({ matchId: this.matchId, mode: this.mode, stakeCents: this.stakeCents, userIds: this.seats.map(s => s.userId) });
-    } catch (e) { this.bcast({ t: 'abort', reason: 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
+      const userIds = this.seats.map(s => s.userId);
+      if (this.tokens) await this.ledger.tokenOpen({ matchId: this.matchId, entry: this.tokens, userIds });
+      else await this.ledger.open({ matchId: this.matchId, mode: this.mode, stakeCents: this.stakeCents, userIds });
+    } catch (e) { this.bcast({ t: 'abort', reason: this.tokens ? 'ClashTokens insuficientes ou erro no caixa' : 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
     this.sim = new Sim({ seed, map, n: this.seats.length });
     this.state = 'play'; this.freeze = COUNTDOWN; this.tickN = 0; this.inputLog = [];
     const skins = this.seats.map((_, i) => i % 4);
     this.sim.players.forEach((p, i) => { p.skin = skins[i]; });
-    this.bcast({ t: 'start', seed, map, W: this.sim.W, H: this.sim.H, n: this.seats.length, w: this.sim.encWorld(), br: [...this.sim.bridges], stake: this.stakeCents, names: this.seats.map(s => s.name), skins, matchId: this.matchId });
+    this.bcast({ t: 'start', seed, map, W: this.sim.W, H: this.sim.H, n: this.seats.length, w: this.sim.encWorld(), br: [...this.sim.bridges], stake: this.stakeCents, tokens: this.tokens, names: this.seats.map(s => s.name), skins, matchId: this.matchId });
     this.timer = setInterval(() => this.tick(), TICK * 1000);
   }
   input(seat, d) {
@@ -65,12 +69,13 @@ export class Room {
     const resultHash = createHash('sha256').update(JSON.stringify({ seed: this.sim.seed, map: this.sim.map, n: this.sim.N, inputs: this.inputLog, w })).digest('hex');
     let paid = null;
     try {
-      if (winner) paid = await this.ledger.settle({ matchId: this.matchId, winnerId: winner.userId, seed: this.sim.seed, resultHash });
+      if (this.tokens) paid = winner ? await this.ledger.tokenSettle({ matchId: this.matchId, winnerId: winner.userId }) : await this.ledger.tokenRefund({ matchId: this.matchId, reason: 'empate' });
+      else if (winner) paid = await this.ledger.settle({ matchId: this.matchId, winnerId: winner.userId, seed: this.sim.seed, resultHash });
       else paid = await this.ledger.refund({ matchId: this.matchId, reason: 'empate' });
     } catch (e) { this.log('ERRO NO CAIXA — revisar partida', this.matchId, e.message); }
     this.bcast({ t: 'end', winner: w, matchId: this.matchId, resultHash, settled: !!paid });
     setTimeout(() => this.close(), 3000);
   }
-  async abort(reason) { clearInterval(this.timer); if (this.state === 'play') { try { await this.ledger.refund({ matchId: this.matchId, reason }); } catch (e) { this.log('refund falhou', e.message); } } this.bcast({ t: 'abort', reason }); this.close(); }
+  async abort(reason) { clearInterval(this.timer); if (this.state === 'play') { try { if (this.tokens) await this.ledger.tokenRefund({ matchId: this.matchId, reason }); else await this.ledger.refund({ matchId: this.matchId, reason }); } catch (e) { this.log('refund falhou', e.message); } } this.bcast({ t: 'abort', reason }); this.close(); }
   close() { clearInterval(this.timer); this.state = 'closed'; for (const s of this.seats) { try { s.ws.close(); } catch { /* já fechado */ } } this.onClose && this.onClose(this); }
 }

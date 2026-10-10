@@ -34,6 +34,15 @@ Jogo (`demo/index.html`): arquivo único, partidas só entre pessoas, saldo real
 - **Sair do demo** volta ao modo real (login, saldo da carteira, fila só com pessoas).
 - Teste: `npm run test:demo`.
 
+## ClashToken (moeda de ouro do Bomber Clash) e sala dourada
+- **Coleta diária:** 1 ClashToken por dia para cada conta (dia de Brasília). Precisa de login e cadastro (CPF), para ninguém criar contas só para juntar tokens. A janela "Coleta diária" abre sozinha uma vez por dia no lobby, e o botão **Coletar** na carteira abre quando quiser.
+- **Sala dourada "Mata-mata 4 · ClashToken":** entrada de 6 ClashTokens por jogador; a partida começa com 4 pessoas e o último de pé leva o pote inteiro (24). Empate ou queda devolve a entrada.
+- ClashToken não é dinheiro: não se compra nem se saca. Fica em `core.clash_wallets`/`core.clash_log`/`core.clash_matches` (migração `20261010190000_clash_tokens.sql`, já aplicada). O jogador só lê o saldo e coleta (`clash_status`, `clash_claim`); quem tira a entrada e paga o pote é o servidor de jogo (`svc_clash_open/settle/refund`, só `service_role`).
+- **Servidor de jogo:** a sala `4x4t` só abre quando o servidor tem `SUPABASE_URL` e `SUPABASE_SERVICE_KEY` (mesmo sem `MONEY_MODE`). Sem essas variáveis, mostra "sala ClashToken indisponível".
+- **Demo:** começa com 6 ClashTokens no aparelho, coleta diária local e o botão **+ 6 ClashTokens demo**.
+- **Visual:** carteira com saldo, ClashTokens, Depositar e Sacar um abaixo do outro, acabamento dourado; valores sempre com centavos (R$ 2,00 … R$ 100,00); "Valor por partida" em destaque.
+- Teste: `npm run test:clash`.
+
 ## Rodar local
     cd demo && python3 -m http.server 8080   # abrir http://localhost:8080
 

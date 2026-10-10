@@ -4,7 +4,7 @@ const b64 = s => Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 function claims(c, now) {
   if (!c || !c.sub || (c.exp && c.exp * 1000 < now) || c.role !== 'authenticated') return null;
   const md = c.user_metadata || {};
-  return { id: c.sub, name: String(md.nickname || md.nick || (c.email || 'Jogador').split('@')[0]).slice(0, 16) };
+  return { id: c.sub, auth: true, name: String(md.nickname || md.nick || (c.email || 'Jogador').split('@')[0]).slice(0, 16) };
 }
 
 // HS256 com o segredo legado do projeto (SUPABASE_JWT_SECRET). Síncrono; usado nos testes.

@@ -10,6 +10,10 @@ const MONEY = process.env.MONEY_MODE === '1'; // sem isso, só partidas de brinc
 const SECRET = process.env.SUPABASE_JWT_SECRET || '';
 const ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const ledger = MONEY ? new SupabaseLedger({ url: process.env.SUPABASE_URL, serviceKey: process.env.SUPABASE_SERVICE_KEY }) : new NoopLedger();
+// ClashToken usa o banco sempre que houver chave de serviço (mesmo sem MONEY_MODE); sem chave, a sala dourada fica fechada
+// (TOKENS_TEST=1 libera com caixa falso, só para teste local)
+const tokenLedger = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY ? (MONEY ? ledger : new SupabaseLedger({ url: process.env.SUPABASE_URL, serviceKey: process.env.SUPABASE_SERVICE_KEY }))
+  : process.env.TOKENS_TEST === '1' ? new NoopLedger() : null;
 if (MONEY && !SECRET && !process.env.SUPABASE_URL) throw new Error('MONEY_MODE exige SUPABASE_URL (chaves novas) ou SUPABASE_JWT_SECRET (chave legada)');
 
 const rooms = new Map();
@@ -18,7 +22,7 @@ const log = (...a) => console.log(new Date().toISOString(), ...a);
 const server = http.createServer((req, res) => { if (req.url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ ok: true, rooms: rooms.size, money: MONEY })); } else { res.writeHead(404); res.end(); } });
 const wss = new WebSocketServer({ server, maxPayload: 2048, verifyClient: ({ origin }) => !ORIGINS.length || ORIGINS.includes(origin) });
 
-const mm = new Matchmaker({ ledger, log, money: MONEY, onRoom: (r, open) => { if (open) rooms.set(r.code, r); else rooms.delete(r.code); } });
+const mm = new Matchmaker({ ledger, tokenLedger, log, money: MONEY, onRoom: (r, open) => { if (open) rooms.set(r.code, r); else rooms.delete(r.code); } });
 
 wss.on('connection', ws => {
   let user = null, msgs = 0;

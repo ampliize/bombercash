@@ -71,7 +71,7 @@ const b64u = o => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toS
 const jwt = (c, secret = 's3cret', alg = 'HS256') => { const h = b64u({ alg, typ: 'JWT' }), p = b64u(c); return `${h}.${p}.${createHmac('sha256', secret).update(h + '.' + p).digest('base64url')}`; };
 test('JWT: aceita válido, rejeita adulterado/expirado/outro papel', () => {
   const ok = { sub: 'abc', role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 60, user_metadata: { nickname: 'Zé' } };
-  assert.deepEqual(verifyJwt(jwt(ok), 's3cret'), { id: 'abc', name: 'Zé' });
+  assert.deepEqual(verifyJwt(jwt(ok), 's3cret'), { id: 'abc', auth: true, name: 'Zé' });
   assert.equal(verifyJwt(jwt(ok, 'outro'), 's3cret'), null);
   assert.equal(verifyJwt(jwt({ ...ok, exp: 1 }), 's3cret'), null);
   assert.equal(verifyJwt(jwt({ ...ok, role: 'anon' }), 's3cret'), null);
@@ -88,6 +88,6 @@ test('JWT ES256 (chaves novas do Supabase) via JWKS', async () => {
   const p = Buffer.from(JSON.stringify({ sub: 'u-1', role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 60, user_metadata: { nickname: 'Bomba' } })).toString('base64url');
   const sig = csign('sha256', Buffer.from(h + '.' + p), { key: privateKey, dsaEncoding: 'ieee-p1363' }).toString('base64url');
   const fetchImpl = async () => ({ ok: true, json: async () => ({ keys: [jwk] }) });
-  assert.deepEqual(await verifyToken(`${h}.${p}.${sig}`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), { id: 'u-1', name: 'Bomba' });
+  assert.deepEqual(await verifyToken(`${h}.${p}.${sig}`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), { id: 'u-1', auth: true, name: 'Bomba' });
   assert.equal(await verifyToken(`${h}.${p}.${sig.slice(0, -4)}AAAA`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), null);
 });

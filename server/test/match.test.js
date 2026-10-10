@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Matchmaker } from '../src/match.js';
+import { NoopLedger } from '../src/ledger.js';
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const mkConn = () => { const out = []; const ws = { readyState: 1, out, send(m) { out.push(JSON.parse(m)); }, close() { this.readyState = 3; } };
@@ -34,4 +35,27 @@ test('fila: sem bots, não aceita valor fora da tabela, nem entrar duas vezes, e
   assert.ok(mm.queue(b, { id: 'a', name: 'A' }, '1x1', 500).err, 'mesmo jogador duas vezes');
   assert.equal(mm.leave(a), true);
   assert.ok(mm.queue(b, { id: 'a', name: 'A' }, '1x1', 500).ok, 'depois de sair pode entrar de novo');
+});
+
+test('sala ClashToken: só com conta, entrada de 6 tokens debitada de todos e pote inteiro para o vencedor', async () => {
+  const calls = [];
+  const tl = { tokenOpen: async a => { calls.push(['open', a]); return { ok: true }; }, tokenSettle: async a => { calls.push(['settle', a]); return { ok: true }; }, tokenRefund: async a => { calls.push(['refund', a]); return { ok: true }; } };
+  const mm = new Matchmaker({ ledger: new NoopLedger(), tokenLedger: tl });
+  const mk = () => { const sent = []; return { sent, ws: { readyState: 1, send: m => sent.push(JSON.parse(m)), close() {} }, room: null, send: m => sent.push(m), setRoom(r, s) { this.room = r; this.seat = s; } }; };
+  assert.match(mm.queue(mk(), { id: 'teste-x', name: 'x' }, '4x4t', 0).err, /conta/);
+  const cs = [mk(), mk(), mk(), mk()];
+  cs.forEach((c, i) => assert.ok(mm.queue(c, { id: 'u' + i, name: 'P' + i, auth: true }, '4x4t', 999).ok));
+  await new Promise(r => setTimeout(r, 30));
+  assert.equal(calls[0][0], 'open'); assert.equal(calls[0][1].entry, 6); assert.deepEqual(calls[0][1].userIds, ['u0', 'u1', 'u2', 'u3']);
+  const room = cs[0].room; assert.equal(room.stakeCents, 0); assert.equal(room.tokens, 6);
+  assert.ok(cs[0].sent.some(m => m.t === 'start' && m.tokens === 6));
+  room.sim.winner = 2; room.sim.ended = true; await room.finish();
+  assert.equal(calls[1][0], 'settle'); assert.equal(calls[1][1].winnerId, 'u2');
+  room.close();
+});
+
+test('sala ClashToken fechada quando o servidor não tem caixa de tokens', () => {
+  const mm = new Matchmaker({ ledger: new NoopLedger() });
+  const c = { ws: { readyState: 1, send() {}, close() {} }, room: null, send() {}, setRoom() {} };
+  assert.match(mm.queue(c, { id: 'u', name: 'u', auth: true }, '4x4t', 0).err, /indisponível/);
 });

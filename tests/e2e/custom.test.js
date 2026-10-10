@@ -24,7 +24,7 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  await p.waitForFunction(()=>document.getElementById('s-end').classList.contains('on'),null,{timeout:8000});
  const e=await p.evaluate(()=>({rows:[...document.querySelectorAll('#e-rank li')].map(l=>({pos:l.querySelector('.pos').textContent,pz:l.querySelector('.pz b').textContent,av:!!l.querySelector('.av').style.backgroundImage})),sum:document.getElementById('e-sum').innerText}));
  ok(e.rows.length===4,'classificação com os 4 participantes');ok(e.rows.map(r=>r.pos).join()==='1º,2º,3º,4º','posições 1º a 4º');
- ok(e.rows[0].pz==='R$ 16'&&e.rows.slice(1).every(r=>r.pz==='R$ 0'),'prêmio: R$ 20 − 20% = R$ 16 só para o 1º');ok(e.rows.every(r=>r.av),'cada linha com o boneco');
+ ok(e.rows[0].pz==='R$ 16,00'&&e.rows.slice(1).every(r=>r.pz==='R$ 0,00'),'prêmio: R$ 20 − 20% = R$ 16 só para o 1º');ok(e.rows.every(r=>r.av),'cada linha com o boneco');
  ok(/Banca 20%/i.test(e.sum)&&/R\$ 4/.test(e.sum),'resumo mostra banca de 20% (R$ 4)');
  await p.evaluate(()=>document.getElementById('back').click());await sleep(400);await p.evaluate(()=>document.getElementById('me').click());await sleep(300);
  ok(await p.evaluate(()=>document.querySelectorAll('#p-icons button').length)===10,'10 ícones de perfil');

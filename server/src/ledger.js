@@ -5,6 +5,9 @@ export class NoopLedger {
   async open() { return { ok: true }; }
   async settle() { return { ok: true }; }
   async refund() { return { ok: true }; }
+  async tokenOpen() { return { ok: true }; }
+  async tokenSettle() { return { ok: true }; }
+  async tokenRefund() { return { ok: true }; }
 }
 
 export class SupabaseLedger {
@@ -21,4 +24,8 @@ export class SupabaseLedger {
   open({ matchId, mode, stakeCents, userIds }) { return this.rpc('svc_match_open', { p_match: matchId, p_mode: mode, p_stake: stakeCents, p_users: userIds }); }
   settle({ matchId, winnerId, seed, resultHash }) { return this.rpc('svc_match_settle', { p_match: matchId, p_winner: winnerId, p_seed: String(seed), p_result_hash: resultHash }); }
   refund({ matchId, reason }) { return this.rpc('svc_match_refund', { p_match: matchId, p_reason: reason }); }
+  // ClashToken (moeda do jogo, não é dinheiro): mesma ideia, entrada antes, pote inteiro para o vencedor
+  tokenOpen({ matchId, entry, userIds }) { return this.rpc('svc_clash_open', { p_match: matchId, p_entry: entry, p_users: userIds }); }
+  tokenSettle({ matchId, winnerId }) { return this.rpc('svc_clash_settle', { p_match: matchId, p_winner: winnerId }); }
+  tokenRefund({ matchId, reason }) { return this.rpc('svc_clash_refund', { p_match: matchId, p_reason: reason }); }
 }

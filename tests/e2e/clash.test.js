@@ -1,0 +1,50 @@
+// ClashToken: coleta diária (1 por dia por conta), carteira empilhada, valores R$ X,00, sala dourada (6 tokens) e partida dourada no demo.
+const {chromium}=require('playwright-core'),{cpf,signup,kyc}=require('./acct');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
+(async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
+ const enter=async p=>{await p.goto('http://127.0.0.1:8765/?clash');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(600);if(await p.isVisible('#hello-ok'))await p.click('#hello-ok');await sleep(500)};
+ const init=()=>{window.__bcCount=0;localStorage.setItem('bc_cfg',JSON.stringify({fs:false}))};
+ // ---- conta real (mock) ----
+ const p=await (await b.newContext({viewport:{width:1000,height:900}})).newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));await p.addInitScript(init);
+ await enter(p);
+ ok((await p.$$eval('#chips .chip',a=>a.map(x=>x.textContent))).join('|')==='R$ 2,00|R$ 5,00|R$ 10,00|R$ 20,00|R$ 50,00|R$ 100,00','valores com centavos: R$ 2,00 … R$ 100,00');
+ ok(await p.textContent('#bal')==='R$ 0,00'&&await p.textContent('#tok')==='0','carteira: saldo R$ 0,00 e 0 ClashTokens');
+ ok(!(await p.$eval('#clash',d=>d.open)),'sem conta: a coleta não abre sozinha');
+ await p.click('#tok-open',{force:true});await sleep(200);ok(await p.$eval('#clash',d=>d.open)&&/Entrar para coletar/.test(await p.textContent('#cl-go')),'Coletar sem conta pede para entrar');
+ await p.click('#cl-go');await sleep(200);ok(await p.$eval('#auth',d=>d.open),'abre Entrar / Criar conta');
+ const T=Date.now();await signup(p,'c'+T+'@teste.com');await kyc(p,cpf(T%1e8+21),'Clash_'+String(T).slice(-4));
+ await p.waitForFunction(()=>document.getElementById('clash').open,null,{timeout:6000});
+ ok(/Coletar \+1/.test(await p.textContent('#cl-go'))&&!(await p.$eval('#cl-go',e=>e.disabled)),'depois do cadastro volta para a coleta');
+ await p.click('#cl-go');await sleep(700);
+ ok(await p.textContent('#cl-bal')==='1'&&await p.$eval('#cl-go',e=>e.disabled)&&/Volte em/.test(await p.textContent('#cl-go')),'coletou +1 e o botão espera até amanhã');
+ await p.click('#cl-no');ok(await p.textContent('#tok')==='1'&&/Coletado/.test(await p.textContent('#tok-open')),'carteira mostra 1 ClashToken (coletado hoje)');
+ const r=await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;return (await fetch('/rest/v1/rpc/clash_claim',{method:'POST',headers:{Authorization:'Bearer '+t},body:'{}'})).json()});
+ ok(r.ok===false&&r.balance===1,'segunda coleta no mesmo dia é recusada pelo servidor');
+ const box=await p.evaluate(()=>{const a=document.getElementById('dep-open').getBoundingClientRect(),w=document.getElementById('wd-open').getBoundingClientRect(),s=document.getElementById('bal').getBoundingClientRect();return{stack:s.bottom<=a.top&&a.bottom<=w.top,left:Math.abs(a.left-w.left)<2}});
+ ok(box.stack&&box.left,'saldo, Depositar e Sacar um abaixo do outro');
+ // sala dourada
+ ok(await p.$eval('.card.mg',c=>/6 CLASHTOKENS/i.test(c.textContent)&&/24/.test(c.textContent)),'sala dourada no menu: Jogar · 6 ClashTokens, pote 24');
+ await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);
+ ok(/6 ClashTokens/.test(await p.textContent('#d-ok'))&&/1 ClashToken de 6/.test(await p.textContent('#d-msg')),'diálogo da sala dourada mostra entrada e quanto falta');
+ await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
+ ok(await p.$eval('#clash',d=>d.open)&&/6 ClashTokens/.test(await p.textContent('#cl-msg')),'sem 6 tokens: abre a coleta explicando');
+ await p.click('#cl-no');await p.evaluate(()=>document.getElementById('dlg').open&&document.getElementById('d-no').click());
+ await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n:5})})});
+ await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens (recarregou)');
+ await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
+ ok(/Servidor de partidas indisponível/.test(await p.textContent('#d-msg')),'com 6 tokens vai para a fila do servidor (aqui sem servidor)');
+ // ---- demo: coleta abre sozinha e partida dourada contra bots ----
+ const q=await (await b.newContext({viewport:{width:900,height:800}})).newPage();q.on('pageerror',e=>ok(false,'pageerror '+e.message));await q.addInitScript(init);
+ await enter(q);await q.click('#demo-on');
+ await q.waitForFunction(()=>document.getElementById('clash').open,null,{timeout:6000});ok(true,'coleta diária abre sozinha uma vez por dia');
+ await q.click('#cl-go');await sleep(500);await q.click('#cl-no');ok(await q.textContent('#tok')==='7','demo: 6 de início + 1 coletado = 7');
+ await q.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);
+ ok(/Jogar demo · 6 ClashTokens/.test(await q.textContent('#d-ok')),'demo: Jogar demo · 6 ClashTokens');
+ await q.evaluate(()=>document.getElementById('d-ok').click());await q.waitForFunction(()=>window.__arena.active,null,{timeout:8000});
+ ok(await q.evaluate(()=>window.__arena._s().players.length)===4&&await q.textContent('#tok')==='1','partida dourada com 4 e a entrada de 6 saiu (sobra 1)');
+ await q.evaluate(async()=>{const ps=window.__arena._s().players;for(let i=ps.length-1;i>=0;i--){if(i===window.__arena.meIdx)continue;ps[i].alive=false;ps[i].deadAt=performance.now();await new Promise(r=>setTimeout(r,60))}});
+ await q.waitForFunction(()=>document.getElementById('s-end').classList.contains('on'),null,{timeout:10000});
+ const e=await q.evaluate(()=>({t:document.getElementById('e-t').textContent,p:document.getElementById('e-p').textContent,sum:document.getElementById('e-sum').innerText}));
+ ok(e.t==='Você venceu!'&&/pote de 24 ClashTokens/.test(e.p)&&/24 CT/.test(e.sum),'venceu: leva o pote de 24 ClashTokens ('+e.p+')');
+ ok(await q.textContent('#tok')==='25','ClashTokens: 1 + 24 = 25');
+ await b.close();console.log(bad?bad+' falha(s)':'tudo certo');process.exit(bad?1:0)})().catch(e=>{console.log('ERRO',e.message);process.exit(1)});
