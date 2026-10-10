@@ -1,0 +1,28 @@
+// Conta real: jogar sem login pede conta; criar conta → cadastro com CPF → PIX de depósito → saldo → saque só para o próprio CPF.
+const {chromium}=require('playwright-core'),{cpf,signup,kyc,deposit}=require('./acct');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
+(async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
+ const p=await (await b.newContext({viewport:{width:900,height:800}})).newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));
+ await p.addInitScript(()=>{window.__bcCount=0;localStorage.setItem('bc_cfg',JSON.stringify({fs:false}))});
+ await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(600);await p.click('#hello-ok');await sleep(500);
+ ok(await p.textContent('#bal')==='R$ 0,00','começa com saldo R$ 0 (sem dinheiro demo)');
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="1x1"]').click()});await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
+ ok(await p.$eval('#auth',d=>d.open),'jogar sem conta abre Entrar / Criar conta');await p.click('#au-no');
+ const email='m'+Date.now()+'@teste.com',c=cpf(Date.now()%1e8);
+ await signup(p,email);ok(true,'conta criada, pede o cadastro');
+ await p.fill('#ky-name','Fulano');await p.fill('#ky-cpf','111.111.111-11');await p.fill('#ky-birth','1990-01-01');await p.fill('#ky-nick','Ful');await p.check('#ky-ok18');await p.click('#ky-go');await sleep(500);
+ ok(/CPF/.test(await p.textContent('#ky-msg'))&&await p.$eval('#kyc',d=>d.open),'CPF inválido é recusado');
+ await kyc(p,c,'Fulano_'+String(Date.now()).slice(-4));ok(!(await p.$eval('#acct-out',e=>e.hidden)),'cadastro feito: aparecem Depositar e Sacar');
+ await p.evaluate(()=>document.getElementById('dep-open').click());await sleep(200);await p.fill('#dp-val','5');await p.click('#dp-go');await sleep(300);
+ ok(/mínimo/.test(await p.textContent('#dp-msg')),'depósito abaixo de R$ 10 é recusado');await p.click('#dp-no');
+ await deposit(p,50);ok(await p.textContent('#bal')==='R$ 50,00','PIX pago: saldo R$ 50');
+ ok((await p.$eval('#dp-code',e=>e.value)).length>10,'mostrou o PIX copia e cola');
+ await p.evaluate(()=>document.getElementById('wd-open').click());await sleep(300);
+ await p.fill('#wd-val','20');await p.fill('#wd-cpf',cpf(12345));await p.click('#wd-go');await sleep(600);
+ ok(/CPF do titular/.test(await p.textContent('#wd-msg')),'saque para CPF de outra pessoa é recusado');
+ await p.fill('#wd-val','999');await p.fill('#wd-cpf',c);await p.click('#wd-go');await sleep(300);ok(/insuficiente/.test(await p.textContent('#wd-msg')),'saque acima do saldo é recusado');
+ await p.fill('#wd-val','20');await p.click('#wd-go');await sleep(900);
+ ok(/Saque (aprovado|recebido)/.test(await p.textContent('#wd-msg'))&&await p.textContent('#bal')==='R$ 30,00','saque de R$ 20 pedido: saldo R$ 30');
+ ok((await p.$$('#wd-list li')).length===1,'saque aparece na lista');await p.click('#wd-no');
+ await p.reload();await sleep(1500);ok(await p.textContent('#bal')==='R$ 30,00','recarregou: continua logado com o saldo do servidor');
+ await b.close();console.log(bad?bad+' falha(s)':'tudo certo');process.exit(bad?1:0)})().catch(e=>{console.log('ERRO',e.message);process.exit(1)});

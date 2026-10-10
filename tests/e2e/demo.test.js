@@ -1,0 +1,32 @@
+// Modo demo: liga pelo botão, saldo virtual R$ 100, joga contra bots sem login/servidor, debita a entrada, não reporta ranking, sai do demo.
+const {chromium}=require('playwright-core');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
+(async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
+ const p=await (await b.newContext({viewport:{width:900,height:800}})).newPage();p.on('pageerror',e=>ok(false,'pageerror '+e.message));
+ let reports=0;p.on('request',r=>{if(/bc_report/.test(r.url()))reports++});
+ await p.addInitScript(()=>{window.__bcCount=0;localStorage.setItem('bc_cfg',JSON.stringify({fs:false}))});
+ await p.goto('http://127.0.0.1:8765/');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(600);await p.click('#hello-ok');await sleep(400);
+ ok(await p.isVisible('#demo-on')&&!(await p.isVisible('#demobar')),'fora do demo: só o botão "Testar no modo demo"');
+ await p.click('#demo-on');await sleep(300);
+ ok(await p.isVisible('#demobar')&&await p.textContent('#bal')==='R$ 100,00','demo ligado: faixa MODO DEMO e saldo R$ 100');
+ ok(!(await p.isVisible('#login-open')),'no demo não pede login');
+ await p.evaluate(()=>{document.querySelector('#rail .card[data-k="4x4"]').click()});await sleep(300);
+ ok(/Jogar demo/.test(await p.textContent('#d-ok'))&&/bots/.test(await p.textContent('#d-msg')),'diálogo explica a partida demo');
+ await p.evaluate(()=>document.getElementById('d-ok').click());
+ await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});
+ const st=await p.evaluate(()=>({n:window.__arena._s().players.length,bal:document.getElementById('bal').textContent}));
+ ok(st.n===4&&st.bal==='R$ 95,00','partida começou na hora com 4 (você + 3 bots) e a entrada de R$ 5 saiu: '+JSON.stringify(st));
+ // termina rápido: o jogador fica parado com a própria bomba
+ await p.evaluate(()=>{const s=window.__arena._s();window.__arena.finishNow?window.__arena.finishNow():0});
+ await p.keyboard.down(' ');await sleep(120);await p.keyboard.up(' ');
+ await p.waitForFunction(()=>document.getElementById('s-end').classList.contains('on'),null,{timeout:60000});
+ const end=await p.evaluate(()=>({t:document.getElementById('e-t').textContent,wk:document.getElementById('e-wk').textContent}));
+ ok(/não conta no ranking/.test(end.wk),'fim da partida demo: avisa que não conta no ranking ('+end.t+')');
+ ok(reports===0,'nenhum resultado enviado ao ranking');
+ await p.click('#again');await p.waitForFunction(()=>window.__arena.active,null,{timeout:8000});ok(await p.textContent('#bal')==='R$ 90,00','Jogar de novo: nova partida demo na hora (saldo R$ 90)');
+ await p.evaluate(()=>document.getElementById('ar-back').click());await sleep(400);
+ await p.click('#demo-add');await sleep(200);const v=await p.textContent('#bal');ok(/R\$ 1\d\d|R\$ 19\d/.test(v),'+ R$ 100 demo recarrega: '+v);
+ await p.reload();await sleep(1500);ok(await p.isVisible('#demobar')&&await p.textContent('#bal')===v,'recarregou: continua no demo com o mesmo saldo');
+ await p.evaluate(()=>window.__bcEnter&&window.__bcEnter());await sleep(500);if(await p.isVisible('#hello-ok'))await p.click('#hello-ok');
+ await p.click('#demo-off');await sleep(400);ok(!(await p.isVisible('#demobar'))&&await p.textContent('#bal')==='R$ 0,00'&&await p.isVisible('#login-open'),'Sair do demo: volta ao saldo real (R$ 0) e ao login');
+ await b.close();console.log(bad?bad+' falha(s)':'tudo certo');process.exit(bad?1:0)})().catch(e=>{console.log('ERRO',e.message);process.exit(1)});
