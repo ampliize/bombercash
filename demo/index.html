@@ -542,6 +542,14 @@ dialog.clash{width:min(420px,94vw);text-align:center;background:radial-gradient(
 dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
 #dlg.mg #d-cover{filter:sepia(.75) saturate(1.7) hue-rotate(-12deg) brightness(.95)}
 #dlg.mg #d-t{background:linear-gradient(180deg,#fff6c2,#ffd24a 50%,#e39a17);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* para onde vão os 20% da casa */
+.rake{margin-top:16px;padding:16px 18px;border-radius:18px;background:linear-gradient(160deg,#3a2a08 0%,#1b1c47 60%);border:1.5px solid #d9a93a;box-shadow:0 0 34px -14px #ffc83d,inset 0 1px 0 #ffffff1a}
+.rake h3{margin:0 0 6px;font-size:17px;background:linear-gradient(180deg,#fff6c2,#ffd24a 50%,#e39a17);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rake p{margin:0 0 12px;line-height:1.55;color:#fff3dc;font-weight:700}
+.rake ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.rake li{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;background:#0a0b24cc;border:1px solid #d9a93a55;font-weight:800;font-size:13px;line-height:1.3}
+.rake li i{font-style:normal;font-size:20px;flex:none}
+.rake.sm{margin-top:10px;padding:10px 12px;border-radius:12px}.rake.sm p{margin:0;font-size:12.5px;line-height:1.5}.rake.sm b{color:#ffd24a}
 </style>
 </head>
 <body>
@@ -575,6 +583,7 @@ dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
    <div class="tabs" id="dm-tabs"></div>
    <div><h3 id="dm-title"></h3><p id="dm-desc"></p></div>
    <dl class="facts" id="dm-facts"></dl>
+   <div class="rake sm"><p><b>20% da casa:</b> todo o valor vai para ajustes da empresa, criações e reparos diários nos servidores, melhorias do marketing e do sistema para um futuro novo sistema.</p></div>
    <div><h3>Mapa: <span id="dm-map"></span></h3><p id="dm-mapdesc"></p><p class="note">Na partida valendo, o mapa é sorteado entre os 7, todos do mesmo tamanho.</p></div>
   </div>
  </div>
@@ -611,6 +620,9 @@ dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
   <div><b>Fuja da morte súbita</b>Quando o relógio marca 1:00, blocos que não quebram começam a cair de fora para dentro e fecham a arena até sobrar só o miolo. Ficar parado no canto não é opção.</div>
   <div><b>Seja o último de pé</b>Prenda os rivais na explosão. Quem sobrar leva o prêmio: a soma das entradas menos 20% que ficam com a casa (ex.: 1x1 de R$ 10 → R$ 20 − 20% = R$ 16). Deu empate? Os finalistas disputam um duelo na lava até sobrar só um.</div>
  </div>
+ <div class="rake" id="rake"><h3>Para onde vão os 20% da casa?</h3>
+  <p>Todo o valor é usado para manter e fazer o BomberCash crescer, rumo a um novo sistema no futuro:</p>
+  <ul><li><i>🏢</i>Ajustes da empresa</li><li><i>🛠️</i>Criações e reparos diários nos servidores</li><li><i>📣</i>Melhorias do marketing</li><li><i>🚀</i>Melhorias do sistema e o futuro novo sistema</li></ul></div>
  <p class="note" style="margin-top:22px">Proibido para menores de 18 anos. BomberCash é um jogo de habilidade, estratégia e agilidade entre jogadores reais: não existem bots e a partida só começa quando a sala tiver gente suficiente no mesmo valor. Em toda partida a casa fica com 20% das entradas e o vencedor leva o restante. Depósito e saque só por PIX, em conta do mesmo CPF do jogador. O ranking conta as partidas vencidas por ID; o da semana zera toda segunda-feira. Os bonecos são sorteados a cada partida (10% de chance de skin rara, só visual). Jogue com responsabilidade.</p>
 </section>
 
@@ -1405,7 +1417,7 @@ function needAcct(cb){if(!logged()){acctAfter=cb;openAuth();return false}if(!acc
 /* ---------- passo a passo: aparece no primeiro login (por conta, neste aparelho); dá para pular e rever no "?" ---------- */
 const TUT=[
  {h:'Bem-vindo à BomberCash!',art:()=>[0,1,2,3].map(i=>`<i class="av" style="${avStyle(i)}"></i>`).join(''),
-  b:'<p>Cada partida é entre <b>pessoas de verdade</b>. Solte bombas, prenda os rivais e seja o <b>último de pé</b>.</p><p>O vencedor leva o total das entradas <b>menos 20%</b> da casa.</p>'},
+  b:'<p>Cada partida é entre <b>pessoas de verdade</b>. Solte bombas, prenda os rivais e seja o <b>último de pé</b>.</p><p>O vencedor leva o total das entradas <b>menos 20%</b> da casa.</p><div class="rake sm"><p><b>Os 20% da casa</b> são usados em ajustes da empresa, criações e reparos diários nos servidores, marketing e melhorias do sistema, preparando um novo sistema no futuro.</p></div>'},
  {h:'Mexa-se',art:()=>'<div class="pad"><span></span><b>▲</b><span></span><b>◀</b><span></span><b>▶</b><span></span><b>▼</b><span></span></div>',
   b:'<ul><li><b>Celular:</b> use o analógico ou as setas (troque em Configurações ⚙️, onde também dá para mudar cores e posição).</li><li><b>Computador:</b> setas ou W A S D.</li></ul>'},
  {h:'Solte bombas',art:()=>'<i class="fx"></i><i class="bm"></i><i class="fx"></i><div class="btn">BOMBA</div>',
@@ -1596,7 +1608,7 @@ function openDlg(){
  $('d-bar').hidden=true;$('d-bar').firstChild.style.width=0;$('d-t').textContent=mode.name+' · '+mode.label;
  const tk=isTok(mode);
  $('d-l').innerHTML=tk?`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span><i class="coin sm"></i> ${CT(mode.token)}</span><span>Prêmio do vencedor</span><span><i class="coin sm"></i> ${CT(mode.n*mode.token)} <small>(o pote inteiro)</small></span><span>Seus ClashTokens</span><span>${clash.bal}</span><span>Morte súbita</span><span>no 1:00 do relógio</span>`
-  :`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span>${R$(bet)}</span><span>Prêmio do vencedor</span><span>${R$(prize(mode.n*bet))} <small>(${R$(mode.n*bet)} − 20% da casa)</small></span><span>Morte súbita</span><span>no 1:00 do relógio</span>`;
+  :`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span>${R$(bet)}</span><span>Prêmio do vencedor</span><span>${R$(prize(mode.n*bet))} <small>(${R$(mode.n*bet)} − 20% da casa)</small></span><span>Morte súbita</span><span>no 1:00 do relógio</span><span class="rk-why" style="grid-column:1/-1"><span class="rake sm" style="display:block"><p><b>Os 20% da casa</b> vão para ajustes da empresa, reparos diários nos servidores, marketing e melhorias do sistema.</p></span></span>`;
  const ok=$('d-ok');ok.disabled=!!mq;ok.textContent=(DEMO?'Jogar demo · ':'Procurar partida · ')+(tk?CT(mode.token):R$(bet));
  $('d-msg').textContent=tk?(DEMO?'Modo demo: você joga agora contra 3 bots com ClashTokens demo.':!logged()?'Entre na sua conta para jogar por ClashToken.':clash.bal<mode.token?'Você tem '+CT(clash.bal)+' de '+mode.token+'. Colete 1 por dia para entrar na sala dourada.':'Sala dourada: começa quando 4 pessoas entrarem. Os 6 ClashTokens saem quando a partida começar.'):DEMO?'Modo demo: você joga agora contra '+(mode.n-1)+(mode.n>2?' bots':' bot')+' com fichas virtuais. Nada vale dinheiro e não conta no ranking.':!logged()?'Entre na sua conta para jogar valendo.':bal<bet?'Saldo insuficiente: deposite por PIX para jogar.':'Só jogadores de verdade: a partida começa quando a sala tiver '+mode.n+' pessoas no mesmo valor. A entrada sai do seu saldo quando a partida começar.';
  if(!$('dlg').open)$('dlg').showModal()}
