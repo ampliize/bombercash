@@ -18,10 +18,10 @@ const srv=http.createServer((req,res)=>{
   if(!who)return send(401,{error:'Faça login de novo.'});
   if(u.endsWith('/my_profile'))return send(200,A.profiles[who]?[A.profiles[who]]:[]);
   // ClashToken: 1 por dia por conta (só com cadastro); /__clash dá tokens de teste
-  if(u.endsWith('/clash_status')){const c=A.clash[who]||{bal:0,last:null},today=new Date(Date.now()-3*36e5).toISOString().slice(0,10);return send(200,{balance:c.bal,can_claim:!!A.profiles[who]&&c.last!==today,next_at:new Date(Date.now()+864e5).toISOString()})}
-  if(u.endsWith('/clash_claim')){if(!A.profiles[who])return send(400,{message:'profile_required'});const c=A.clash[who]=A.clash[who]||{bal:0,last:null},today=new Date(Date.now()-3*36e5).toISOString().slice(0,10);
-   if(c.last===today)return send(200,{ok:false,error:'already',balance:c.bal});c.bal++;c.last=today;return send(200,{ok:true,balance:c.bal})}
-  if(u==='/__clash'){const c=A.clash[who]=A.clash[who]||{bal:0,last:null};c.bal+=+a.n||0;return send(200,{balance:c.bal})}
+  if(u.endsWith('/clash_status')){const c=A.clash[who]||{bal:0,at:null},nx=c.at?c.at+864e5:Date.now();return send(200,{balance:c.bal,can_claim:!!A.profiles[who]&&Date.now()>=nx,next_at:new Date(nx).toISOString(),last_at:c.at?new Date(c.at).toISOString():null})}
+  if(u.endsWith('/clash_claim')){if(!A.profiles[who])return send(400,{message:'profile_required'});const c=A.clash[who]=A.clash[who]||{bal:0,at:null};
+   if(c.at&&Date.now()<c.at+864e5)return send(200,{ok:false,error:'already',balance:c.bal,next_at:new Date(c.at+864e5).toISOString()});c.bal++;c.at=Date.now();return send(200,{ok:true,balance:c.bal,next_at:new Date(c.at+864e5).toISOString()})}
+  if(u==='/__clash'){const c=A.clash[who]=A.clash[who]||{bal:0,at:null};c.bal+=+a.n||0;if(a.back)c.at=(c.at||Date.now())-a.back;return send(200,{balance:c.bal})}
   if(u.endsWith('/my_wallet'))return send(200,[{balance_cents:A.wallet[who]||0,escrow_cents:0}]);
   if(u.endsWith('/my_withdrawals'))return send(200,A.wds.filter(w=>w.user===who).map(w=>({amount_cents:w.amount,status:w.status,pix_key_masked:w.mask,requested_at:new Date().toISOString()})));
   if(u==='/functions/v1/account'){const cpf=String(a.cpf||'').replace(/\D/g,'');if(cpf.length!==11)return send(400,{error:'CPF inválido.'});if(Object.values(A.profiles).some(p=>p.cpf===cpf))return send(409,{error:'Este CPF já tem uma conta.'});

@@ -532,6 +532,7 @@ dialog.clash{width:min(420px,94vw);text-align:center;background:radial-gradient(
 .cl-t{font-family:Bungee;font-size:22px;background:linear-gradient(180deg,#fff6c2,#ffd24a 50%,#e39a17);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cl-sub{margin:6px 0 10px;line-height:1.5}
 .cl-bal{font-weight:900;color:#ffe9b0}.cl-bal b{font-family:Bungee;font-weight:400;font-size:22px;color:#ffd24a}
+.cl-when{margin:6px 0 0;font-weight:900;color:#ffe08a;font-size:13px}
 .cl-days{display:flex;gap:6px;justify-content:center;margin:10px 0 4px}
 .cl-days i{width:30px;height:30px;border-radius:50%;border:2px dashed #d9a93a77}
 .cl-days i.on{border:0;background:var(--coin) center/contain no-repeat}
@@ -660,9 +661,9 @@ dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
  <div class="tu-art" id="tu-art" aria-hidden="true"></div><h3 id="tu-h"></h3><div id="tu-b"></div><div class="tu-dots" id="tu-dots"></div>
  <div class="row"><button type="button" id="tu-back">Voltar</button><button type="button" class="ok" id="tu-next">Próximo</button></div></dialog>
 <dialog id="clash" class="clash" aria-labelledby="cl-t"><div class="cl-coin"><i class="coin"></i></div><div class="cl-t" id="cl-t">COLETA DIÁRIA</div>
- <p class="cl-sub">Todo dia tem <b>1 ClashToken</b> esperando por você. Junte <b>6</b> para entrar no <b>Mata-mata 4 · ClashToken</b> e dispute o pote de <b>24</b>.</p>
- <div class="cl-bal">Você tem <b id="cl-bal">0</b> ClashTokens</div><div class="cl-days" id="cl-days" aria-hidden="true"></div>
- <p class="note" id="cl-msg">1 ClashToken por dia para cada conta. ClashToken não é dinheiro: não se compra nem se saca.</p>
+ <p class="cl-sub">A cada <b>24 horas</b> tem <b>1 ClashToken</b> esperando por você. Junte <b>6</b> para entrar no <b>Mata-mata 4 · ClashToken</b> e dispute o pote de <b>24</b>.</p>
+ <div class="cl-bal">Você tem <b id="cl-bal">0</b> ClashTokens</div><div class="cl-days" id="cl-days" aria-hidden="true"></div><p class="cl-when" id="cl-when"></p>
+ <p class="note" id="cl-msg">1 ClashToken a cada 24 horas para cada conta. ClashToken não é dinheiro: não se compra nem se saca.</p>
  <div class="row"><button type="button" id="cl-no">Fechar</button><button type="button" class="ok gold" id="cl-go">Coletar +1</button></div></dialog>
 <dialog id="auth" aria-labelledby="au-t"><div class="logo" style="font-size:20px" id="au-t">Entrar</div>
  <div class="seg" id="au-tabs" role="group"><button type="button" data-v="in" aria-pressed="true">Entrar</button><button type="button" data-v="up" aria-pressed="false">Criar conta</button></div>
@@ -1376,38 +1377,41 @@ async function refreshAcct(){if(DEMO){renderAcct();return}if(!logged()){bal=0;re
 function renderAcct(){setTimeout(refreshClash,0);$('acct-in').hidden=logged();$('acct-out').hidden=!logged();document.body.classList.toggle('is-demo',DEMO);$('demobar').hidden=!DEMO;$('demo-on').hidden=DEMO;renderMoney()}
 /* ---------- ClashToken: 1 por dia por conta (no demo, fica no aparelho) ---------- */
 let clash={bal:0,can:false,next:null};
-const todayBR=()=>new Date(Date.now()-3*36e5).toISOString().slice(0,10);
-const nextBR=()=>{const d=new Date(Date.now()-3*36e5);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+1)+3*36e5};
-const demoClash=()=>ls.get('bc_demo_clash',{bal:6,last:null}),saveDemoClash=c=>ls.set('bc_demo_clash',c);
+/* a próxima coleta abre 24 horas depois da última; o horário aparece no relógio de Brasília */
+const DAY=864e5,brTime=t=>new Date(t).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const left24=t=>{const l=Math.max(0,t-Date.now()),h=Math.floor(l/36e5),m=Math.floor(l%36e5/6e4),sec=Math.floor(l%6e4/1e3);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')};
+const demoClash=()=>{const c=ls.get('bc_demo_clash',{bal:6,at:null});if(typeof c.at!=='number')c.at=null;return c},saveDemoClash=c=>ls.set('bc_demo_clash',c);
 function clashAdd(v){if(!DEMO)return;const c=demoClash();c.bal=Math.max(0,c.bal+v);saveDemoClash(c);clash.bal=c.bal;renderClash()}
 async function refreshClash(){
- if(DEMO){const c=demoClash();clash={bal:c.bal,can:c.last!==todayBR(),next:nextBR()}}
+ if(DEMO){const c=demoClash();clash={bal:c.bal,can:!c.at||Date.now()>=c.at+DAY,next:c.at?c.at+DAY:Date.now(),last:c.at}}
  else if(!logged()||!acct.profile)clash={bal:0,can:true,next:null,anon:true};
- else{try{const r=await urpc('clash_status');clash={bal:r.balance|0,can:!!r.can_claim,next:Date.parse(r.next_at)||nextBR()}}catch(e){}}
+ else{try{const r=await urpc('clash_status');clash={bal:r.balance|0,can:!!r.can_claim,next:Date.parse(r.next_at)||Date.now(),last:r.last_at?Date.parse(r.last_at):null}}catch(e){}}
  renderClash();clashAuto()}
-function renderClash(){$('tok').textContent=clash.bal;const b=$('tok-open');b.textContent=clash.can?'Coletar +1':'Coletado ✓';b.classList.toggle('on',!!clash.can);b.classList.toggle('done',!clash.can);
+function renderClash(){$('tok').textContent=clash.bal;const b=$('tok-open');b.textContent=clash.can?'Coletar +1':'⏱ '+left24(clash.next);b.classList.toggle('on',!!clash.can);b.classList.toggle('done',!clash.can);
  if($('clash').open)drawClash();if(typeof renderMoney==='function'&&$('rail').children.length)renderMoney()}
 let clashT=0;
-function drawClash(){const n=Math.min(6,clash.bal);$('cl-bal').textContent=clash.bal;$('cl-days').innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
+function drawClash(){const n=Math.min(6,clash.bal);$('cl-bal').textContent=clash.bal;$('cl-when').textContent=clash.can?(clash.anon?'Entre na sua conta para coletar.':'Seu ClashToken está liberado agora!'):'Próxima coleta: '+brTime(clash.next)+' (horário de Brasília)';$('cl-days').innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
  const go=$('cl-go');clearInterval(clashT);
  if(clash.can){go.disabled=false;go.textContent=clash.anon?'Entrar para coletar':'Coletar +1'}
- else{go.disabled=true;const tick=()=>{const l=Math.max(0,(clash.next||nextBR())-Date.now()),h=Math.floor(l/36e5),m=Math.floor(l%36e5/6e4),sec=Math.floor(l%6e4/1e3);go.textContent='Volte em '+h+'h '+String(m).padStart(2,'0')+'m '+String(sec).padStart(2,'0')+'s';if(l<=0){clearInterval(clashT);refreshClash()}};tick();clashT=setInterval(tick,1000)}}
-function openClash(){drawClash();if(!$('clash').open)$('clash').showModal();try{ss.set('bc_clash_seen',todayBR())}catch(e){}}
+ else{go.disabled=true;const tick=()=>{go.textContent='Próxima em '+left24(clash.next);if(Date.now()>=clash.next){clearInterval(clashT);refreshClash()}};tick();clashT=setInterval(tick,1000)}}
+/* contagem das 24 horas também na carteira */
+setInterval(()=>{if(!clash.can&&clash.next){$('tok-open').textContent='⏱ '+left24(clash.next);if(Date.now()>=clash.next&&!clash.busy){clash.busy=true;refreshClash().finally(()=>{clash.busy=false})}}},1000);
+function openClash(){drawClash();if(!$('clash').open)$('clash').showModal();try{ss.set('bc_clash_seen',String(clash.last||'none'))}catch(e){}}
 $('clash').addEventListener('close',()=>clearInterval(clashT));
 $('cl-no').onclick=()=>$('clash').close();$('tok-open').onclick=openClash;
 $('cl-go').onclick=async()=>{
  if(!DEMO&&!logged()){$('clash').close();acctAfter=()=>{refreshClash().then(openClash)};openAuth();return}
  if(!DEMO&&!acct.profile){$('clash').close();acctAfter=()=>{refreshClash().then(openClash)};openKyc();return}
  $('cl-go').disabled=true;
- try{let r;if(DEMO){const c=demoClash();if(c.last===todayBR())r={ok:false};else{c.bal++;c.last=todayBR();saveDemoClash(c);r={ok:true,balance:c.bal}}}else r=await urpc('clash_claim');
-  if(r&&r.ok){clash.bal=r.balance;clash.can=false;clash.next=nextBR();const pl=document.createElement('div');pl.className='cl-plus';pl.textContent='+1';$('clash').appendChild(pl);setTimeout(()=>pl.remove(),1300);
-   $('cl-msg').textContent=clash.bal>=6?'Você já tem ClashTokens para a sala dourada!':'Faltam '+(6-clash.bal)+' para a sala dourada. Volte amanhã!';toast('+1 ClashToken coletado!')}
-  else{clash.can=false;$('cl-msg').textContent='Você já coletou hoje. Volte amanhã!'}}
+ try{let r;if(DEMO){const c=demoClash();if(c.at&&Date.now()<c.at+DAY)r={ok:false,next_at:c.at+DAY};else{c.bal++;c.at=Date.now();saveDemoClash(c);r={ok:true,balance:c.bal,next_at:c.at+DAY}}}else r=await urpc('clash_claim');
+  if(r&&r.ok){clash.bal=r.balance;clash.can=false;clash.last=Date.now();clash.next=typeof r.next_at==='number'?r.next_at:Date.parse(r.next_at)||Date.now()+DAY;const pl=document.createElement('div');pl.className='cl-plus';pl.textContent='+1';$('clash').appendChild(pl);setTimeout(()=>pl.remove(),1300);
+   $('cl-msg').textContent=clash.bal>=6?'Você já tem ClashTokens para a sala dourada!':'Faltam '+(6-clash.bal)+' para a sala dourada. Volte em 24 horas!';toast('+1 ClashToken coletado!')}
+  else{clash.can=false;if(r&&r.next_at)clash.next=typeof r.next_at==='number'?r.next_at:Date.parse(r.next_at);$('cl-msg').textContent='Você já coletou nas últimas 24 horas.'}}
  catch(e){$('cl-msg').textContent='Não deu para coletar agora. Tente de novo.'}
  renderClash()};
 /* aparece sozinho uma vez por dia, no lobby, quando não há outra janela aberta */
 let clashAutoT=0;
-function clashAuto(){clearTimeout(clashAutoT);if(!clash.can||clash.anon||ss.get('bc_clash_seen')===todayBR()||window.__noClashAuto)return;
+function clashAuto(){clearTimeout(clashAutoT);if(!clash.can||clash.anon||ss.get('bc_clash_seen')===String(clash.last||'none')||window.__noClashAuto)return;
  const tryOpen=()=>{if($('s-lobby').classList.contains('on')&&!document.querySelector('dialog[open]')&&!$('intro'))openClash();else clashAutoT=setTimeout(tryOpen,2000)};clashAutoT=setTimeout(tryOpen,1200)}
 function setDemo(on){if(mq||arena.active)return;DEMO=on;ls.set('bc_demo',on);setTimeout(refreshClash,0);if(on){bal=Number(ls.get('bc_demo_bal',100))||0;toast('Modo demo ligado: fichas virtuais, sem dinheiro real.')}else{bal=0;refreshAcct();toast('Modo demo desligado.')}renderAcct()}
 /* antes de jogar: logado → cadastro completo → saldo suficiente */
@@ -1427,7 +1431,7 @@ const TUT=[
  {h:'Como funciona a partida',art:()=>'<span class="big">1x1 · 4 · 8</span>',
   b:'<ul><li>Escolha o modo e o valor e toque em <b>Procurar partida</b>.</li><li>A partida só começa quando a sala enche com jogadores no mesmo modo e valor.</li><li>Contagem de 10 segundos e valendo! Não há pausa.</li><li>Empate? Os 2 finalistas vão para o <b>duelo na lava</b>.</li></ul>'},
  {h:'Saldo, PIX e responsabilidade',art:()=>'<span class="big">PIX</span>',
-  b:'<ul><li><b>Depositar:</b> PIX a partir de R$ 10, de uma conta no seu CPF.</li><li><b>Sacar:</b> só para o seu próprio CPF.</li><li><b>ClashToken:</b> moeda de ouro grátis, 1 por dia. Junte 6 para a sala dourada.</li><li>Jogue por diversão, defina limites e nunca tente recuperar perdas.</li></ul>'}];
+  b:'<ul><li><b>Depositar:</b> PIX a partir de R$ 10, de uma conta no seu CPF.</li><li><b>Sacar:</b> só para o seu próprio CPF.</li><li><b>ClashToken:</b> moeda de ouro grátis, 1 a cada 24 horas. Junte 6 para a sala dourada.</li><li>Jogue por diversão, defina limites e nunca tente recuperar perdas.</li></ul>'}];
 let tutI=0,tutCb=null;
 const tutUser=()=>{try{return JSON.parse(atob(sess.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub}catch(e){return'anon'}};
 const tutKey=()=>'bc_tut_'+tutUser();
