@@ -18,7 +18,8 @@
     "test:money": "node money.test.js",
     "test:tutorial": "node tutorial.test.js",
     "test:demo": "node demo.test.js",
-    "test:clash": "node clash.test.js"
+    "test:clash": "node clash.test.js",
+    "test:friend": "node friend.test.js"
   },
   "dependencies": {
     "playwright-core": "^1.56.1",

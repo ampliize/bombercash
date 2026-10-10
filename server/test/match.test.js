@@ -59,3 +59,25 @@ test('sala ClashToken fechada quando o servidor não tem caixa de tokens', () =>
   const c = { ws: { readyState: 1, send() {}, close() {} }, room: null, send() {}, setRoom() {} };
   assert.match(mm.queue(c, { id: 'u', name: 'u', auth: true }, '4x4t', 0).err, /indisponível/);
 });
+
+test('1x1 com amigo: cria código, amigo entra com o mesmo valor e a partida começa', async () => {
+  const lg = ledger(); const mm = new Matchmaker({ ledger: lg, money: true });
+  const a = mkConn(), b = mkConn(), c = mkConn();
+  assert.ok(mm.createPrivate(a, { id: 'ua', name: 'A' }, 1000).ok);
+  const code = a.out.find(m => m.t === 'private').code; assert.match(code, /^[A-Z0-9]{6}$/);
+  assert.match(mm.joinPrivate(a, { id: 'ua', name: 'A' }, code).err, /sua/);
+  assert.match(mm.joinPrivate(c, { id: 'uc', name: 'C' }, 'XXXXXX').err, /não encontrada/);
+  assert.match(mm.createPrivate(c, { id: 'uc', name: 'C' }, 123).err, /inválido/);
+  assert.ok(mm.joinPrivate(b, { id: 'ub', name: 'B' }, code.toLowerCase()).ok);
+  await wait(30);
+  assert.equal(lg.calls[0][0], 'open'); assert.equal(lg.calls[0][1].stakeCents, 1000); assert.deepEqual(lg.calls[0][1].userIds, ['ua', 'ub']);
+  assert.ok(a.room && a.room === b.room && a.room.mode === '1x1');
+  assert.match(mm.joinPrivate(c, { id: 'uc', name: 'C' }, code).err, /não encontrada/);
+  a.room.close();
+});
+
+test('1x1 com amigo: sair cancela o convite', () => {
+  const mm = new Matchmaker({ ledger: ledger() }); const a = mkConn(), b = mkConn();
+  mm.createPrivate(a, { id: 'ua', name: 'A' }, 500); const code = a.out.find(m => m.t === 'private').code;
+  assert.ok(mm.leave(a)); assert.match(mm.joinPrivate(b, { id: 'ub', name: 'B' }, code).err, /não encontrada/);
+});

@@ -45,6 +45,11 @@ Jogo (`demo/index.html`): arquivo único, partidas só entre pessoas, saldo real
 - **Visual:** carteira com saldo, ClashTokens, Depositar e Sacar um abaixo do outro, acabamento dourado; valores sempre com centavos (R$ 2,00 … R$ 100,00); "Valor por partida" em destaque.
 - Teste: `npm run test:clash`.
 
+## 1x1 com amigos e apresentação em PDF
+- **Só no Duelo 1x1:** o diálogo tem "Contra alguém online" (fila) ou "Com um amigo". Com amigo: **Criar sala e convidar** gera um código de 6 caracteres e um link (`?sala=CÓDIGO&v=centavos`) para copiar ou mandar pelo WhatsApp. O amigo abre o link (ou digita o código), entra na conta e toca em **Entrar na sala**; a partida começa só com os dois, com o mesmo valor e a mesma regra de prêmio (total − 20%). O convite vale 15 minutos. Servidor: `Matchmaker.createPrivate/joinPrivate` (mensagens `private_create`/`private_join`).
+- **PDF:** `docs/BomberCash-Apresentacao.pdf` (18 páginas, capturas reais). Também publicado no site (`demo/BomberCash-Apresentacao.pdf`) com o botão "Baixar apresentação do jogo (PDF)" no rodapé do lobby.
+- Teste: `npm run test:friend` (dois navegadores + servidor de jogo).
+
 ## Rodar local
     cd demo && python3 -m http.server 8080   # abrir http://localhost:8080
 

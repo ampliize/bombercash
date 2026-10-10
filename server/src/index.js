@@ -42,6 +42,8 @@ wss.on('connection', ws => {
       return conn.send({ t: 'hello', id: user.id, money: MONEY });
     }
     if (m.t === 'queue') { const r = mm.queue(conn, user, m.mode, m.stake); if (r.err) err(r.err); }
+    else if (m.t === 'private_create') { const r = mm.createPrivate(conn, user, m.stake); if (r.err) err(r.err); }
+    else if (m.t === 'private_join') { const r = mm.joinPrivate(conn, user, m.code); if (r.err) err(r.err); }
     else if (m.t === 'leave') { if (mm.leave(conn)) conn.send({ t: 'left' }); }
     else if (m.t === 'in' && conn.room && conn.seat) conn.room.input(conn.seat, m);
   });
