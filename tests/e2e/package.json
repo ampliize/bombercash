@@ -16,7 +16,8 @@
     "test:shield": "node shield.test.js",
     "test:rules": "node rules.test.js",
     "test:money": "node money.test.js",
-    "test:tutorial": "node tutorial.test.js"
+    "test:tutorial": "node tutorial.test.js",
+    "test:demo": "node demo.test.js"
   },
   "dependencies": {
     "playwright-core": "^1.56.1",

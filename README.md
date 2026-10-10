@@ -26,6 +26,13 @@ Jogo (`demo/index.html`): arquivo único, partidas só entre pessoas, saldo real
 - **Pular passo a passo** em qualquer tela; Voltar/Próximo; no fim, "Começar a jogar" segue para o depósito ou para a fila. Fica lembrado por conta neste aparelho (`bc_tut_<id>`). O botão **?** no topo reabre quando quiser.
 - Teste: `npm run test:tutorial`.
 
+## Modo demo (para testar o sistema)
+- Botão **🧪 Testar no modo demo** no lobby, ou abrir com `?demo` (ex.: `https://bombercash.vercel.app/?demo`).
+- Saldo virtual de R$ 100 (botão **+ R$ 100 demo** recarrega), guardado só no aparelho. Não precisa de login nem do servidor de jogo.
+- A partida começa na hora contra bots, com a mesma regra de entrada e prêmio (−20%). O resultado não vai para o ranking.
+- **Sair do demo** volta ao modo real (login, saldo da carteira, fila só com pessoas).
+- Teste: `npm run test:demo`.
+
 ## Rodar local
     cd demo && python3 -m http.server 8080   # abrir http://localhost:8080
 
