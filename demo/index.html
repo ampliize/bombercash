@@ -532,6 +532,7 @@ dialog.clash{width:min(420px,94vw);text-align:center;background:radial-gradient(
 .cl-t{font-family:Bungee;font-size:22px;background:linear-gradient(180deg,#fff6c2,#ffd24a 50%,#e39a17);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cl-sub{margin:6px 0 10px;line-height:1.5}
 .cl-bal{font-weight:900;color:#ffe9b0}.cl-bal b{font-family:Bungee;font-weight:400;font-size:22px;color:#ffd24a}
+.cl-swap{display:block;width:100%;margin:10px 0 2px;padding:11px;border-radius:12px;background:#0a0b24;border:1.5px solid #d9a93a;color:#ffe08a;font-weight:900;font-size:15px}.cl-swap:disabled{opacity:.45;cursor:not-allowed}
 .cl-when{margin:6px 0 0;font-weight:900;color:#ffe08a;font-size:13px}
 .cl-days{display:flex;gap:6px;justify-content:center;margin:10px 0 4px}
 .cl-days i{width:30px;height:30px;border-radius:50%;border:2px dashed #d9a93a77}
@@ -661,9 +662,10 @@ dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
  <div class="tu-art" id="tu-art" aria-hidden="true"></div><h3 id="tu-h"></h3><div id="tu-b"></div><div class="tu-dots" id="tu-dots"></div>
  <div class="row"><button type="button" id="tu-back">Voltar</button><button type="button" class="ok" id="tu-next">Próximo</button></div></dialog>
 <dialog id="clash" class="clash" aria-labelledby="cl-t"><div class="cl-coin"><i class="coin"></i></div><div class="cl-t" id="cl-t">COLETA DIÁRIA</div>
- <p class="cl-sub">A cada <b>24 horas</b> tem <b>1 ClashToken</b> esperando por você. Junte <b>6</b> para entrar no <b>Mata-mata 4 · ClashToken</b> e dispute o pote de <b>24</b>.</p>
+ <p class="cl-sub">A cada <b>24 horas</b> tem <b>1 ClashToken</b> esperando por você. Com <b>6</b>, troque por <b>R$ 2,00</b> no saldo ou entre no <b>Mata-mata 4 · ClashToken</b>: o vencedor ganha <b>R$ 2,00</b>.</p>
  <div class="cl-bal">Você tem <b id="cl-bal">0</b> ClashTokens</div><div class="cl-days" id="cl-days" aria-hidden="true"></div><p class="cl-when" id="cl-when"></p>
- <p class="note" id="cl-msg">1 ClashToken a cada 24 horas para cada conta. ClashToken não é dinheiro: não se compra nem se saca.</p>
+ <button type="button" class="cl-swap" id="cl-swap">Trocar 6 ClashTokens por R$ 2,00</button>
+ <p class="note" id="cl-msg">1 ClashToken a cada 24 horas para cada conta (CPF). O ClashToken em si não se compra nem se saca: só vira saldo pela troca de 6 por R$ 2,00 ou vencendo a sala dourada.</p>
  <div class="row"><button type="button" id="cl-no">Fechar</button><button type="button" class="ok gold" id="cl-go">Coletar +1</button></div></dialog>
 <dialog id="auth" aria-labelledby="au-t"><div class="logo" style="font-size:20px" id="au-t">Entrar</div>
  <div class="seg" id="au-tabs" role="group"><button type="button" data-v="in" aria-pressed="true">Entrar</button><button type="button" data-v="up" aria-pressed="false">Criar conta</button></div>
@@ -1304,7 +1306,7 @@ const MODES={
  '1x1':{n:2,cover:'c1',cls:'m1',label:'1x1',name:'Duelo',tag:'DUELO',tab:'Duelo 1x1',arena:'15 × 13 blocos',desc:'Você contra outro jogador de verdade, cada um num canto. Partida rápida e direta: errou a fuga, perdeu.'},
  '4x4':{n:4,cover:'c4',cls:'m2',label:'4 PLAYS',name:'Mata-mata',tag:'4 JOGADORES',tab:'4 jogadores',arena:'15 × 13 blocos',desc:'Quatro jogadores, um em cada canto da arena. Todo mundo contra todo mundo até sobrar um.'},
  '8x8':{n:8,cover:'c8',cls:'m3',label:'8 PLAYS',name:'Mata-mata',tag:'8 JOGADORES',tab:'8 jogadores',arena:'21 × 15 blocos (mapa grande)',desc:'Oito jogadores no mapa grande. Mais caixas, mais itens e muito mais explosão ao mesmo tempo.'},
- '4x4t':{n:4,cover:'c4',cls:'mg',label:'4 PLAYS',name:'Mata-mata ClashToken',tag:'CLASHTOKEN',tab:'ClashToken',arena:'15 × 13 blocos',token:6,desc:'Sala dourada: quatro jogadores, entrada de 6 ClashTokens cada. O último de pé leva o pote inteiro de 24.'}};
+ '4x4t':{n:4,cover:'c4',cls:'mg',label:'4 PLAYS',name:'Mata-mata ClashToken',tag:'CLASHTOKEN',tab:'ClashToken',arena:'15 × 13 blocos',token:6,prizeCents:200,desc:'Sala dourada: quatro jogadores, entrada de 6 ClashTokens cada. O último de pé ganha R$ 2,00 no saldo (os 24 ClashTokens do pote viram dinheiro, pago pela casa). Precisa de 1 depósito de R$ 10,00 ou mais nas últimas 3 semanas.'}};
 const MODE_N={'1x1':2,'4x4':4,'8x8':8,'4x4t':4},MODE_NAME={'1x1':'Duelo 1x1','4x4':'Mata-mata 4','8x8':'Mata-mata 8','4x4t':'Mata-mata 4 · ClashToken'};
 const isTok=m=>!!(m&&m.token),CT=v=>v+(v===1?' ClashToken':' ClashTokens');
 const CHARS=[
@@ -1383,14 +1385,14 @@ const left24=t=>{const l=Math.max(0,t-Date.now()),h=Math.floor(l/36e5),m=Math.fl
 const demoClash=()=>{const c=ls.get('bc_demo_clash',{bal:6,at:null});if(typeof c.at!=='number')c.at=null;return c},saveDemoClash=c=>ls.set('bc_demo_clash',c);
 function clashAdd(v){if(!DEMO)return;const c=demoClash();c.bal=Math.max(0,c.bal+v);saveDemoClash(c);clash.bal=c.bal;renderClash()}
 async function refreshClash(){
- if(DEMO){const c=demoClash();clash={bal:c.bal,can:!c.at||Date.now()>=c.at+DAY,next:c.at?c.at+DAY:Date.now(),last:c.at}}
+ if(DEMO){const c=demoClash();clash={bal:c.bal,can:!c.at||Date.now()>=c.at+DAY,next:c.at?c.at+DAY:Date.now(),last:c.at,depOk:true}}
  else if(!logged()||!acct.profile)clash={bal:0,can:true,next:null,anon:true};
- else{try{const r=await urpc('clash_status');clash={bal:r.balance|0,can:!!r.can_claim,next:Date.parse(r.next_at)||Date.now(),last:r.last_at?Date.parse(r.last_at):null}}catch(e){}}
+ else{try{const r=await urpc('clash_status');clash={bal:r.balance|0,can:!!r.can_claim,next:Date.parse(r.next_at)||Date.now(),last:r.last_at?Date.parse(r.last_at):null,depOk:!!r.deposit_ok,depUntil:r.deposit_until?Date.parse(r.deposit_until):null}}catch(e){}}
  renderClash();clashAuto()}
 function renderClash(){$('tok').textContent=clash.bal;const b=$('tok-open');b.textContent=clash.can?'Coletar +1':'⏱ '+left24(clash.next);b.classList.toggle('on',!!clash.can);b.classList.toggle('done',!clash.can);
  if($('clash').open)drawClash();if(typeof renderMoney==='function'&&$('rail').children.length)renderMoney()}
 let clashT=0;
-function drawClash(){const n=Math.min(6,clash.bal);$('cl-bal').textContent=clash.bal;$('cl-when').textContent=clash.can?(clash.anon?'Entre na sua conta para coletar.':'Seu ClashToken está liberado agora!'):'Próxima coleta: '+brTime(clash.next)+' (horário de Brasília)';$('cl-days').innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
+function drawClash(){const n=Math.min(6,clash.bal);$('cl-swap').disabled=clash.bal<6||(!DEMO&&!!clash.anon);$('cl-bal').textContent=clash.bal;$('cl-when').textContent=clash.can?(clash.anon?'Entre na sua conta para coletar.':'Seu ClashToken está liberado agora!'):'Próxima coleta: '+brTime(clash.next)+' (horário de Brasília)';$('cl-days').innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
  const go=$('cl-go');clearInterval(clashT);
  if(clash.can){go.disabled=false;go.textContent=clash.anon?'Entrar para coletar':'Coletar +1'}
  else{go.disabled=true;const tick=()=>{go.textContent='Próxima em '+left24(clash.next);if(Date.now()>=clash.next){clearInterval(clashT);refreshClash()}};tick();clashT=setInterval(tick,1000)}}
@@ -1398,7 +1400,14 @@ function drawClash(){const n=Math.min(6,clash.bal);$('cl-bal').textContent=clash
 setInterval(()=>{if(!clash.can&&clash.next){$('tok-open').textContent='⏱ '+left24(clash.next);if(Date.now()>=clash.next&&!clash.busy){clash.busy=true;refreshClash().finally(()=>{clash.busy=false})}}},1000);
 function openClash(){drawClash();if(!$('clash').open)$('clash').showModal();try{ss.set('bc_clash_seen',String(clash.last||'none'))}catch(e){}}
 $('clash').addEventListener('close',()=>clearInterval(clashT));
-$('cl-no').onclick=()=>$('clash').close();$('tok-open').onclick=openClash;
+$('cl-no').onclick=()=>$('clash').close();
+/* troca: 6 ClashTokens -> R$ 2,00 no saldo (pago pelo caixa da empresa) */
+$('cl-swap').onclick=async()=>{if(clash.bal<6)return;$('cl-swap').disabled=true;
+ try{if(DEMO){clashAdd(-6);bal=Math.round((bal+2)*100)/100;save();renderMoney()}
+  else{const r=await urpc('clash_exchange');if(!r||!r.ok)throw new Error(r&&r.error||'troca');clash.bal=r.balance;await refreshAcct()}
+  $('cl-msg').textContent='Pronto! R$ 2,00 entraram no seu saldo.';toast('6 ClashTokens trocados por R$ 2,00.')}
+ catch(e){$('cl-msg').textContent='Não deu para trocar agora. Tente de novo.'}
+ renderClash()};$('tok-open').onclick=openClash;
 $('cl-go').onclick=async()=>{
  if(!DEMO&&!logged()){$('clash').close();acctAfter=()=>{refreshClash().then(openClash)};openAuth();return}
  if(!DEMO&&!acct.profile){$('clash').close();acctAfter=()=>{refreshClash().then(openClash)};openKyc();return}
@@ -1416,7 +1425,8 @@ function clashAuto(){clearTimeout(clashAutoT);if(!clash.can||clash.anon||ss.get(
 function setDemo(on){if(mq||arena.active)return;DEMO=on;ls.set('bc_demo',on);setTimeout(refreshClash,0);if(on){bal=Number(ls.get('bc_demo_bal',100))||0;toast('Modo demo ligado: fichas virtuais, sem dinheiro real.')}else{bal=0;refreshAcct();toast('Modo demo desligado.')}renderAcct()}
 /* antes de jogar: logado → cadastro completo → saldo suficiente */
 function needAcct(cb){if(!logged()){acctAfter=cb;openAuth();return false}if(!acct.profile){acctAfter=cb;openKyc();return false}
- if(isTok(mode)){if(clash.bal<mode.token){openClash();$('cl-msg').textContent='Você precisa de '+CT(mode.token)+' para a sala dourada. Colete 1 por dia.';return false}return true}
+ if(isTok(mode)){if(clash.bal<mode.token){openClash();$('cl-msg').textContent='Você precisa de '+CT(mode.token)+' para a sala dourada. Colete 1 a cada 24 horas.';return false}
+  if(!clash.depOk){openDep();$('dp-msg').textContent='Para entrar na sala dourada é preciso ter feito pelo menos 1 depósito de R$ 10,00 nas últimas 3 semanas.';return false}return true}
  if(bal<bet){openDep();return false}return true}
 /* ---------- passo a passo: aparece no primeiro login (por conta, neste aparelho); dá para pular e rever no "?" ---------- */
 const TUT=[
@@ -1431,7 +1441,7 @@ const TUT=[
  {h:'Como funciona a partida',art:()=>'<span class="big">1x1 · 4 · 8</span>',
   b:'<ul><li>Escolha o modo e o valor e toque em <b>Procurar partida</b>.</li><li>A partida só começa quando a sala enche com jogadores no mesmo modo e valor.</li><li>Contagem de 10 segundos e valendo! Não há pausa.</li><li>Empate? Os 2 finalistas vão para o <b>duelo na lava</b>.</li></ul>'},
  {h:'Saldo, PIX e responsabilidade',art:()=>'<span class="big">PIX</span>',
-  b:'<ul><li><b>Depositar:</b> PIX a partir de R$ 10, de uma conta no seu CPF.</li><li><b>Sacar:</b> só para o seu próprio CPF.</li><li><b>ClashToken:</b> moeda de ouro grátis, 1 a cada 24 horas. Junte 6 para a sala dourada.</li><li>Jogue por diversão, defina limites e nunca tente recuperar perdas.</li></ul>'}];
+  b:'<ul><li><b>Depositar:</b> PIX a partir de R$ 10, de uma conta no seu CPF.</li><li><b>Sacar:</b> só para o seu próprio CPF.</li><li><b>ClashToken:</b> moeda de ouro grátis, 1 a cada 24 horas. Com 6, troque por R$ 2,00 ou jogue a sala dourada (o vencedor ganha R$ 2,00).</li><li>Jogue por diversão, defina limites e nunca tente recuperar perdas.</li></ul>'}];
 let tutI=0,tutCb=null;
 const tutUser=()=>{try{return JSON.parse(atob(sess.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub}catch(e){return'anon'}};
 const tutKey=()=>'bc_tut_'+tutUser();
@@ -1588,11 +1598,11 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.to
 function renderMoney(){
  $('bal').textContent=R$(bal);
  document.querySelectorAll('#chips .chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.b===bet)));
- document.querySelectorAll('#rail .card').forEach(c=>{const m=MODES[c.dataset.k];if(isTok(m)){c.querySelector('.prize b').innerHTML='<i class="coin sm"></i>'+(m.n*m.token);c.querySelector('.play').textContent='Jogar · '+CT(m.token)}
+ document.querySelectorAll('#rail .card').forEach(c=>{const m=MODES[c.dataset.k];if(isTok(m)){c.querySelector('.prize b').textContent=R$(m.prizeCents/100);c.querySelector('.play').textContent='Jogar · '+CT(m.token)}
   else{c.querySelector('.prize b').textContent=R$(prize(m.n*bet));c.querySelector('.play').textContent='Jogar · '+R$(bet)}})}
 function render(){
  $('chips').innerHTML=BETS.map(b=>`<button class="chip" aria-pressed="false" data-b="${b}">${R$(b)}</button>`).join('');
- $('rail').innerHTML=Object.entries(MODES).map(([k,m],i)=>`<button class="card ${m.cls}" data-k="${k}" style="--i:${i}"><div class="cov" role="img" aria-label="${m.name} ${m.label}"><span class="cov-img" style="background-image:url(${ASSET[m.cover]})"></span><span class="badge">${m.tag}</span>${m.token?'<i class="coin"></i>':''}<span class="shine"></span></div><div class="info2"><div class="prize"><span>${m.n} jogadores · ${m.token?'pote':'prêmio'}</span><b></b></div><div class="play"></div></div></button>`).join('');
+ $('rail').innerHTML=Object.entries(MODES).map(([k,m],i)=>`<button class="card ${m.cls}" data-k="${k}" style="--i:${i}"><div class="cov" role="img" aria-label="${m.name} ${m.label}"><span class="cov-img" style="background-image:url(${ASSET[m.cover]})"></span><span class="badge">${m.tag}</span>${m.token?'<i class="coin"></i>':''}<span class="shine"></span></div><div class="info2"><div class="prize"><span>${m.n} jogadores · prêmio</span><b></b></div><div class="play"></div></div></button>`).join('');
  renderMoney()}
 /* aviso de jogo responsável: aparece ao escolher o valor da partida e antes da 1ª partida de cada sessão;
    só libera o Confirmar depois de marcar "li e vou jogar com responsabilidade" */
@@ -1611,10 +1621,10 @@ function openDlg(){
  $('d-cover').src=ASSET[mode.cover];$('dlg').className=mode.cls;
  $('d-bar').hidden=true;$('d-bar').firstChild.style.width=0;$('d-t').textContent=mode.name+' · '+mode.label;
  const tk=isTok(mode);
- $('d-l').innerHTML=tk?`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span><i class="coin sm"></i> ${CT(mode.token)}</span><span>Prêmio do vencedor</span><span><i class="coin sm"></i> ${CT(mode.n*mode.token)} <small>(o pote inteiro)</small></span><span>Seus ClashTokens</span><span>${clash.bal}</span><span>Morte súbita</span><span>no 1:00 do relógio</span>`
+ $('d-l').innerHTML=tk?`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span><i class="coin sm"></i> ${CT(mode.token)}</span><span>Prêmio do vencedor</span><span>${R$(mode.prizeCents/100)} <small>(troca dos ${mode.n*mode.token} ClashTokens, pago pela casa)</small></span><span>Seus ClashTokens</span><span>${clash.bal}</span><span>Depósito em 3 semanas</span><span>${DEMO?'demo':clash.depOk?'ok'+(clash.depUntil?' até '+new Date(clash.depUntil).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'}):''):'falta'}</span><span>Morte súbita</span><span>no 1:00 do relógio</span>`
   :`<span>Jogadores</span><span>${mode.n}</span><span>Entrada</span><span>${R$(bet)}</span><span>Prêmio do vencedor</span><span>${R$(prize(mode.n*bet))} <small>(${R$(mode.n*bet)} − 20% da casa)</small></span><span>Morte súbita</span><span>no 1:00 do relógio</span><span class="rk-why" style="grid-column:1/-1"><span class="rake sm" style="display:block"><p><b>Os 20% da casa</b> vão para ajustes da empresa, reparos diários nos servidores, marketing e melhorias do sistema.</p></span></span>`;
  const ok=$('d-ok');ok.disabled=!!mq;ok.textContent=(DEMO?'Jogar demo · ':'Procurar partida · ')+(tk?CT(mode.token):R$(bet));
- $('d-msg').textContent=tk?(DEMO?'Modo demo: você joga agora contra 3 bots com ClashTokens demo.':!logged()?'Entre na sua conta para jogar por ClashToken.':clash.bal<mode.token?'Você tem '+CT(clash.bal)+' de '+mode.token+'. Colete 1 por dia para entrar na sala dourada.':'Sala dourada: começa quando 4 pessoas entrarem. Os 6 ClashTokens saem quando a partida começar.'):DEMO?'Modo demo: você joga agora contra '+(mode.n-1)+(mode.n>2?' bots':' bot')+' com fichas virtuais. Nada vale dinheiro e não conta no ranking.':!logged()?'Entre na sua conta para jogar valendo.':bal<bet?'Saldo insuficiente: deposite por PIX para jogar.':'Só jogadores de verdade: a partida começa quando a sala tiver '+mode.n+' pessoas no mesmo valor. A entrada sai do seu saldo quando a partida começar.';
+ $('d-msg').textContent=tk?(DEMO?'Modo demo: você joga agora contra 3 bots com ClashTokens demo.':!logged()?'Entre na sua conta para jogar por ClashToken.':clash.bal<mode.token?'Você tem '+CT(clash.bal)+' de '+mode.token+'. Colete 1 a cada 24 horas para entrar na sala dourada.':!clash.depOk?'A sala dourada exige 1 depósito de R$ 10,00 ou mais a cada 3 semanas.':'Sala dourada: começa quando 4 pessoas entrarem. Os 6 ClashTokens saem quando a partida começar.'):DEMO?'Modo demo: você joga agora contra '+(mode.n-1)+(mode.n>2?' bots':' bot')+' com fichas virtuais. Nada vale dinheiro e não conta no ranking.':!logged()?'Entre na sua conta para jogar valendo.':bal<bet?'Saldo insuficiente: deposite por PIX para jogar.':'Só jogadores de verdade: a partida começa quando a sala tiver '+mode.n+' pessoas no mesmo valor. A entrada sai do seu saldo quando a partida começar.';
  if(!$('dlg').open)$('dlg').showModal()}
 $('d-no').onclick=()=>{mmCancel();$('dlg').close()};
 $('dlg').addEventListener('close',()=>{if(mq&&!mq.started)mmCancel()});
@@ -1869,11 +1879,12 @@ function finish(w,info){
  const F=tok?CT:R$,prz=tok?(v=>v):prize;
  const add=v=>{if(tok){clashAdd(v);return}if(DEMO||!logged())bal=Math.round((bal+v)*100)/100}; // logado: quem paga/devolve é o servidor; o saldo é relido do banco
  if(w===-2){add(stake);t='Partida cancelada';p='A conexão com o outro jogador caiu. Sua entrada de '+F(stake)+' voltou.'}
- else if(w===mine){const pr=prz(pot);add(pr);result='win';t='Você venceu!';p=tok?'O pote de '+CT(pr)+' é seu!':'O prêmio de '+R$(pr)+' é seu ('+R$(pot)+' em entradas − 20% da casa).'}
+ else if(w===mine&&tok){result='win';t='Você venceu!';if(DEMO){bal=Math.round((bal+mode.prizeCents/100)*100)/100;save();renderMoney()}else setTimeout(refreshAcct,1500);p=R$(mode.prizeCents/100)+' foram creditados no seu saldo: os '+CT(pot)+' do pote viraram dinheiro, pago pela casa.'}
+ else if(w===mine){const pr=prz(pot);add(pr);result='win';t='Você venceu!';p='O prêmio de '+R$(pr)+' é seu ('+R$(pot)+' em entradas − 20% da casa).'}
  else if(info.place){result='loss';t='Derrota';p='Você foi eliminado e ficou em '+info.place+'º lugar de '+mode.n+'.'}
  else if(w<0){add(stake);result='draw';t='Empate';p='O tempo acabou sem vencedor. Sua entrada de '+F(stake)+' voltou.'}
  else{result='loss';t='Derrota';p=info.name+' foi o último de pé e levou o prêmio.'}
- save();if(logged()&&!DEMO)setTimeout(refreshAcct,1200);$('e-img').src=ASSET.ch[SK[w>=0&&w!==mine?info.skin:me.skin]];$('e-t').textContent=t;$('e-p').textContent=p+(tok?(DEMO?' ClashTokens: '+clash.bal+'.':''):' Saldo: '+R$(bal)+'.');if(tok&&!DEMO)setTimeout(refreshClash,1500);
+ save();if(logged()&&!DEMO)setTimeout(refreshAcct,1200);$('e-img').src=ASSET.ch[SK[w>=0&&w!==mine?info.skin:me.skin]];$('e-t').textContent=t;$('e-p').textContent=p+(tok?(DEMO?' Saldo: '+R$(bal)+' · ClashTokens: '+clash.bal+'.':''):' Saldo: '+R$(bal)+'.');if(tok&&!DEMO)setTimeout(refreshClash,1500);
  renderEnd(w,info,stake,pot,online);
  $('again').hidden=false;$('again').textContent=tok?(clash.bal<mode.token&&DEMO?'Sem ClashTokens · voltar ao menu':'Jogar de novo · '+CT(mode.token)):bal<bet?'Sem saldo · voltar ao menu':'Jogar de novo · '+R$(bet);
  const o=opp.slice();if(online)endNet();show('s-end');
@@ -1884,11 +1895,11 @@ function renderEnd(w,info,stake,pot,online){
  const rank=info.rank||[],hum=online&&net&&net.humans?net.humans:null,pays=r=>!hum||hum.includes(r.i),pr=tok?pot:prize(pot),voided=w===-2,draw=w<0&&!voided;
  const cell=(k,v,c)=>`<div${c?' class="'+c+'"':''}><dt>${k}</dt><dd>${v}</dd></div>`;
  $('e-sum').innerHTML=cell('Modo',esc((MODE_NAME[mode.k]||mode.name||'')+(online?' · online':'')))+cell('Mapa',esc(info.duel?'Duelo na lava':(info.map||'')))+cell('Duração',mmss(info.duration||0))
-  +cell('Entradas',F(pot)+' <small>('+rank.filter(pays).length+' × '+F(stake)+')</small>')+cell(tok?'Casa':'Banca 20%',tok?'0 CT':R$(Math.round((pot-pr)*100)/100))+cell('Prêmio',voided||draw?'—':F(pr),'gold');
+  +cell('Entradas',F(pot)+' <small>('+rank.filter(pays).length+' × '+F(stake)+')</small>')+cell(tok?'Casa':'Banca 20%',tok?'paga o prêmio':R$(Math.round((pot-pr)*100)/100))+cell('Prêmio',voided||draw?'—':tok?R$(mode.prizeCents/100):F(pr),'gold');
  const posTxt=r=>r.place?r.place+'º':'—';
  $('e-rank').innerHTML=rank.map(r=>{const paid=pays(r),get=r.win&&!voided?pr:0,net0=paid?(voided||draw?0:get-stake):0;
   const sub=[r.me?'Você':r.bot?'Bot':'Jogador',r.kills?r.kills+(r.kills>1?' eliminações':' eliminação'):'',!r.place?'ainda em jogo':''].filter(Boolean).join(' · ');
-  const money=!paid?'<b>—</b><small>sem entrada</small>':voided||draw?'<b>'+F(stake)+'</b><small>entrada devolvida</small>':`<b>${F(get)}</b><small class="${net0>=0?'up':'dn'}">${net0>=0?'+':'−'}${F(Math.abs(net0))}</small>`;
+  const money=tok&&!voided&&!draw?(r.win?'<b>'+R$(mode.prizeCents/100)+'</b><small class="up">troca de '+pot+' CT</small>':'<b>—</b><small class="dn">−'+stake+' CT</small>'):!paid?'<b>—</b><small>sem entrada</small>':voided||draw?'<b>'+F(stake)+'</b><small>entrada devolvida</small>':`<b>${F(get)}</b><small class="${net0>=0?'up':'dn'}">${net0>=0?'+':'−'}${F(Math.abs(net0))}</small>`;
   return`<li class="${['p'+r.place,r.win?'win':'',r.me?'me':''].join(' ')}"><span class="pos">${posTxt(r)}</span><span class="av" style="${avStyle(r.skin)};${r.rare?'box-shadow:0 0 0 2px #ffd76a':''}" role="img" aria-label="${esc(BC.SKIN_NAMES[r.skin]||'')}"></span><span class="nm"><b>${esc(r.name)}${r.win?' 🏆':''}</b><small>${sub}</small></span><span class="pz">${money}</span></li>`}).join('')}
 $('ar-back').onclick=()=>{
  if(net&&net.started&&arena.active){net.room.emit('bye',{s:net.slot||0});const st=net.stake,o=opp.slice();endNet();arena.stop();keys.clear();mode=MODES['1x1'];mode.k='1x1';

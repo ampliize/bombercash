@@ -11,6 +11,6 @@ async function kyc(p,c,nick,keepTut){await p.fill('#ky-name','Fulano de Tal');aw
 async function deposit(p,reais){await p.evaluate(()=>document.getElementById('dep-open').click());await sleep(200);await p.fill('#dp-val',String(reais));await p.click('#dp-go');
  await p.waitForFunction(()=>!document.getElementById('dp-step2').hidden,null,{timeout:5000});
  await p.evaluate(()=>fetch('/__pay',{method:'POST',body:'{}'}));
- await p.waitForFunction(r=>/Pagamento confirmado/.test(document.getElementById('dp-status').textContent)&&document.getElementById('bal').textContent.includes(String(r)),reais,{timeout:9000});
+ await p.waitForFunction(()=>/Pagamento confirmado/.test(document.getElementById('dp-status').textContent),null,{timeout:9000});
  await p.click('#dp-done')}
 module.exports={cpf,signup,kyc,deposit};

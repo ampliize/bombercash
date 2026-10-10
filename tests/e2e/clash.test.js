@@ -1,5 +1,5 @@
 // ClashToken: coleta diária (1 por dia por conta), carteira empilhada, valores R$ X,00, sala dourada (6 tokens) e partida dourada no demo.
-const {chromium}=require('playwright-core'),{cpf,signup,kyc}=require('./acct');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const {chromium}=require('playwright-core'),{cpf,signup,kyc,deposit}=require('./acct');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
 (async()=>{const b=await chromium.launch(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{});
  const enter=async p=>{await p.goto('http://127.0.0.1:8765/?clash');await sleep(1200);await p.evaluate(()=>window.__bcEnter());await sleep(600);if(await p.isVisible('#hello-ok'))await p.click('#hello-ok');await sleep(500)};
@@ -30,16 +30,26 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  const box=await p.evaluate(()=>{const a=document.getElementById('dep-open').getBoundingClientRect(),w=document.getElementById('wd-open').getBoundingClientRect(),s=document.getElementById('bal').getBoundingClientRect();return{stack:s.bottom<=a.top&&a.bottom<=w.top,left:Math.abs(a.left-w.left)<2}});
  ok(box.stack&&box.left,'saldo, Depositar e Sacar um abaixo do outro');
  // sala dourada
- ok(await p.$eval('.card.mg',c=>/6 CLASHTOKENS/i.test(c.textContent)&&/24/.test(c.textContent)),'sala dourada no menu: Jogar · 6 ClashTokens, pote 24');
+ // troca direta: 6 ClashTokens -> R$ 2,00
+ await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n:4})})});
+ await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens');
+ await p.click('#tok-open',{force:true});await sleep(200);ok(!(await p.$eval('#cl-swap',e=>e.disabled)),'botão Trocar 6 por R$ 2,00 liberado');
+ await p.click('#cl-swap');await sleep(900);
+ ok(await p.textContent('#tok')==='0'&&await p.textContent('#bal')==='R$ 2,00'&&await p.$eval('#cl-swap',e=>e.disabled),'trocou: 0 ClashTokens e R$ 2,00 no saldo');await p.click('#cl-no');
+ ok(await p.$eval('.card.mg',c=>/6 CLASHTOKENS/i.test(c.textContent)&&/R\$ 2,00/.test(c.textContent)),'sala dourada no menu: Jogar · 6 ClashTokens, prêmio R$ 2,00');
  await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);
- ok(/6 ClashTokens/.test(await p.textContent('#d-ok'))&&/1 ClashToken de 6/.test(await p.textContent('#d-msg')),'diálogo da sala dourada mostra entrada e quanto falta');
+ ok(/6 ClashTokens/.test(await p.textContent('#d-ok'))&&/0 ClashTokens de 6/.test(await p.textContent('#d-msg'))&&/R\$ 2,00/.test(await p.textContent('#d-l')),'diálogo da sala dourada mostra entrada, prêmio R$ 2,00 e quanto falta');
  await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(300);
  ok(await p.$eval('#clash',d=>d.open)&&/6 ClashTokens/.test(await p.textContent('#cl-msg')),'sem 6 tokens: abre a coleta explicando');
  await p.click('#cl-no');await p.evaluate(()=>document.getElementById('dlg').open&&document.getElementById('d-no').click());
- await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n:4})})});
+ await p.evaluate(async()=>{const t=JSON.parse(localStorage.bc_sess).access_token;await fetch('/__clash',{method:'POST',headers:{Authorization:'Bearer '+t},body:JSON.stringify({n:6})})});
  await enter(p);ok(await p.textContent('#tok')==='6','com 6 ClashTokens (recarregou)');
  await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
- ok(/Servidor de partidas indisponível/.test(await p.textContent('#d-msg')),'com 6 tokens vai para a fila do servidor (aqui sem servidor)');
+ ok(await p.$eval('#dep',d=>d.open)&&/3 semanas/.test(await p.textContent('#dp-msg')),'sem depósito nas últimas 3 semanas: pede depósito antes da sala dourada');
+ await p.click('#dp-no');await p.evaluate(()=>document.getElementById('dlg').open&&document.getElementById('d-no').click());
+ await deposit(p,10);await enter(p);
+ await p.evaluate(()=>document.querySelector('#rail .card[data-k="4x4t"]').click());await sleep(300);await p.evaluate(()=>document.getElementById('d-ok').click());await sleep(400);
+ ok(/Servidor de partidas indisponível/.test(await p.textContent('#d-msg')),'com 6 tokens e depósito de R$ 10,00 vai para a fila do servidor (aqui sem servidor)');
  // ---- demo: coleta abre sozinha e partida dourada contra bots ----
  const q=await (await b.newContext({viewport:{width:900,height:800}})).newPage();q.on('pageerror',e=>ok(false,'pageerror '+e.message));await q.addInitScript(init);
  await enter(q);await q.click('#demo-on');
@@ -52,6 +62,6 @@ let bad=0;const ok=(c,m)=>{console.log((c?'OK  ':'FALHOU ')+m);if(!c)bad++};
  await q.evaluate(async()=>{const ps=window.__arena._s().players;for(let i=ps.length-1;i>=0;i--){if(i===window.__arena.meIdx)continue;ps[i].alive=false;ps[i].deadAt=performance.now();await new Promise(r=>setTimeout(r,60))}});
  await q.waitForFunction(()=>document.getElementById('s-end').classList.contains('on'),null,{timeout:10000});
  const e=await q.evaluate(()=>({t:document.getElementById('e-t').textContent,p:document.getElementById('e-p').textContent,sum:document.getElementById('e-sum').innerText}));
- ok(e.t==='Você venceu!'&&/pote de 24 ClashTokens/.test(e.p)&&/24 CT/.test(e.sum),'venceu: leva o pote de 24 ClashTokens ('+e.p+')');
- ok(await q.textContent('#tok')==='25','ClashTokens: 1 + 24 = 25');
+ ok(e.t==='Você venceu!'&&/R\$ 2,00 foram creditados/.test(e.p)&&/24 CT/.test(e.sum)&&/R\$ 2,00/.test(e.sum),'venceu: os 24 ClashTokens viram R$ 2,00 no saldo ('+e.p+')');
+ ok(await q.textContent('#tok')==='1'&&await q.textContent('#bal')==='R$ 102,00','ClashTokens ficam em 1 e o saldo demo vai de R$ 100,00 para R$ 102,00');
  await b.close();console.log(bad?bad+' falha(s)':'tudo certo');process.exit(bad?1:0)})().catch(e=>{console.log('ERRO',e.message);process.exit(1)});

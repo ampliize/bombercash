@@ -36,7 +36,7 @@ export class Room {
       const userIds = this.seats.map(s => s.userId);
       if (this.tokens) await this.ledger.tokenOpen({ matchId: this.matchId, entry: this.tokens, userIds });
       else await this.ledger.open({ matchId: this.matchId, mode: this.mode, stakeCents: this.stakeCents, userIds });
-    } catch (e) { this.bcast({ t: 'abort', reason: this.tokens ? 'ClashTokens insuficientes ou erro no caixa' : 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
+    } catch (e) { this.bcast({ t: 'abort', reason: this.tokens ? (/deposit_required/.test(e.message) ? 'sala dourada: falta um depósito de R$ 10,00 nas últimas 3 semanas' : 'ClashTokens insuficientes ou erro no caixa') : 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
     this.sim = new Sim({ seed, map, n: this.seats.length });
     this.state = 'play'; this.freeze = COUNTDOWN; this.tickN = 0; this.inputLog = [];
     const skins = this.seats.map((_, i) => i % 4);

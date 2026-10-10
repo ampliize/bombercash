@@ -18,7 +18,8 @@ const srv=http.createServer((req,res)=>{
   if(!who)return send(401,{error:'Faça login de novo.'});
   if(u.endsWith('/my_profile'))return send(200,A.profiles[who]?[A.profiles[who]]:[]);
   // ClashToken: 1 por dia por conta (só com cadastro); /__clash dá tokens de teste
-  if(u.endsWith('/clash_status')){const c=A.clash[who]||{bal:0,at:null},nx=c.at?c.at+864e5:Date.now();return send(200,{balance:c.bal,can_claim:!!A.profiles[who]&&Date.now()>=nx,next_at:new Date(nx).toISOString(),last_at:c.at?new Date(c.at).toISOString():null})}
+  if(u.endsWith('/clash_status')){const c=A.clash[who]||{bal:0,at:null},nx=c.at?c.at+864e5:Date.now(),dep=A.deps.some(d=>d.user===who&&d.paid&&d.amount>=1000);return send(200,{balance:c.bal,can_claim:!!A.profiles[who]&&Date.now()>=nx,next_at:new Date(nx).toISOString(),last_at:c.at?new Date(c.at).toISOString():null,deposit_ok:dep,deposit_until:dep?new Date(Date.now()+21*864e5).toISOString():null})}
+  if(u.endsWith('/clash_exchange')){const c=A.clash[who]||{bal:0,at:null};if(!A.profiles[who])return send(400,{message:'profile_required'});if(c.bal<6)return send(200,{ok:false,error:'insufficient_tokens',balance:c.bal});c.bal-=6;A.wallet[who]=(A.wallet[who]||0)+200;return send(200,{ok:true,balance:c.bal,credited_cents:200})}
   if(u.endsWith('/clash_claim')){if(!A.profiles[who])return send(400,{message:'profile_required'});const c=A.clash[who]=A.clash[who]||{bal:0,at:null};
    if(c.at&&Date.now()<c.at+864e5)return send(200,{ok:false,error:'already',balance:c.bal,next_at:new Date(c.at+864e5).toISOString()});c.bal++;c.at=Date.now();return send(200,{ok:true,balance:c.bal,next_at:new Date(c.at+864e5).toISOString()})}
   if(u==='/__clash'){const c=A.clash[who]=A.clash[who]||{bal:0,at:null};c.bal+=+a.n||0;if(a.back)c.at=(c.at||Date.now())-a.back;return send(200,{balance:c.bal})}
