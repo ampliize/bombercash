@@ -462,6 +462,30 @@ dialog#tut{width:min(460px,94vw);padding:20px 20px 16px}
 .demobar span{color:#ffd76a}.demobar .row{gap:8px}.demobar button{padding:8px 12px}
 .demo-try{margin:10px 0 0;background:none;border:2px dashed var(--line);color:var(--mute);border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
 body.is-demo #acct-in,body.is-demo #acct-out{display:none!important}
+/* como jogar no celular: vertical e horizontal, com a prévia ao vivo dentro de cada aparelho */
+.phones{margin-top:14px;background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:16px}
+.phones h3{margin:0 0 4px}.phones>.note{margin:0 0 12px}
+.ph-row{display:flex;gap:22px;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+.ph{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;flex:1 1 220px;max-width:420px}
+.ph-dev{background:#05060f;border:3px solid #3a3d7a;border-radius:26px;padding:7px;box-shadow:0 10px 30px -12px #000,inset 0 0 0 2px #000;position:relative}
+.ph-dev .scr{position:relative;overflow:hidden;border-radius:19px;background:#0b0c1e;display:flex}
+.ph.v .ph-dev{width:min(190px,62vw)}.ph.v .scr{aspect-ratio:9/19;flex-direction:column}
+.ph.h .ph-dev{width:min(400px,92vw)}.ph.h .scr{aspect-ratio:19/9;flex-direction:row}
+.ph .bar{display:flex;align-items:center;gap:4px;padding:5px 6px;font:900 8px/1 Nunito,sans-serif;color:#ffd76a}.ph .bar i{width:22px;height:9px;border-radius:5px;background:#232458}
+.ph .map{position:relative;background:#07081a}.ph .map canvas{display:block;width:100%;height:100%}
+.ph.v .map{width:100%;aspect-ratio:720/624}.ph.h .map{height:100%;aspect-ratio:720/624;flex:none}
+.ph .pad,.ph .btn{flex:1;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
+.ph .pad{background:#22b8e6}.ph .btn{background:#ff5b6e}
+.ph.v .ctl{flex:1;display:flex;border-radius:0 0 14px 14px;overflow:hidden;margin:4px 3px 3px}
+.ph .stk{width:50%;max-width:72px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 50%,#3b3e52 0 26%,#1a1c28 27% 100%);box-shadow:0 3px 0 #0006;position:relative}
+.ph .stk::after{content:"";position:absolute;inset:30%;border-radius:50%;background:#4a4e66;animation:phStk 3.2s ease-in-out infinite}
+.ph .bmb{width:52%;max-width:74px;aspect-ratio:1;border-radius:50%;background:#1a1c28;color:#ffd76a;font:900 9px/1 Nunito,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 3px 0 #0006;animation:phTap 1.6s ease-in-out infinite}
+.ph .bmb b{font-size:15px}
+.ph figcaption{text-align:center;font-size:13px;line-height:1.5;color:var(--mute)}.ph figcaption b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+.ph .rot{font-size:18px;margin-right:4px}
+@keyframes phStk{0%,100%{transform:translate(0,0)}20%{transform:translate(28%,0)}45%{transform:translate(0,-28%)}70%{transform:translate(-28%,0)}85%{transform:translate(0,28%)}}
+@keyframes phTap{0%,70%,100%{transform:scale(1)}80%{transform:scale(.88)}}
+@media (prefers-reduced-motion:reduce){.ph .stk::after,.ph .bmb{animation:none}}
 </style>
 </head>
 <body>
@@ -493,6 +517,15 @@ body.is-demo #acct-in,body.is-demo #acct-out{display:none!important}
    <div><h3>Mapa: <span id="dm-map"></span></h3><p id="dm-mapdesc"></p><p class="note">Na partida valendo, o mapa é sorteado entre os 7, todos do mesmo tamanho.</p></div>
   </div>
  </div>
+
+ <div class="phones" id="phones"><h3>Como jogar no celular</h3><p class="note">O jogo funciona com o celular em pé ou deitado. Gire quando quiser: a tela se ajusta sozinha, sem sair da partida.</p>
+  <div class="ph-row">
+   <figure class="ph v"><div class="ph-dev" aria-hidden="true"><div class="scr"><div class="bar">← Sair <i></i><i></i><i></i></div><div class="map"><canvas width="360" height="312"></canvas></div><div class="ctl"><div class="pad"><span class="stk"></span></div><div class="btn"><span class="bmb"><b>💣</b>BOMBA</span></div></div></div></div>
+    <figcaption><b><span class="rot">📱</span>Na vertical</b>Mapa em cima e controle embaixo: analógico (ou setas) à esquerda e BOMBA à direita, um polegar em cada lado. A câmera segue o seu boneco.</figcaption></figure>
+   <figure class="ph h"><div class="ph-dev" aria-hidden="true"><div class="scr"><div class="pad"><span class="stk"></span></div><div class="map"><canvas width="360" height="312"></canvas></div><div class="btn"><span class="bmb"><b>💣</b>BOMBA</span></div></div></div>
+    <figcaption><b><span class="rot">🔄</span>Na horizontal</b>O mapa fica maior, no centro, com o analógico na lateral esquerda e a BOMBA na direita, como num controle de videogame.</figcaption></figure>
+  </div>
+  <p class="note" style="margin:12px 0 0;text-align:center">Em Configurações ⚙️ você troca analógico por setas, muda cores, tamanho e posição dos botões. No computador: setas ou W A S D para andar e Espaço para a bomba.</p></div>
 
  <h2>Ranking <small id="rk-week"></small></h2>
  <div class="rank">
@@ -1607,9 +1640,9 @@ function hideInv(){}async function poll(){} // convites entre amigos removidos: 
 addEventListener('pagehide',()=>{if(net&&net.started&&arena.active)net.room.emit('bye',{s:net.slot||0})});
 
 /* ---------- prévia ao vivo ---------- */
-let dmMode='4x4',dmMap=-1,dmView=false;
+let dmMode='4x4',dmMap=-1,dmView=false,phOn=false;
 const demo=BC.create({canvas:$('demo'),demo:true,
- visible:()=>dmView&&!document.hidden&&$('s-lobby').classList.contains('on')&&!document.querySelector('dialog[open]')&&!$('intro'),
+ visible:()=>(dmView||phOn)&&!document.hidden&&$('s-lobby').classList.contains('on')&&!document.querySelector('dialog[open]')&&!$('intro'),
  onMsg:t=>{$('dm-msg').textContent=t},
  onStart:s=>{$('dm-map').textContent=s.name;$('dm-mapdesc').textContent=s.desc;document.querySelectorAll('.mapbtn').forEach(b=>b.setAttribute('aria-pressed',String(dmMap<0?+b.dataset.m===-1:+b.dataset.m===s.map)));
   const cur=document.querySelector('.mapbtn[data-m="'+s.map+'"] span');document.querySelectorAll('.mapbtn span').forEach(e=>{e.textContent=e.dataset.n});if(cur&&dmMap<0)cur.textContent='▶ '+cur.dataset.n}});
@@ -1620,6 +1653,12 @@ function renderDemo(){
  $('dm-facts').innerHTML=`<dt>Arena</dt><dd>${m.arena}</dd><dt>Tempo</dt><dd>até 2:30 por partida</dd><dt>Morte súbita</dt><dd>no 1:00 do relógio caem blocos que fecham a arena até sobrar o miolo</dd><dt>Prêmio</dt><dd>${m.n} × a entrada − 20% da banca, para o vencedor</dd><dt>Bonecos</dt><dd>sorteados a cada partida${m.n>4?' (os 4 comuns aparecem no máximo 2 vezes)':', sem repetir'}</dd>`}
 $('dm-tabs').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;dmMode=b.dataset.k;renderDemo();demo.begin(MODES[dmMode].n,null,{map:dmMap,keep:true,sdAt:45})};
 if('IntersectionObserver' in window)new IntersectionObserver(es=>{dmView=es[0].isIntersecting},{rootMargin:'120px'}).observe($('demo'));else dmView=true;
+/* os dois celulares do "como jogar" copiam a prévia ao vivo */
+{const minis=[...document.querySelectorAll('#phones canvas')].map(c=>c.getContext('2d'));
+ if('IntersectionObserver' in window)new IntersectionObserver(es=>{phOn=es[0].isIntersecting},{rootMargin:'80px'}).observe($('phones'));else phOn=true;
+ (function phLoop(){requestAnimationFrame(phLoop);if(!phOn||document.hidden||!$('s-lobby').classList.contains('on'))return;const src=$('demo');if(!src.width)return;
+  for(const g of minis){try{g.drawImage(src,0,0,g.canvas.width,g.canvas.height)}catch(e){}}})()}
+
 
 /* ---------- partida ---------- */
 const keys=new Set(),con=$('console'),cv=$('arena');
