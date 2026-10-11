@@ -32,11 +32,20 @@ export class Room {
   async start() {
     if (this.starting) return; this.starting = true;
     const seed = (Math.random() * 0x7fffffff) | 0, map = Math.floor(Math.random() * 7);
+    const seats = this.seats.slice(); // quem estava na sala quando a entrada foi cobrada
     try { // aposta: debita e prende em escrow ANTES de a partida existir; se qualquer um não cobrir, ninguém joga
-      const userIds = this.seats.map(s => s.userId);
+      const userIds = seats.map(s => s.userId);
       if (this.tokens) await this.ledger.tokenOpen({ matchId: this.matchId, entry: this.tokens, userIds });
       else await this.ledger.open({ matchId: this.matchId, mode: this.mode, stakeCents: this.stakeCents, userIds });
-    } catch (e) { this.bcast({ t: 'abort', reason: this.tokens ? (/deposit_required/.test(e.message) ? 'sala dourada: falta um depósito de R$ 10,00 nas últimas 3 semanas' : 'ClashTokens insuficientes ou erro no caixa') : 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
+    } catch (e) {
+      // a resposta pode ter se perdido depois de o banco cobrar: tenta devolver (idempotente; se nada foi cobrado, não faz nada)
+      await this.refundQuiet('falha ao abrir a partida');
+      this.bcast({ t: 'abort', reason: this.tokens ? (/deposit_required/.test(e.message) ? 'sala dourada: falta um depósito de R$ 10,00 nas últimas 3 semanas' : 'ClashTokens insuficientes ou erro no caixa') : 'saldo insuficiente ou erro no caixa' }); this.close(); this.log('open falhou', e.message); return; }
+    // alguém saiu enquanto o banco cobrava: cancela e devolve a entrada de todos (ninguém ganha sem jogar)
+    if (seats.some(s => s.gone) || this.seats.length !== seats.length) {
+      await this.refundQuiet('jogador saiu antes do início');
+      this.bcast({ t: 'abort', reason: 'um jogador saiu antes do início; a entrada voltou para o saldo' }); this.close(); return;
+    }
     this.sim = new Sim({ seed, map, n: this.seats.length });
     this.state = 'play'; this.freeze = COUNTDOWN; this.tickN = 0; this.inputLog = [];
     const skins = this.seats.map((_, i) => i % 4);
@@ -44,15 +53,19 @@ export class Room {
     this.bcast({ t: 'start', seed, map, W: this.sim.W, H: this.sim.H, n: this.seats.length, w: this.sim.encWorld(), br: [...this.sim.bridges], stake: this.stakeCents, tokens: this.tokens, names: this.seats.map(s => s.name), skins, matchId: this.matchId });
     this.timer = setInterval(() => this.tick(), TICK * 1000);
   }
+  async refundQuiet(reason) {
+    try { if (this.tokens) await this.ledger.tokenRefund({ matchId: this.matchId, reason }); else await this.ledger.refund({ matchId: this.matchId, reason }); }
+    catch (e) { if (!/match_not_found|none/.test(e.message)) this.log('refund falhou (a varredura do banco devolve em até 10 min)', this.matchId, e.message); }
+  }
   input(seat, d) {
+    seat.lastSeen = Date.now(); // qualquer comando conta como presença, inclusive durante a contagem
     if (this.state !== 'play' || !this.sim || this.freeze > 0 || !d || typeof d !== 'object') return;
-    seat.lastSeen = Date.now();
     const dx = Math.sign(+d.dx || 0), dy = Math.sign(+d.dy || 0), bomb = !!d.bomb;
     this.inputLog.push([this.tickN, seat.slot, dx, dy, bomb ? 1 : 0]);
     this.sim.input(seat.slot, { dx, dy, bomb });
   }
   tick() {
-    if (this.freeze > 0) { this.freeze -= TICK; if (this.tickN++ % SNAP_EVERY === 0) this.bcast({ t: 'snap', s: { ...this.sim.snapshot(), t: -Math.max(0.01, this.freeze) } }); return; }
+    if (this.freeze > 0) { this.freeze -= TICK; if (this.freeze <= 0) { const now = Date.now(); for (const s of this.seats) s.lastSeen = now; } /* a contagem não conta como inatividade */ if (this.tickN++ % SNAP_EVERY === 0) this.bcast({ t: 'snap', s: { ...this.sim.snapshot(), t: -Math.max(0.01, this.freeze) } }); return; }
     for (const s of this.seats) if (!s.gone && Date.now() - s.lastSeen > 9000) this.drop(s);
     this.sim.step(TICK);
     if (this.tickN++ % SNAP_EVERY === 0 || this.sim.ended) this.bcast({ t: 'snap', s: this.sim.snapshot() });
@@ -76,6 +89,6 @@ export class Room {
     this.bcast({ t: 'end', winner: w, matchId: this.matchId, resultHash, settled: !!paid });
     setTimeout(() => this.close(), 3000);
   }
-  async abort(reason) { clearInterval(this.timer); if (this.state === 'play') { try { if (this.tokens) await this.ledger.tokenRefund({ matchId: this.matchId, reason }); else await this.ledger.refund({ matchId: this.matchId, reason }); } catch (e) { this.log('refund falhou', e.message); } } this.bcast({ t: 'abort', reason }); this.close(); }
+  async abort(reason) { clearInterval(this.timer); if (this.state === 'play') await this.refundQuiet(reason); this.bcast({ t: 'abort', reason }); this.close(); }
   close() { clearInterval(this.timer); this.state = 'closed'; for (const s of this.seats) { try { s.ws.close(); } catch { /* já fechado */ } } this.onClose && this.onClose(this); }
 }

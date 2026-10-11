@@ -697,7 +697,7 @@ dialog#dlg.mg{border-color:#d9a93a;box-shadow:0 0 60px -12px #ffc83d99}
   <div class="chips" id="dp-chips"></div><label class="fld">Outro valor (R$)<input id="dp-val" inputmode="decimal" placeholder="10,00"></label>
   <p id="dp-msg" class="note"></p><div class="row"><button type="button" id="dp-no">Fechar</button><button class="ok" type="button" id="dp-go">Gerar PIX</button></div></div>
  <div id="dp-step2" hidden><p class="note" id="dp-info"></p><img id="dp-qr" alt="QR Code PIX" style="width:220px;height:220px;display:block;margin:8px auto;background:#fff;border-radius:12px;padding:8px">
-  <label class="fld">PIX copia e cola<input id="dp-code" readonly></label><div class="row"><button type="button" id="dp-copy">Copiar código</button><button type="button" class="ok" id="dp-done">Fechar</button></div><p class="note" id="dp-status">Aguardando pagamento…</p></div></dialog>
+  <label class="fld">PIX copia e cola<input id="dp-code" readonly></label><div class="row"><button type="button" id="dp-copy">Copiar código</button><button type="button" class="ok" id="dp-done">Fechar</button></div><p class="note" id="dp-status">Aguardando pagamento…</p><button type="button" id="dp-sim" hidden>Simular pagamento (teste)</button></div></dialog>
 <dialog id="wd" aria-labelledby="wd-t"><div class="logo" style="font-size:20px" id="wd-t">Sacar por PIX</div>
  <p class="note">Saque só para a chave PIX do tipo CPF do titular da conta. Mínimo R$ 10. Até R$ 100 em conta sem pendências sai na hora; acima disso passa por revisão. O primeiro saque libera 24h depois do primeiro depósito.</p>
  <form id="wd-form"><label class="fld">Valor (R$)<input id="wd-val" inputmode="decimal" required placeholder="10,00"></label>
@@ -1504,10 +1504,11 @@ const parseBRL=v=>{const n=Number(String(v).replace(/\./g,'').replace(',','.'));
 $('dp-go').onclick=async()=>{const c=parseBRL($('dp-val').value);if(!(c>=1000)){$('dp-msg').textContent='O depósito mínimo é R$ 10.';return}
  $('dp-go').disabled=true;$('dp-msg').textContent='Gerando o PIX…';
  try{const j=await fnCall('pix-deposit',{amount_cents:c});const q=j.qr||'';$('dp-qr').src=q?(q.startsWith('data:')?q:'data:image/png;base64,'+q):'';$('dp-qr').hidden=!q;
-  $('dp-code').value=j.brCode;$('dp-info').textContent='Pague '+R$(c/100)+' com o PIX abaixo (vale até '+new Date(j.expiresAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+').';
+  $('dp-code').value=j.brCode;$('dp-sim').hidden=!(j.test&&j.ref);$('dp-sim').dataset.ref=j.ref||'';$('dp-info').textContent='Pague '+R$(c/100)+' com o PIX abaixo (vale até '+new Date(j.expiresAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+').';
   $('dp-step1').hidden=true;$('dp-step2').hidden=false;$('dp-status').textContent='Aguardando pagamento…';const before=acct.wallet?acct.wallet.balance_cents:0;
   depPoll=setInterval(async()=>{await refreshAcct();if(acct.wallet&&acct.wallet.balance_cents>before){clearInterval(depPoll);$('dp-status').textContent='Pagamento confirmado! Saldo: '+R$(bal);toast('Depósito confirmado.')}},4000)}
  catch(err){$('dp-msg').textContent=err.message}finally{$('dp-go').disabled=false}};
+$('dp-sim').onclick=async()=>{const b=$('dp-sim');b.disabled=true;try{await fnCall('pix-deposit',{simulate:b.dataset.ref});$('dp-status').textContent='Pagamento de teste enviado. Aguardando a confirmação…'}catch(err){$('dp-status').textContent=err.message}finally{b.disabled=false}};
 $('dp-copy').onclick=()=>{const t=$('dp-code').value;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Código PIX copiado.')).catch(()=>{$('dp-code').select()})};
 $('dp-no').onclick=$('dp-done').onclick=()=>$('dep').close();$('dep').addEventListener('close',()=>clearInterval(depPoll));
 $('dep-open').onclick=openDep;
@@ -1555,7 +1556,7 @@ function renderRank(){
  if(rk.loading){L.innerHTML='<li class="rk-empty">Carregando ranking…</li>'}
  else if(!rk.online){L.innerHTML='<li class="rk-empty">Sem conexão com o ranking agora. Suas vitórias desta semana neste aparelho: <b>'+lw.wins+'</b>.</li>'}
  else if(!rk.top.length){L.innerHTML='<li class="rk-empty">'+(all?'Ninguém jogou ainda.':'Ninguém venceu ainda nesta semana. Ganhe uma partida e apareça em 1º lugar.')+'</li>'}
- else L.innerHTML=rk.top.map(r=>`<li><button class="rk-row${r.id===me.id?' me':''}" data-pid="${r.id}"><span class="rk-pos">${r.pos}º</span><span class="av" style="${avStyle(r.skin)}"></span><span class="rk-n"><b>${esc(r.nick)}${r.id===me.id?' (você)':''}</b><small>${dot(r.status)}ID ${fid(r.id)}</small></span><span class="rk-w"><b>${r.wins}</b><small>${r.wins===1?'vitória':'vitórias'} em ${r.matches}</small></span></button></li>`).join('');
+ else L.innerHTML=rk.top.map(r=>`<li><button class="rk-row${r.id===me.id?' me':''}" data-pid="${esc(r.id)}"><span class="rk-pos">${esc(r.pos)}º</span><span class="av" style="${avStyle(r.skin)}"></span><span class="rk-n"><b>${esc(r.nick)}${r.id===me.id?' (você)':''}</b><small>${dot(r.status)}ID ${fid(r.id)}</small></span><span class="rk-w"><b>${r.wins}</b><small>${r.wins===1?'vitória':'vitórias'} em ${r.matches}</small></span></button></li>`).join('');
  $('rk-more').hidden=!(rk.online&&all&&rk.top.length<rk.total);
  const mine=rk.online&&rk.me?rk.me:{pos:null,wins:lw.wins,matches:lw.matches};
  $('rk-me').textContent=(me.id?'Seu ID '+me.id+' · ':'')+(mine.pos?mine.pos+'º lugar · ':'')+mine.wins+(mine.wins===1?' vitória':' vitórias')+' em '+mine.matches+(mine.matches===1?' partida':' partidas')+(all?' no total':' nesta semana')}
@@ -1653,7 +1654,7 @@ $('d-no').onclick=()=>{mmCancel();$('dlg').close()};
 $('dlg').addEventListener('close',()=>{if(mq&&!mq.started)mmCancel()});
 function play(){if(DEMO){demoPlay();return}if(needAcct(()=>{openDlg();play()}))mmSearch(friendMode()?{create:true}:null)}
 $('d-how').onclick=e=>{const b=e.target.closest('[data-v]');if(!b||mq)return;dHow=b.dataset.v;openDlg()};
-function joinFriend(){const code=$('d-code').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){$('d-msg').textContent='O código tem 6 letras e números.';return}
+function joinFriend(){if(DEMO){$('d-msg').textContent='No modo demo não dá para entrar em sala de amigo. Desligue o demo para jogar valendo.';return}const code=$('d-code').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){$('d-msg').textContent='O código tem 6 letras e números.';return}
  if(needAcct(()=>{openDlg();joinFriend()}))mmSearch({code})}
 $('d-join').onclick=()=>rgGate(joinFriend);
 $('d-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)});
@@ -1694,10 +1695,10 @@ $('pus').innerHTML=PUS.map((p,i)=>`<div class="pu"><i style="background-image:ur
 
 /* ---------- amigos: lista por ID, busca de jogadores ---------- */
 let frInvite=false,frList=[];
-const prow=(p,o)=>`<li class="prow"><span class="av" style="${avStyle(p.skin)}"></span><span class="rk-n"><b>${esc(p.nick)}</b><small>${dot(p.status)}ID ${fid(p.id)}${o.wins!==undefined?' · '+o.wins+(o.wins===1?' vitória':' vitórias'):''}</small></span><span class="pacts">`
+const prow=(p,o)=>`<li class="prow"><span class="av" style="${avStyle(p.skin)}"></span><span class="rk-n"><b>${esc(p.nick)}</b><small>${dot(p.status)}ID ${fid(p.id)}${o.wins!==undefined?' · '+(Number(o.wins)||0)+(o.wins===1?' vitória':' vitórias'):''}</small></span><span class="pacts">`
  
- +`<button class="mini" data-act="profile" data-id="${p.id}">Perfil</button>`
- +(o.friend?`<button class="mini x" data-act="unfriend" data-id="${p.id}" aria-label="Remover ${esc(p.nick)} da lista">✕</button>`:p.id===me.id?'<span class="mini ok">Você</span>':p.is_friend?'<span class="mini ok">Na lista</span>':`<button class="mini" data-act="friend" data-id="${p.id}">+ Amigo</button>`)+'</span></li>';
+ +`<button class="mini" data-act="profile" data-id="${esc(p.id)}">Perfil</button>`
+ +(o.friend?`<button class="mini x" data-act="unfriend" data-id="${esc(p.id)}" aria-label="Remover ${esc(p.nick)} da lista">✕</button>`:p.id===me.id?'<span class="mini ok">Você</span>':p.is_friend?'<span class="mini ok">Na lista</span>':`<button class="mini" data-act="friend" data-id="${esc(p.id)}">+ Amigo</button>`)+'</span></li>';
 async function loadFriends(){
  const L=$('f-list');
  if(!await ensurePlayer()){L.innerHTML='<li class="rk-empty">Sem conexão com o servidor agora.</li>';return}
@@ -1728,7 +1729,7 @@ const RES={win:['win','Vitória'],loss:['loss','Derrota'],draw:['draw','Empate']
 function histRow(h){const r=RES[h.result]||RES.loss,n=MODE_N[h.mode]||2,opp=Array.isArray(h.opponents)?h.opponents:[];
  const vs=opp.length?'vs '+opp.slice(0,7).map(o=>o&&o.id?`<button class="lnk" data-act="profile" data-id="${+o.id}">${esc(o.nick||('ID '+fid(o.id)))}</button>`:esc((o&&o.nick)||'?')).join(', '):'';
  const money=h.stake?(h.result==='win'?'Entrada '+R$(h.stake)+' · prêmio '+R$(prize(h.stake*n)):h.result==='draw'?'Entrada '+R$(h.stake)+' devolvida':'Entrada '+R$(h.stake)):'';
- return `<li class="hrow ${r[0]}"><span class="hres">${r[1]}</span><span class="hmain"><b>${MODE_NAME[h.mode]||h.mode}${h.map?' · '+esc(h.map):''}${h.kind==='friend'?' · com amigo':''}</b>${vs?'<small>'+vs+'</small>':''}<small>${[money,fmtDT(h.played_at),h.duration_s?'durou '+mmss(h.duration_s):''].filter(Boolean).join(' · ')}</small></span></li>`}
+ return `<li class="hrow ${r[0]}"><span class="hres">${r[1]}</span><span class="hmain"><b>${MODE_NAME[h.mode]||esc(h.mode)}${h.map?' · '+esc(h.map):''}${h.kind==='friend'?' · com amigo':''}</b>${vs?'<small>'+vs+'</small>':''}<small>${[money,fmtDT(h.played_at),h.duration_s?'durou '+mmss(h.duration_s):''].filter(Boolean).join(' · ')}</small></span></li>`}
 async function openProfile(id){
  const d=$('pf');$('pf-nick').textContent='Carregando…';$('pf-sub').textContent='ID '+fid(id);$('pf-img').removeAttribute('src');$('pf-tiles').innerHTML='';$('pf-acts').innerHTML='';$('pf-hist').innerHTML='';
  if(!d.open)d.showModal();
@@ -1738,7 +1739,7 @@ async function openProfile(id){
  $('pf-img').src=ASSET.ch[SK[p.skin||0]];$('pf-nick').textContent=p.nick+(mine?' (você)':'');
  $('pf-sub').innerHTML=dot(p.status)+'ID '+fid(p.id)+' · joga desde '+fmtDT(p.since).slice(0,5)+(p.pos_all?' · '+p.pos_all+'º no ranking geral':'');
  $('pf-tiles').innerHTML=[['Partidas',s.matches||0],['Vitórias',s.wins||0],['Derrotas',s.losses||0],['Empates',s.draws||0],['Aproveitamento',rate+'%'],['Vitórias na semana',s.week_wins||0]].map(t=>`<div><b>${t[1]}</b><span>${t[0]}</span></div>`).join('');
- $('pf-acts').innerHTML=mine?'<button id="pf-edit">Editar apelido</button>':(p.is_friend?`<button data-act="unfriend" data-id="${p.id}">Remover amigo</button>`:`<button data-act="friend" data-id="${p.id}">+ Adicionar amigo</button>`);
+ $('pf-acts').innerHTML=mine?'<button id="pf-edit">Editar apelido</button>':(p.is_friend?`<button data-act="unfriend" data-id="${esc(p.id)}">Remover amigo</button>`:`<button data-act="friend" data-id="${esc(p.id)}">+ Adicionar amigo</button>`);
  if(mine)$('pf-edit').onclick=()=>{d.close();$('me').click()};
  $('pf-hist').innerHTML=p.history.length?p.history.map(histRow).join(''):'<li class="rk-empty">Nenhuma batalha registrada ainda.</li>'}
 $('pf-close').onclick=()=>$('pf').close();
@@ -1759,9 +1760,13 @@ function Room(topic,onMsg,onUp){
 
 /* ---------- convites 1x1 ---------- */
 /* ---------- servidor de jogo autoritativo (opcional) ----------
-   Com ?gs=wss://… (fica salvo; ?gs=off desliga) a sala com amigos roda no servidor: ele simula tudo e decide o vencedor.
+   O endereço vem de window.BC_GS (definido no deploy). ?gs=… só vale para servidor local (127.0.0.1/localhost) ou da lista
+   window.BC_GS_ALLOW, e não fica salvo: um link com outro servidor nunca recebe o login do jogador.
    Este aparelho só manda direção e bomba, prevê o próprio movimento e corrige pelo estado que chega. */
-const GS_URL=(()=>{try{const q=new URLSearchParams(location.search).get('gs');if(q!=null)localStorage.setItem('bc_gs',q==='off'?'':q);return localStorage.getItem('bc_gs')||window.BC_GS||''}catch(e){return window.BC_GS||''}})();
+const GS_URL=(()=>{try{localStorage.removeItem('bc_gs')}catch(e){}
+ try{const q=new URLSearchParams(location.search).get('gs');if(q==='off')return'';if(q){const u=new URL(q),allow=window.BC_GS_ALLOW||[];
+  if((u.protocol==='ws:'||u.protocol==='wss:')&&(u.hostname==='127.0.0.1'||u.hostname==='localhost'||allow.includes(u.origin)))return u.href}}catch(e){}
+ return window.BC_GS||''})();
 function GsRoom(onMsg,onUp){let ws=null,up=false;const raw=m=>{try{if(ws&&ws.readyState===1)ws.send(JSON.stringify(m))}catch(e){}};
  try{ws=new WebSocket(GS_URL)}catch(e){setTimeout(()=>onUp(false),0);return{emit(){},raw(){},close(){}}}
  ws.onopen=async()=>{up=true;const t=await token().catch(()=>null);raw(t?{t:'hello',token:t}:{t:'hello',name:me.nick});onUp(true)};
@@ -1788,7 +1793,7 @@ function mmMsg(st,m){
   if(mq===st&&!st.started){mmFail(m.t==='closed'?'A conexão com o servidor caiu.':(m.error||m.reason||'Partida cancelada.'));return}
   if(m.t==='abort'&&net&&net.room===st.room)toast('Partida cancelada: '+(m.reason||''));return}
  if(mq!==st)return;
- if(m.t==='hello'){if(st.priv&&st.priv.create)st.room.raw({t:'private_create',stake:Math.round(st.stake*100)});else if(st.priv&&st.priv.code){st.room.raw({t:'private_join',code:st.priv.code});$('d-msg').textContent='Entrando na sala '+st.priv.code+'…'}else st.room.raw({t:'queue',mode:st.k,stake:Math.round(st.stake*100)});return}
+ if(m.t==='hello'){if(m.mode==='demo'&&!DEMO){mmFail('Este servidor é só de demonstração. Ligue o modo demo para jogar nele.');return}if(st.priv&&st.priv.create)st.room.raw({t:'private_create',stake:Math.round(st.stake*100)});else if(st.priv&&st.priv.code){st.room.raw({t:'private_join',code:st.priv.code});$('d-msg').textContent='Entrando na sala '+st.priv.code+'…'}else st.room.raw({t:'queue',mode:st.k,stake:Math.round(st.stake*100)});return}
  if(m.t==='private'){const it=inviteText(m.code,st.stake);$('d-scode').textContent=m.code;$('d-wa').href='https://wa.me/?text='+encodeURIComponent(it.t);$('d-share').hidden=false;$('d-friend').hidden=false;
   $('d-msg').textContent='Sala criada! Mande o código ou o convite para o seu amigo. A partida começa quando ele entrar (o convite vale 15 minutos).';return}
  if(m.t==='queue'){$('d-bar').firstChild.style.width=Math.round(m.have*100/m.need)+'%';$('d-msg').textContent=`Procurando jogadores… ${m.have}/${m.need}. A partida começa quando a sala encher.`;return}

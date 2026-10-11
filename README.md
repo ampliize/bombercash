@@ -72,7 +72,7 @@ Como funciona (demo): o anfitrião simula a partida e manda o estado 10x por seg
 O mock substitui o Supabase só no servidor de teste; o arquivo do demo não muda.
 
 ### Sala no servidor de jogo (autoritativo)
-Abra o jogo com `?gs=wss://SEU-SERVIDOR` (fica salvo no aparelho; `?gs=off` volta ao modo antigo). A sala com amigos passa a rodar no `server/`:
+O endereço do servidor vai em `window.BC_GS`. Para desenvolvimento, `?gs=ws://127.0.0.1:PORTA` funciona só para servidor local (ou da lista `window.BC_GS_ALLOW`) e não fica salvo, para nenhum link desviar o login do jogador. A sala com amigos passa a rodar no `server/`:
 o código vira 4 dígitos, quem criou toca em Começar (2 a 4 pessoas, sem bots), o servidor move os bonecos, explode as bombas e decide o vencedor.
 O aparelho só manda direção/bomba e corrige a própria posição pelo estado do servidor (mexer no boneco pelo console não adianta).
 Teste: suba o mock (`npm run mock` em `tests/e2e`) e rode `npm run test:server` (sobe o servidor na porta 2599 e joga com 2 navegadores).

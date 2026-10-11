@@ -3,11 +3,12 @@
 const URL_ = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-const ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean);
+// sem ALLOWED_ORIGINS, só o site oficial (nunca '*')
+const ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') || 'https://bombercash.vercel.app').split(',').map(s => s.trim()).filter(Boolean);
 
 export function cors(req: Request): Record<string, string> {
   const o = req.headers.get('origin') ?? '';
-  const allow = !ORIGINS.length ? '*' : ORIGINS.includes(o) ? o : ORIGINS[0];
+  const allow = ORIGINS.includes(o) ? o : ORIGINS[0];
   return { 'Access-Control-Allow-Origin': allow, 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Vary': 'Origin' };
 }
 export const json = (req: Request, body: unknown, status = 200) =>
@@ -46,6 +47,19 @@ export function cpfValid(c: string): boolean {
   return dv(9) === +c[9] && dv(10) === +c[10];
 }
 export const env = (k: string) => Deno.env.get(k) ?? '';
+// chave de teste da AbacatePay (modo dev): os eventos de teste só valem quando a própria chave é de teste
+export const abacateDev = () => /^abc_dev_/i.test(env('ABACATEPAY_API_KEY')) || env('ABACATEPAY_DEV') === '1';
+// confere a cobrança direto na AbacatePay (não confia só no aviso do webhook)
+export async function abacateCheck(id: string): Promise<{ status?: string; amount?: number; devMode?: boolean; error?: string }> {
+  const key = env('ABACATEPAY_API_KEY'); if (!key) return { error: 'sem chave' };
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(`https://api.abacatepay.com/v1/pixQrCode/check?id=${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${key}` }, signal: ctl.signal });
+    const j = await r.json().catch(() => ({})); const d = j && (j.data ?? j);
+    if (!r.ok || !d) return { error: `check ${r.status}` };
+    return { status: String(d.status ?? ''), amount: d.amount != null ? Math.round(Number(d.amount)) : undefined, devMode: d.devMode };
+  } catch (e) { return { error: String(e) }; } finally { clearTimeout(t); }
+}
 // mensagens do banco -> texto para o jogador
 export function friendly(e: string): string {
   const M: Record<string, string> = {
@@ -55,7 +69,8 @@ export function friendly(e: string): string {
     profile_not_found: 'Complete seu cadastro primeiro.',
   };
   for (const k of Object.keys(M)) if (e.includes(k)) return M[k];
-  if (e.includes('cpf_hash')) return 'Este CPF já tem uma conta.';
+  // não confirma se um CPF já está cadastrado (LGPD / enumeração de CPF)
+  if (e.includes('cpf_hash')) return 'Não foi possível concluir o cadastro com esses dados. Fale com o suporte se o CPF for seu.';
   if (e.includes('nickname')) return 'Esse apelido já está em uso.';
   if (e.includes('profiles_pkey')) return 'Seu cadastro já foi feito.';
   return 'Não foi possível concluir agora. Tente de novo.';

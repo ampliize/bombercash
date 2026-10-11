@@ -91,3 +91,27 @@ test('JWT ES256 (chaves novas do Supabase) via JWKS', async () => {
   assert.deepEqual(await verifyToken(`${h}.${p}.${sig}`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), { id: 'u-1', auth: true, name: 'Bomba' });
   assert.equal(await verifyToken(`${h}.${p}.${sig.slice(0, -4)}AAAA`, { supabaseUrl: 'https://x.supabase.co', fetchImpl }), null);
 });
+
+test('a contagem de 10 s não conta como inatividade: ninguém é derrubado quando o jogo começa', async () => {
+  const r = new Room({ code: 'cd', mode: '1x1', ledger: { open: async () => ({}), settle: async () => ({}), refund: async () => ({}) } });
+  const ws = () => ({ readyState: 1, send() {}, close() {} });
+  r.join(ws(), { id: 'a', name: 'A' }); r.join(ws(), { id: 'b', name: 'B' });
+  await new Promise(res => setTimeout(res, 20)); clearInterval(r.timer);
+  for (const s of r.seats) s.lastSeen = Date.now() - 20000; // ficaram parados a contagem toda (sem mandar comando)
+  r.freeze = 0.01; r.tick(); r.tick();
+  assert.ok(r.seats.every(s => !s.gone), 'ninguém derrubado ao fim da contagem'); assert.equal(r.sim.ended, false);
+  r.close();
+});
+
+test('jogador sai enquanto o banco cobra a entrada: partida cancelada e entrada devolvida a todos', async () => {
+  const calls = []; let release;
+  const lg = { open: a => { calls.push('open'); return new Promise(res => { release = res; }); }, settle: async () => ({}), refund: async a => { calls.push('refund:' + a.reason); return {}; } };
+  const sent = [], ws = () => ({ readyState: 1, send: m => sent.push(JSON.parse(m)), close() {} });
+  const r = new Room({ code: 'dp', mode: '1x1', stakeCents: 500, ledger: lg });
+  r.join(ws(), { id: 'a', name: 'A' }); const s2 = r.join(ws(), { id: 'b', name: 'B' }).seat;
+  await new Promise(res => setTimeout(res, 5));
+  r.drop(s2); release({});
+  await new Promise(res => setTimeout(res, 20));
+  assert.deepEqual(calls, ['open', 'refund:jogador saiu antes do início']);
+  assert.ok(sent.some(m => m.t === 'abort')); assert.ok(!r.sim, 'a partida nem começou');
+});

@@ -81,3 +81,17 @@ test('1x1 com amigo: sair cancela o convite', () => {
   mm.createPrivate(a, { id: 'ua', name: 'A' }, 500); const code = a.out.find(m => m.t === 'private').code;
   assert.ok(mm.leave(a)); assert.match(mm.joinPrivate(b, { id: 'ub', name: 'B' }, code).err, /não encontrada/);
 });
+
+test('valendo: quem não pode jogar (sem saldo/cadastro) nem entra na fila e não derruba a sala dos outros', async () => {
+  const lg = ledger(); lg.canPlay = async ({ userId }) => userId === 'pobre' ? { ok: false, reason: 'insufficient_funds' } : { ok: true };
+  const mm = new Matchmaker({ ledger: lg, money: true }); const a = mkConn(), b = mkConn(), c = mkConn();
+  assert.ok(mm.queue(a, { id: 'pobre', name: 'P' }, '1x1', 500).pending);
+  assert.match(mm.queue(a, { id: 'pobre', name: 'P' }, '1x1', 500).err, /conferindo/);
+  await wait(10);
+  assert.match(a.out.find(m => m.t === 'error').error, /saldo insuficiente/);
+  mm.queue(b, { id: 'u1', name: 'A' }, '1x1', 500); mm.queue(c, { id: 'u2', name: 'B' }, '1x1', 500);
+  await wait(30);
+  assert.ok(b.room && b.room === c.room, 'os dois elegíveis jogam'); assert.ok(!a.room);
+  assert.match(mm.queue(mkConn(), { id: 'u1', name: 'A' }, '1x1', 500).err, /partida/, 'mesma pessoa em outra conexão não entra de novo');
+  b.room.close();
+});
