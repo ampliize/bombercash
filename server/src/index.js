@@ -30,7 +30,12 @@ const log = (...a) => console.log(new Date().toISOString(), ...a);
 const server = http.createServer((req, res) => { if (req.url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ ok: !closing })); } else { res.writeHead(404); res.end(); } });
 let closing = false;
 const perIp = new Map();
-const ipOf = req => String(req.headers['fly-client-ip'] || (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket.remoteAddress || '').trim();
+// IP real do jogador: o proxy (Traefik do Easypanel) ACRESCENTA o IP no fim do x-forwarded-for; o começo vem do cliente e pode ser forjado.
+// TRUST_PROXY=fly usa o fly-client-ip; TRUST_PROXY=0 ignora cabeçalhos (servidor exposto direto).
+const TRUST = process.env.TRUST_PROXY || '1';
+const ipOf = req => String((TRUST === 'fly' && req.headers['fly-client-ip'])
+  || (TRUST !== '0' && (req.headers['x-forwarded-for'] || '').split(',').map(s => s.trim()).filter(Boolean).pop())
+  || req.socket.remoteAddress || '').trim();
 const wss = new WebSocketServer({ server, maxPayload: 2048, verifyClient: ({ origin, req }) => !closing && (!ORIGINS.length || ORIGINS.includes(origin)) && (perIp.get(ipOf(req)) || 0) < MAX_PER_IP });
 
 const mm = new Matchmaker({ ledger, tokenLedger, log, money: MONEY, onRoom: (r, open) => { if (open) rooms.set(r.code, r); else rooms.delete(r.code); } });

@@ -18,7 +18,7 @@ servidor → `hello`, `joined`, `lobby {names,you}`, `start {seed,map,W,H,n,w,br
 
 ## Variáveis de ambiente (Easypanel)
 `PORT` · `COUNTDOWN` (segundos de contagem antes de liberar os bonecos; padrão 10) · `ALLOWED_ORIGINS` (domínios do front, separados por vírgula) · `MONEY_MODE=1` + `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` + `SUPABASE_JWT_SECRET`.
-Sem `MONEY_MODE` só rodam salas de brincadeira (sem saldo). Com `NODE_ENV=production` o servidor só sobe com `MONEY_MODE=1` **ou** `PLAY_MODE=demo` (fichas virtuais) e com `ALLOWED_ORIGINS`; `MAX_CONN_PER_IP` (padrão 6) limita conexões por IP. Partidas abertas há mais de 10 min são reembolsadas pela varredura do banco (`core.match_sweep`, pg_cron a cada 2 min). **A service key só existe no servidor, nunca no front nem no repositório.**
+Sem `MONEY_MODE` só rodam salas de brincadeira (sem saldo). Com `NODE_ENV=production` o servidor só sobe com `MONEY_MODE=1` **ou** `PLAY_MODE=demo` (fichas virtuais) e com `ALLOWED_ORIGINS`; `MAX_CONN_PER_IP` (padrão 6) limita conexões por IP. Atrás do Easypanel (Traefik) deixe `TRUST_PROXY` no padrão (usa o último IP do `x-forwarded-for`); no Fly.io use `TRUST_PROXY=fly`. Partidas abertas há mais de 10 min são reembolsadas pela varredura do banco (`core.match_sweep`, pg_cron a cada 2 min). **A service key só existe no servidor, nunca no front nem no repositório.**
 
 ## Dinheiro
 Pré-requisito: migration `20261009140000_public_svc_game_server.sql` (aplicada no Supabase em 2026-10-09; só `service_role` executa).

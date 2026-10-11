@@ -28,7 +28,7 @@ Nada disto é parecer jurídico.
 ### Médio
 8. Queda durante a abertura fazia o outro ganhar sem jogar. **Corrigido** (vira cancelamento com reembolso).
 9. Servidor podia rodar "sem dinheiro" mostrando R$. **Corrigido** (em produção falha fechado).
-10. Sem limite de conexões/tempo para se identificar. **Corrigido.**
+10. Sem limite de conexões/tempo para se identificar. **Corrigido** (IP lido do fim do `x-forwarded-for`, que o proxy preenche, para não ser forjado).
 11. Eventos de webhook podiam se perder em falha temporária. **Corrigido** (só marca como processado depois de creditar).
 12. CPF validado só pelo dígito; cadastro sem limite de tentativas; ações antes do KYC. Ver seção 4.
 13. Funções `bc_*` do ranking abertas: o próprio cliente informa vitória (ranking forjável). Sem impacto em dinheiro hoje; mover para o servidor antes de dar prêmio por ranking.
@@ -51,6 +51,9 @@ Escapar campos do ranking no HTML (corrigido), `aud/iss` no JWT, semente dos ite
 - Site: Vercel (ok).
 - **Servidor de partidas não roda na Vercel** (WebSocket em função tem duração máxima de 300–800 s e sem estado compartilhado). Opções em São Paulo: **Fly.io região `gru`** (~US$ 2/mês) ou VPS SP com Easypanel/Coolify (R$ 25–50/mês). Sem ele, só o demo contra bots funciona.
 - Supabase: banco, contas e Edge Functions (ok).
+- **Easypanel (escolhido se já houver VPS):** App → fonte GitHub `ampliize/bombercash`, pasta `server/`, build pelo `Dockerfile`; porta 2567; domínio com HTTPS (ex.: `jogo.seudominio.com.br`) → o front usa `wss://jogo.seudominio.com.br` em `window.BC_GS`.
+  Variáveis: `NODE_ENV=production`, `ALLOWED_ORIGINS=https://bombercash.vercel.app`, `PLAY_MODE=demo` (pré-lançamento) ou `MONEY_MODE=1` + `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` (depois do jurídico). **Uma réplica só** (salas e filas ficam na memória).
+  VPS em São Paulo para o ping ficar baixo (o jogo manda 30 atualizações por segundo).
 
 ## 6. Demo público de 72 h multijogador (como o mercado faz)
 - Igual às mesas de "play money" do pôquer: **fila separada**, moeda virtual que **nunca** vira dinheiro, recarga diária gratuita, ranking próprio.
@@ -72,7 +75,7 @@ Aprovar KYC, ver e aprovar/recusar saques e marcar como enviados, bloquear conta
 
 ## 10. Ordem de trabalho proposta
 1. (feito) Correções críticas e altas de segurança.
-2. Publicar o servidor de partidas (Fly.io gru) e ligar `window.BC_GS`.
+2. Publicar o servidor de partidas (Easypanel em VPS SP ou Fly.io gru) e ligar `window.BC_GS`.
 3. Demo multijogador 72 h (fila separada, fichas virtuais) — pré-lançamento.
 4. Painel admin MVP.
 5. Testar AbacatePay em modo dev (cobrança, simular pagamento, webhook) — sem ligar dinheiro real em produção.
